@@ -92,7 +92,18 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => 'prefer',
+        ],        
+        'san' => [
+            'driver' => 'pgsql',
+            'url' => env('DB_URL2'),
+            'host' => env('DB_HOST2', '172.17.10.30'),
+            'port' => env('DB_PORT2', '5432'),
+            'database' => env('DB_DATABASE2', 'red'),
+            'username' => env('DB_USERNAME2', 'mso'),
+            'password' => env('DB_PASSWORD2', 'mso1'),
+            'charset' => env('DB_CHARSET2', 'utf8'),
         ],
+
 
         'sqlsrv' => [
             'driver' => 'sqlsrv',
