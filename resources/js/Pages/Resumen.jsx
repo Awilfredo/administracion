@@ -19,7 +19,7 @@ function Resumen({ auth, ausencias, llegadas_tarde }) {
                     {llegadas_tarde.length ? (
                         <TablaResumen
                             resumen={llegadas_tarde}
-                            tipo="Ausencia"
+                            tipo="Tarde"
                         ></TablaResumen>
                     ) : (
                         ""
@@ -27,7 +27,7 @@ function Resumen({ auth, ausencias, llegadas_tarde }) {
                     {ausencias.length ? (
                         <TablaResumen
                             resumen={ausencias}
-                            tipo="Tarde"
+                            tipo="Ausencia"
                         ></TablaResumen>
                     ) : (
                         ""

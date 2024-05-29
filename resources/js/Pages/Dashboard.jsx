@@ -1,80 +1,42 @@
+import AccionPersonal from "@/Components/AccionPersonal";
 import Table from "@/Components/Table";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 
-export default function Dashboard({ auth, asistencias, date = null }) {
-
-    const [anterior, setAnterior] = useState('');
+export default function Dashboard({ auth, asistencias, date = "" }) {
     const [fecha, setFecha] = useState(date);
-    const [siguiente, setSiguiente] = useState('');
+    const [selectedUsers, setSelectedUsers] = useState([]);
+
+    const { data, setData, patch, errors, processing, recentlySuccessful } =
+    useForm({
+        accion_personal:'',
+        id: '',
+    });
+
+    const handleCheck = (e, id) => {
+        console.log(e.target.checked);
+        e.target.checked
+            ? setSelectedUsers([...selectedUsers, id])
+            : selectedUsers.includes(id) &&
+              setSelectedUsers(selectedUsers.filter((item) => item !== id));
+    };
 
     useEffect(() => {
-        if (!date) {
-            const fechaActual = new Date();
-            let anio = fechaActual.getFullYear();
-            let mes = String(fechaActual.getMonth() + 1).padStart(2, "0");
-            let dia = String(fechaActual.getDate()).padStart(2, "0");
-            let day = `${anio}-${mes}-${dia}`;
-            setFecha(day);
-
-            const fechaAnterior=new Date();
-            fechaAnterior.setDate(fechaAnterior.getDate()-1);
-            anio = fechaAnterior.getFullYear();
-            mes = String(fechaAnterior.getMonth() + 1).padStart(2, "0");
-            dia = String(fechaAnterior.getDate()).padStart(2, "0");
-            const prev= `${anio}-${mes}-${dia}`;
-            setAnterior(prev);
-
-            const fechaSiguiente=new Date();
-            fechaSiguiente.setDate(fechaAnterior.getDate()+1);
-            anio = fechaSiguiente.getFullYear();
-            mes = String(fechaSiguiente.getMonth() + 1).padStart(2, "0");
-            dia = String(fechaSiguiente.getDate()).padStart(2, "0");
-            const sig= `${anio}-${mes}-${dia}`;
-            setSiguiente(sig);
+        console.log(selectedUsers);
+        if(selectedUsers.length){
+            
         }
-    }, []);
+    }, [selectedUsers]);
 
-    useEffect(() => {
-        console.log(date)
-        if (date) {
-            let fecha = date.split('-').reverse().join('-');
-            console.log(fecha)
-            const fechaAnterior=new Date(fecha);
-            fechaAnterior.setDate(fechaAnterior.getDate()-1);
-            let anio = fechaAnterior.getFullYear();
-            let mes = String(fechaAnterior.getMonth() + 1).padStart(2, "0");
-            let dia = String(fechaAnterior.getDate()).padStart(2, "0");
-            const prev= `${anio}-${mes}-${dia}`;
-            setAnterior(prev);
-
-            const fechaSiguiente=new Date(fecha);
-            fechaSiguiente.setDate(fechaAnterior.getDate()+1);
-            anio = fechaSiguiente.getFullYear();
-            mes = String(fechaSiguiente.getMonth() + 1).padStart(2, "0");
-            dia = String(fechaSiguiente.getDate()).padStart(2, "0");
-            const sig= `${anio}-${mes}-${dia}`;
-            setSiguiente(sig);
-        }
-    }, []);
-
-
-
-    
+    const handleAccion = (accion) => {
+        console.log(accion);
+    };
 
     const handleChange = (e) => {
         setFecha(e.target.value);
     };
 
-    const handleAnterior = (e) => {
-        alert(anterior);
-    };
-
-    
-    const handleSiguiente = (e) => {
-        alert(siguiente);
-    };
 
     return (
         <AuthenticatedLayout
@@ -91,12 +53,6 @@ export default function Dashboard({ auth, asistencias, date = null }) {
                 <div className="mx-auto sm:px-6 lg:px-8">
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="flex justify-between mx-20 my-5">
-                            <button
-                                className="mx-5 py-2 bg-blue-500 px-5 rounded-xl text-white hover:bg-blue-700"
-                                onClick={handleAnterior}
-                            >
-                                Dia Anteriror
-                            </button>
                             <div>
                                 <input
                                     type="date"
@@ -114,12 +70,15 @@ export default function Dashboard({ auth, asistencias, date = null }) {
                                     Buscar
                                 </Link>
                             </div>
-
-                            <button className="mx-5 py-2 bg-blue-500 px-5 rounded-xl text-white hover:bg-blue-700" onClick={handleSiguiente} >
-                                Siguiente dia
-                            </button>
+                        { /*
+                            <AccionPersonal
+                                handleClickAccion={handleAccion}
+                            ></AccionPersonal>*/}
                         </div>
-                        <Table asistencias={asistencias}></Table>
+                        <Table
+                            asistencias={asistencias}
+                            handleCheck={handleCheck}
+                        ></Table>
                     </div>
                 </div>
             </div>

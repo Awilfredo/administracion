@@ -1,11 +1,7 @@
-import { useForm } from "@inertiajs/react";
-import { DeleteIcon } from "./DeleteIcon";
-import EditIcon from "./EditIcon";
-import { SaveIcon } from "./SaveIcon";
 import AsistenciaRow from "./AsistenciaRow";
 
-function Table({ asistencias }) {
-
+function Table({ asistencias, handleCheck }) {
+    console.log(asistencias)
     return (
         <div className="">
             <div class="flex justify-center">
@@ -15,6 +11,12 @@ function Table({ asistencias }) {
                             <table class="max-w-screen">
                                 <thead class="bg-gray-200 border-b">
                                     <tr>
+                                        <th
+                                            scope="col"
+                                            class="text-sm font-medium text-gray-900 px-6 py-4 text-left"
+                                        >
+                                            Seleccionar
+                                        </th>
                                         <th
                                             scope="col"
                                             class="text-sm font-medium text-gray-900 px-6 py-4 text-left"
@@ -51,7 +53,6 @@ function Table({ asistencias }) {
                                         >
                                             Accion de personal
                                         </th>
-
                                         <th
                                             scope="col"
                                             class="text-sm font-medium text-gray-900 px-6 py-4 text-left"
@@ -62,7 +63,11 @@ function Table({ asistencias }) {
                                 </thead>
                                 <tbody>
                                     {asistencias.map((element, index) => (
-                                      <AsistenciaRow key={index} element={element}></AsistenciaRow>
+                                        <AsistenciaRow
+                                            key={index}
+                                            element={element}
+                                            handleCheck={handleCheck}
+                                        ></AsistenciaRow>
                                     ))}
                                 </tbody>
                             </table>

@@ -13,12 +13,14 @@ class AsistenciaController extends Controller
 {
     public function index()
     {
-        $asistencias = Asistencia::where("fecha",Date::today())->orderBy('id')->get();
+        $asistencias = Asistencia::whereDate("fecha", Date::today())->orderBy('id')->get();
         return Inertia::render('Dashboard', ['asistencias' => $asistencias]);
+
+       // return json_encode($asistencias);
     }
 
     public function fecha($fecha){
-        $asistencias = Asistencia::where("fecha",$fecha)->orderBy('id')->get();
+        $asistencias = Asistencia::whereDate("fecha",$fecha)->orderBy('id')->get();
         return Inertia::render('Dashboard', ['asistencias' => $asistencias, 'date' => $fecha]);
     }
     public function create()

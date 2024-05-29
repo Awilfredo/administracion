@@ -4,11 +4,15 @@ import EditIcon from "./EditIcon";
 import { SaveIcon } from "./SaveIcon";
 import { useState } from "react";
 
-function AsistenciaRow({ element }) {
+function AsistenciaRow({ element, handleCheck }) {
     const handleEdit = (id) => {
         document.getElementById(id).disabled = false;
         document.getElementById(id).focus();
     };
+
+    const fecha = new Date(element.fecha);
+    const fechaLegible = fecha.toLocaleDateString();
+    const tiempoLegible = fecha.toLocaleTimeString();
 
     const [showBtnSave, setshowBtnSave] = useState(false);
     const { data, setData, patch, errors, processing, recentlySuccessful } =
@@ -17,15 +21,15 @@ function AsistenciaRow({ element }) {
             id: element.id,
         });
 
-
     const handleSubmit = () => {
         patch(route("asistencia.update"), {
             preserveScroll: true,
-            onSuccess: () => Swal.fire({
-                title: "Accion de personal actualizada!",
-                text: "",
-                icon: "success"
-              }).then(e=>setshowBtnSave(false)),
+            onSuccess: () =>
+                Swal.fire({
+                    title: "Accion de personal actualizada!",
+                    text: "",
+                    icon: "success",
+                }).then((e) => setshowBtnSave(false)),
         });
     };
 
@@ -47,7 +51,6 @@ function AsistenciaRow({ element }) {
     };
 
     const handleDelete = (id) => {
-        
         Swal.fire({
             title: "Estas seguro que deseas eliminar esta accion de personal?",
             text: "",
@@ -61,23 +64,27 @@ function AsistenciaRow({ element }) {
             if (result.isConfirmed) {
                 patch(route("asistencia.delete"), {
                     preserveScroll: true,
-                    onSuccess: () => Swal.fire({
-                        title: "Accion de personal actualizada!",
-                        text: "",
-                        icon: "success"
-                      }).then(e=>{
-                        setshowBtnSave(false);
-                        setData('accion_personal', '')
-                    }),
+                    onSuccess: () =>
+                        Swal.fire({
+                            title: "Accion de personal actualizada!",
+                            text: "",
+                            icon: "success",
+                        }).then((e) => {
+                            setshowBtnSave(false);
+                            setData("accion_personal", "");
+                        }),
                 });
             }
-        })
+        });
     };
 
     return (
         <tr class="bg-white border-b transition duration-300 ease-in-out hover:bg-gray-100">
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                {element.fecha}
+                <input type="checkbox" name="" id="" onChange={(e)=>handleCheck(e, element.id)} />
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                {fechaLegible}
             </td>
             <td class="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">
                 {element.anacod}
@@ -89,7 +96,7 @@ function AsistenciaRow({ element }) {
                 {element.evento}
             </td>
             <td class="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">
-                {element.hora}
+                {tiempoLegible}
             </td>
             <td class="text-sm text-gray-900 font-light px-6 py-4 whitespace-nowrap">
                 <input
@@ -120,12 +127,8 @@ function AsistenciaRow({ element }) {
                         <SaveIcon></SaveIcon>
                     </button>
                 )}
-                <button
-                    className="text-red-500"
-                    onClick={handleDelete}
-                >
-                     <DeleteIcon></DeleteIcon>
-         
+                <button className="text-red-500" onClick={handleDelete}>
+                    <DeleteIcon></DeleteIcon>
                 </button>
             </td>
         </tr>
