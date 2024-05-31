@@ -1,5 +1,5 @@
-function GenericRow({ data }) {
-    const keys = Object.keys(data);
+function GenericRow({ data, keys }) {
+    
     return (
         <tr>
             {keys.map((key, index) => (

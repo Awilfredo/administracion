@@ -1,9 +1,8 @@
 import { useState } from "react";
 import GenericRow from "./GenericRow";
 
-function GenericTable({ data, nombre, hide = false }) {
-    const keys = Object.keys(data[0]);
-    console.log(keys);
+function GenericTable({ data, nombre, hide = false, keys, headers }) {
+
     const [visible, setvisible] = useState(hide);
     const handleShow = () => {
         setvisible(!visible);
@@ -45,7 +44,7 @@ function GenericTable({ data, nombre, hide = false }) {
                     <table className="w-full">
                         <thead className="bg-gray-500 rounded-xl">
                             <tr className="text-white">
-                                {keys.map((key, index) => (
+                                {headers.map((key, index) => (
                                     <th
                                         key={index}
                                         scope="col"
@@ -60,6 +59,7 @@ function GenericTable({ data, nombre, hide = false }) {
                             {data.map((element, index) => (
                                 <GenericRow
                                     data={element}
+                                    keys={keys}
                                     key={index}
                                 ></GenericRow>
                             ))}

@@ -1,61 +1,60 @@
 import AsistenciaRow from "./AsistenciaRow";
 
 function Table({ asistencias, handleCheck }) {
-    console.log(asistencias)
     return (
         <div className="">
-            <div class="flex justify-center">
-                <div class="overflow-x-auto sm:mx-0.5 lg:mx-0.5">
-                    <div class="py-2 inline-block sm:px-6 lg:px-8">
-                        <div class="overflow-hidden">
-                            <table class="max-w-screen">
-                                <thead class="bg-gray-200 border-b">
+            <div className="flex justify-center">
+                <div className="overflow-x-auto sm:mx-0.5 lg:mx-0.5">
+                    <div className="py-2 inline-block sm:px-6 lg:px-8">
+                        <div className="overflow-hidden">
+                            <table className="max-w-screen">
+                                <thead className="bg-gray-200 border-b">
                                     <tr>
                                         <th
                                             scope="col"
-                                            class="text-sm font-medium text-gray-900 px-6 py-4 text-left"
+                                            className="text-sm font-medium text-gray-900 px-6 py-4 text-left"
                                         >
                                             Seleccionar
                                         </th>
                                         <th
                                             scope="col"
-                                            class="text-sm font-medium text-gray-900 px-6 py-4 text-left"
+                                            className="text-sm font-medium text-gray-900 px-6 py-4 text-left"
                                         >
                                             Fecha
                                         </th>
                                         <th
                                             scope="col"
-                                            class="text-sm font-medium text-gray-900 px-6 py-4 text-left"
+                                            className="text-sm font-medium text-gray-900 px-6 py-4 text-left"
                                         >
                                             Usuario
                                         </th>
                                         <th
                                             scope="col"
-                                            class="text-sm font-medium text-gray-900 px-6 py-4 text-left"
+                                            className="text-sm font-medium text-gray-900 px-6 py-4 text-left"
                                         >
                                             Nombre
                                         </th>
                                         <th
                                             scope="col"
-                                            class="text-sm font-medium text-gray-900 px-6 py-4 text-left"
+                                            className="text-sm font-medium text-gray-900 px-6 py-4 text-left"
                                         >
                                             Evento
                                         </th>
                                         <th
                                             scope="col"
-                                            class="text-sm font-medium text-gray-900 px-6 py-4 text-left"
+                                            className="text-sm font-medium text-gray-900 px-6 py-4 text-left"
                                         >
                                             Hora
                                         </th>
                                         <th
                                             scope="col"
-                                            class="text-sm font-medium text-gray-900 px-6 py-4 text-left"
+                                            className="text-sm font-medium text-gray-900 px-6 py-4 text-left"
                                         >
                                             Accion de personal
                                         </th>
                                         <th
                                             scope="col"
-                                            class="text-sm font-medium text-gray-900 px-6 py-4 text-left"
+                                            className="text-sm font-medium text-gray-900 px-6 py-4 text-left"
                                         >
                                             Opciones
                                         </th>

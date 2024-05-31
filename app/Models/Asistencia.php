@@ -32,4 +32,13 @@ class Asistencia extends Model
 
         return $resumen;
     }
+
+    public static function registrosNFC($fecha){
+        $registros = DB::connection('san')->select("SELECT u.uid, anacod, mac,fecha_registro as hora, evento FROM aplicaciones.log_accesos_sitios a 
+        left join aplicaciones.pro_anatags u ON u.uid=a.uid
+        where DATE(fecha_registro) = '$fecha' ORDER BY anacod , fecha_registro");
+        return $registros;
+    }
+
+
 }

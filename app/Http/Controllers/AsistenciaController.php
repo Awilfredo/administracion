@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asistencia;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
@@ -22,6 +23,11 @@ class AsistenciaController extends Controller
     public function fecha($fecha){
         $asistencias = Asistencia::whereDate("fecha",$fecha)->orderBy('id')->get();
         return Inertia::render('Dashboard', ['asistencias' => $asistencias, 'date' => $fecha]);
+    }
+
+    public function nfcIndex(){
+        $registros = Asistencia::registrosNFC(Carbon::now()->format('Y-m-d'));
+        return $registros;
     }
     public function create()
     {
@@ -44,9 +50,27 @@ class AsistenciaController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Asistencia $asistencia)
+    public function accionesUpdate(Request $request)
     {
-        //
+            // Validación de los datos del request
+    $request->validate([
+        'accion_personal' => 'required|string', // Asegura que 'accion' esté presente y sea una cadena de texto
+        'users_id' => 'required|array',     // Asegura que 'ids' esté presente y sea un array
+        'users_id.*' => 'integer',          // Asegura que cada elemento del array 'ids' sea un entero
+    ]);
+
+        // Recuperar los IDs de la solicitud
+        $users_id = $request->input('users_id');
+
+        // Recuperar el nuevo valor de "accion"
+        $nuevaAccion = $request->input('accion_personal');
+    
+        // Actualizar los registros
+        Asistencia::whereIn('id', $users_id)->update(['accion_personal' => $nuevaAccion]);
+
+        return Redirect::route('dashboard');
+
+
     }
 
     /**
@@ -74,5 +98,10 @@ class AsistenciaController extends Controller
         $ausencias = Asistencia::ausencia();
         return Inertia::render('Resumen', ['llegadas_tarde' => $llegadas_Tarde, 'ausencias' =>$ausencias]);
         //return json_encode($resumen);
+    }
+
+    public function resumenUsuario($anacod){
+        $resumen = Asistencia::where('anacod', $anacod)->get();
+        return json_encode($resumen);
     }
 }
