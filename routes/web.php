@@ -40,11 +40,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/dashboard', [AsistenciaController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/{fecha}', [AsistenciaController::class, 'fecha'])->name('asistencia.fecha');
+    Route::get('/asistencia/nfc', [AsistenciaController::class, 'nfcIndex'])->name('asistencia.nfc');
     Route::patch('/asistencia/update', [AsistenciaController::class, 'update'])->name('asistencia.update');
     Route::patch('/asistencia/delete', [AsistenciaController::class, 'deleteAccion'])->name('asistencia.delete');
+    Route::get('/asistencia/marcas', [AsistenciaController::class, 'marcas'])->name('asistencia.marcas');
     Route::get('/asistencia/resumen/{anacod}', [AsistenciaController::class, 'resumenUsuario'])->name('usuario.resumen');
     Route::get('/horarios', [HorarioController::class, 'index'])->name('horario.index');
     Route::patch('/asistencia/actualizar/acciones', [AsistenciaController::class, 'accionesUpdate'])->name('acciones.update');
+
 });
 
 require __DIR__.'/auth.php';

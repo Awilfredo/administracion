@@ -5,56 +5,56 @@ function Table({ asistencias, handleCheck }) {
         <div className="">
             <div className="flex justify-center">
                 <div className="overflow-x-auto sm:mx-0.5 lg:mx-0.5">
-                    <div className="py-2 inline-block sm:px-6 lg:px-8">
+                    <div className="py-2 inline-block sm:px-6 lg:px-4">
                         <div className="overflow-hidden">
                             <table className="max-w-screen">
                                 <thead className="bg-gray-200 border-b">
                                     <tr>
                                         <th
                                             scope="col"
-                                            className="text-sm font-medium text-gray-900 px-6 py-4 text-left"
+                                            className="text-sm font-medium text-gray-900 px-2 py-4 text-left"
                                         >
                                             Seleccionar
                                         </th>
                                         <th
                                             scope="col"
-                                            className="text-sm font-medium text-gray-900 px-6 py-4 text-left"
+                                            className="text-sm font-medium text-gray-900 px-4 py-4 text-left"
                                         >
                                             Fecha
                                         </th>
                                         <th
                                             scope="col"
-                                            className="text-sm font-medium text-gray-900 px-6 py-4 text-left"
+                                            className="text-sm font-medium text-gray-900 px-4 py-4 text-left"
                                         >
                                             Usuario
                                         </th>
                                         <th
                                             scope="col"
-                                            className="text-sm font-medium text-gray-900 px-6 py-4 text-left"
+                                            className="text-sm font-medium text-gray-900 px-4 py-4 text-left"
                                         >
                                             Nombre
                                         </th>
                                         <th
                                             scope="col"
-                                            className="text-sm font-medium text-gray-900 px-6 py-4 text-left"
+                                            className="text-sm font-medium text-gray-900 px-4 py-4 text-left"
                                         >
                                             Evento
                                         </th>
                                         <th
                                             scope="col"
-                                            className="text-sm font-medium text-gray-900 px-6 py-4 text-left"
+                                            className="text-sm font-medium text-gray-900 px-4 py-4 text-left"
                                         >
                                             Hora
                                         </th>
                                         <th
                                             scope="col"
-                                            className="text-sm font-medium text-gray-900 px-6 py-4 text-left"
+                                            className="text-sm font-medium text-gray-900 px-4 py-4 text-left"
                                         >
                                             Accion de personal
                                         </th>
                                         <th
                                             scope="col"
-                                            className="text-sm font-medium text-gray-900 px-6 py-4 text-left"
+                                            className="text-sm font-medium text-gray-900 px-4 py-4 text-left"
                                         >
                                             Opciones
                                         </th>

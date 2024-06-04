@@ -15,7 +15,7 @@ function Resumen({ auth, ausencias, llegadas_tarde }) {
             }
         >
             <div className="">
-                <div class="flex justify-center mt-10">
+                <div class="flex justify-center mt-10 flex-wrap">
                     {llegadas_tarde.length ? (
                         <TablaResumen
                             resumen={llegadas_tarde}

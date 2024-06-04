@@ -27,7 +27,7 @@ class AsistenciaController extends Controller
 
     public function nfcIndex(){
         $registros = Asistencia::registrosNFC(Carbon::now()->format('Y-m-d'));
-        return $registros;
+        return Inertia::render('RegistrosNFC', ['registros' => $registros, 'fecha' => Carbon::now()->format('Y-m-d')]);
     }
     public function create()
     {
@@ -103,5 +103,13 @@ class AsistenciaController extends Controller
     public function resumenUsuario($anacod){
         $resumen = Asistencia::where('anacod', $anacod)->get();
         return json_encode($resumen);
+    }
+
+    public function marcas(){
+        $registros = Asistencia::marcas(Carbon::today());
+        //$registros = Asistencia::marcas( Carbon::parse('2024-06-01'));
+        //return Inertia::render('Marcaciones', ['registros'=> $registros, 'fecha' => Carbon::parse('2024-06-01')]);
+        //return json_encode($registros);
+        return Inertia::render('Marcaciones', ['registros'=> $registros, 'fecha' => Carbon::today()]);
     }
 }
