@@ -1,16 +1,9 @@
 import { router } from "@inertiajs/react";
 
-function TablaResumen({ resumen, tipo }) {
-
-    const handleClick = (anacod) => {
-        router.visit(route('usuario.resumen', anacod), {
-            only: ['users'],
-          })
-      };
-
+function TablaResumen({ resumen, tipo, handleClick }) {
     return (
-        <div class="overflow-x-auto sm:mx-0.5 lg:mx-0.5">
-        <div class="py-2 inline-block max-w-full sm:px-6 lg:px-4">
+        <div class="sm:mt-5">
+        <div class="">
             <div class="overflow-hidden rounded-xl">
                 <table class="">
                     <thead class="bg-blue-200 border-b">
@@ -38,7 +31,7 @@ function TablaResumen({ resumen, tipo }) {
                     </thead>
                     <tbody>
                         {resumen.map((element, index) => (
-                            <tr key={index} class="bg-white border-b transition duration-300 ease-in-out hover:bg-gray-100" onClick={()=>handleClick(element.anacod)}>
+                            <tr key={index} class="bg-white border-b transition duration-300 ease-in-out hover:bg-gray-100" onClick={()=>handleClick(element.anacod, tipo)}>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {element.anacod}
                                 </td>

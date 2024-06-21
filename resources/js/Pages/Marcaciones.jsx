@@ -1,8 +1,10 @@
+import Search from "@/Components/Search";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link, useForm } from "@inertiajs/react";
 import { useEffect, useState } from "react";
-function Marcaciones({ registros, auth, fecha }) {
+function Marcaciones({ registros, auth, fecha, nfc }) {
     const [marcas_completas, setMarcas_completas] = useState([]);
+    const [resultados, setResultados] = useState([]);
 
     useEffect(() => {
         const datos_marcas = [];
@@ -64,6 +66,59 @@ function Marcaciones({ registros, auth, fecha }) {
             element.marca_6 != null && marcas.push(element.marca_6);
             element.marca_7 != null && marcas.push(element.marca_7);
 
+            let marcas_nfc = [];
+            nfc.forEach((marca_nfc) => {
+                if (marca_nfc.anacod == element.anacod) {
+                    marcas_nfc.push(marca_nfc);
+                }
+            });
+
+            console.log(marcas_nfc);
+
+            for (let i = 0; i < marcas_nfc.length; i++) {
+                const e = marcas_nfc[i];
+                if (e.evento === "ENTRADA") {
+                    let fecha = new Date(e.hora); // Convertir la hora de la marca NFC en un objeto Date
+                    let formattedDate =
+                        fecha.getFullYear() +
+                        "-" +
+                        ("0" + (fecha.getMonth() + 1)).slice(-2) +
+                        "-" +
+                        ("0" + fecha.getDate()).slice(-2) +
+                        " " +
+                        ("0" + fecha.getHours()).slice(-2) +
+                        ":" +
+                        ("0" + fecha.getMinutes()).slice(-2) +
+                        ":" +
+                        ("0" + fecha.getSeconds()).slice(-2);
+                    registro.nfc_entrada = formattedDate;
+                    break; // Salir del bucle una vez que se ha encontrado la entrada
+                }
+            }
+            
+
+                for (let i = marcas_nfc.length -1; i >= 0; i--) {
+                    
+                    if (marcas_nfc[i].evento === "SALIDA") {
+                        let fecha = new Date(marcas_nfc[i].hora);
+                        let formattedDate =
+                            fecha.getFullYear() +
+                            "-" +
+                            ("0" + (fecha.getMonth() + 1)).slice(-2) +
+                            "-" +
+                            ("0" + fecha.getDate()).slice(-2) +
+                            " " +
+                            ("0" + fecha.getHours()).slice(-2) +
+                            ":" +
+                            ("0" + fecha.getMinutes()).slice(-2) +
+                            ":" +
+                            ("0" + fecha.getSeconds()).slice(-2);
+                        registro.nfc_salida = formattedDate;
+                       break;
+                    }
+                }
+            
+
             for (let i = 0; i < marcas.length; i++) {
                 console.log(element.entrada);
                 if (
@@ -100,7 +155,7 @@ function Marcaciones({ registros, auth, fecha }) {
                 registro.evento_salida = "Salió antes";
             }
 
-            if (new Date(marcas[marcas.length - 1]) >= salida_datetime){
+            if (new Date(marcas[marcas.length - 1]) >= salida_datetime) {
                 registro.marca_salida = marcas[marcas.length - 1];
                 registro.evento_salida = "Sin Evento";
             }
@@ -111,6 +166,10 @@ function Marcaciones({ registros, auth, fecha }) {
 
         setMarcas_completas(datos_marcas);
     }, []);
+
+    useEffect(() => {
+        setResultados(marcas_completas);
+    }, [marcas_completas]);
 
     const styles = {
         height: "650px",
@@ -126,7 +185,15 @@ function Marcaciones({ registros, auth, fecha }) {
         >
             <Head title="Marcaciones" />
 
-            <div className="overflow-x-auto mx-5 mt-5 rounded-xl" style={styles}>
+            <div
+                className="overflow-x-auto mx-5 mt-5 rounded-xl"
+                style={styles}
+            >
+                <Search
+                    datos={marcas_completas}
+                    keys={["anacod", "ananam"]}
+                    setResultados={setResultados}
+                ></Search>
                 <table className="max-w-100 mx-5">
                     <thead className="bg-blue-200 w-full">
                         <tr>
@@ -195,6 +262,12 @@ function Marcaciones({ registros, auth, fecha }) {
                                 scope="col"
                                 className="text-sm font-medium text-gray-900 px-4 py-4 text-left"
                             >
+                                NFC salida
+                            </th>
+                            <th
+                                scope="col"
+                                className="text-sm font-medium text-gray-900 px-4 py-4 text-left"
+                            >
                                 Evento Entrada
                             </th>
                             <th
@@ -209,7 +282,7 @@ function Marcaciones({ registros, auth, fecha }) {
                         className="overflow-y-scroll w-full"
                         style={{ height: "60vh" }}
                     >
-                        {marcas_completas.map((element, index) => (
+                        {resultados.map((element, index) => (
                             <tr
                                 key={index}
                                 className="bg-white border border-2 transition duration-300 ease-in-out hover:bg-gray-300"
@@ -234,12 +307,16 @@ function Marcaciones({ registros, auth, fecha }) {
                                     {element.marca_entrada}
                                 </td>
                                 <td className="text-sm text-gray-900 font-light px-4 py-4 whitespace-nowrap">
-                                    null
+                                    {element.nfc_entrada}
                                 </td>
                                 <td className="text-sm text-gray-900 font-light px-4 py-4 whitespace-nowrap w-60"></td>
                                 <td className="text-sm text-gray-900 font-light px-4 py-4 whitespace-nowrap w-60"></td>
                                 <td className="text-sm text-gray-900 font-light px-4 py-4 whitespace-nowrap">
                                     {element.marca_salida}
+                                </td>
+
+                                <td className="text-sm text-gray-900 font-light px-4 py-4 whitespace-nowrap">
+                                    {element.nfc_salida}
                                 </td>
 
                                 <td className="text-sm text-gray-900 font-light px-4 py-4 whitespace-nowrap w-60">
@@ -248,7 +325,6 @@ function Marcaciones({ registros, auth, fecha }) {
                                 <td className="text-sm text-gray-900 font-light px-4 py-4 whitespace-nowrap w-60">
                                     {element.evento_salida}
                                 </td>
-
                             </tr>
                         ))}
                     </tbody>

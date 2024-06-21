@@ -72,8 +72,9 @@ export default function Authenticated({ user, header, children }) {
 
                             <li>
                                 <Link
+                                    href={route('asistencia.eventos')}
                                     className={
-                                        route().current("fence.show")
+                                        route().current("asistencia.eventos")
                                             ? navSelectedClass
                                             : navDefaultClass
                                     }
@@ -107,7 +108,7 @@ export default function Authenticated({ user, header, children }) {
                                         <Link
                                             href={route("asistencia.marcas")}
                                             className={
-                                                route().current("grid")
+                                                route().current("asistencia.marcas")
                                                     ? navSelectedClass
                                                     : navDefaultClass
                                             }
@@ -268,6 +269,7 @@ export default function Authenticated({ user, header, children }) {
 
                             <li>
                                 <Link
+                                href={route("empleados.index")}
                                     className={
                                         route().current("fence.users")
                                             ? navSelectedClass

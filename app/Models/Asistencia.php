@@ -26,6 +26,10 @@ class Asistencia extends Model
 
         return $resumen;
     }
+    public static function resumenUsuario($anacod, $evento){
+        $resumen = DB::connection('san')->select("SELECT anacod, ananam, fecha, evento FROM aplicaciones.pro_eventos_asistencia WHERE evento= '$evento' AND DATE(fecha) BETWEEN CURRENT_DATE - INTERVAL '30 days' AND CURRENT_DATE AND accion_personal IS null AND anacod = '$anacod' ORDER BY fecha ASC");
+        return $resumen;
+    }
 
     public static function ausencia()
     {
@@ -36,9 +40,7 @@ class Asistencia extends Model
 
     public static function registrosNFC($fecha)
     {
-        $registros = DB::connection('san')->select("SELECT u.uid, anacod, mac,fecha_registro as hora, evento FROM aplicaciones.log_accesos_sitios a 
-        left join aplicaciones.pro_anatags u ON u.uid=a.uid
-        where DATE(fecha_registro) = '$fecha' ORDER BY anacod , fecha_registro");
+        $registros = DB::connection('san')->select("SELECT u.uid, anacod, mac,fecha_registro as hora, evento FROM aplicaciones.log_accesos_sitios a left join aplicaciones.pro_anatags u ON u.uid=a.uid where fecha_registro >= (DATE('$fecha') - INTERVAL '3 HOURS') AND fecha_registro <= (DATE('$fecha') + INTERVAL '1 day' + INTERVAL '3 hours')");
         return $registros;
     }
 

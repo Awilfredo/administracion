@@ -15,14 +15,14 @@ class AsistenciaController extends Controller
     public function index()
     {
         $asistencias = Asistencia::whereDate("fecha", Date::today())->orderBy('id')->get();
-        return Inertia::render('Dashboard', ['asistencias' => $asistencias]);
+        return Inertia::render('Eventos', ['asistencias' => $asistencias]);
 
        // return json_encode($asistencias);
     }
 
     public function fecha($fecha){
         $asistencias = Asistencia::whereDate("fecha",$fecha)->orderBy('id')->get();
-        return Inertia::render('Dashboard', ['asistencias' => $asistencias, 'date' => $fecha]);
+        return Inertia::render('Eventos', ['asistencias' => $asistencias, 'date' => $fecha]);
     }
 
     public function nfcIndex(){
@@ -100,16 +100,17 @@ class AsistenciaController extends Controller
         //return json_encode($resumen);
     }
 
-    public function resumenUsuario($anacod){
-        $resumen = Asistencia::where('anacod', $anacod)->get();
+    public function resumenUsuario($anacod, $evento){
+        $resumen = Asistencia::resumenUsuario($anacod, $evento);
         return json_encode($resumen);
     }
 
     public function marcas(){
         $registros = Asistencia::marcas(Carbon::today());
+        $nfc = Asistencia::registrosNFC(Carbon::now()->format('Y-m-d'));
         //$registros = Asistencia::marcas( Carbon::parse('2024-06-01'));
         //return Inertia::render('Marcaciones', ['registros'=> $registros, 'fecha' => Carbon::parse('2024-06-01')]);
         //return json_encode($registros);
-        return Inertia::render('Marcaciones', ['registros'=> $registros, 'fecha' => Carbon::today()]);
+        return Inertia::render('Marcaciones', ['registros'=> $registros, 'nfc' => $nfc, 'fecha' => Carbon::today()]);
     }
 }
