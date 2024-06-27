@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Asistencia;
+use App\Models\Empleado;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -117,7 +118,8 @@ class AsistenciaController extends Controller
     public function estadisticas()
     {
         $data=Asistencia::nfcMes();
-        return Inertia::render('Estadisticas', ['data'=>$data]);        
+        $empleados = Empleado::where('anatip', 'U')->where('anasta', 'A')->where('anapai', 'SV')->get();
+        return Inertia::render('Estadisticas', ['data'=>$data, 'empleados'=>$empleados]);        
     }
 
 }

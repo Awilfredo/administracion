@@ -11,11 +11,12 @@ import {
     Tooltip,
 } from "recharts";
 
-function Estadisticas({ data, auth }) {
+function Estadisticas({ data, auth, empleados }) {
     const headers = ["Usuario", "Nombre", "Horas dentro de la empresa"];
     const keys = ["anacod", "nombre", "horas"];
     const [estadisticas, setEstadisticas] = useState([]);
     const [grafica, setgrafica] = useState([]);
+    const [graficaEmpleado, setGraficaEmpleado] = useState();
 
     const test = [
         { name: "Page A", uv: 400, pv: 400, amt: 2400 },
@@ -100,7 +101,6 @@ function Estadisticas({ data, auth }) {
         // Convertir timestamps a objetos Date
         const date1 = convertirTimestampADate(timestamp1);
         const date2 = convertirTimestampADate(timestamp2);
-
         // Comparar si son del mismo día
         return date1 == date2;
     }
@@ -109,8 +109,6 @@ function Estadisticas({ data, auth }) {
     function convertirTimestampADate(timestamp) {
         const partes = timestamp.split(" ");
         const fecha = partes[0];
-        console.log(fecha);
-
         return partes[0];
     }
 
@@ -142,38 +140,53 @@ function Estadisticas({ data, auth }) {
             datos.push({ anacod, nombre, horas: mostrarHoras(suma) });
         }
 
+        const data_empleados_grafica = { name: "" };
+        const array_empleados_grafica = [];
+
+        console.log(data_empleados_grafica);
         const year = 2024;
         const month = 5; // Meses en JavaScript van de 0 a 11 (junio es 5)
         const timestampsJunio2024 = obtenerTimestampsMes(year, month);
-        console.log(timestampsJunio2024);
         const datos_grafica = [];
         let dia_elemnto = { name: "", horas: 0 };
 
         timestampsJunio2024.forEach((e) => {
-            dia_elemnto.name = convertirTimestampADate(e);
+            data_empleados_grafica.name =
+                convertirTimestampADate(e).split("-")[2];
+            empleados.forEach((emp) => {
+                data_empleados_grafica[emp.anacod] = null;
+            });
 
-            let suma_horas = 0;
-            let suma_elementos = 0;
+            dia_elemnto.name = convertirTimestampADate(e);
+            let suma_horas = null;
+            let suma_elementos = null;
             data.forEach((element) => {
                 if (mismoDia(e, element.fecha)) {
+                    data_empleados_grafica[element.anacod] = (
+                        element.sum / 3600
+                    ).toFixed(2);
                     suma_horas += parseFloat(element.sum);
                     suma_elementos++;
                 }
             });
 
             if (suma_elementos > 0) {
-                dia_elemnto.horas = suma_horas / suma_elementos / 3600;
+                dia_elemnto.horas = (
+                    suma_horas /
+                    suma_elementos /
+                    3600
+                ).toFixed(2);
                 datos_grafica.push({
                     name: dia_elemnto.name,
                     horas: dia_elemnto.horas,
-                });
-            }
+                });}
+            
 
+            array_empleados_grafica.push({ ...data_empleados_grafica });
             console.log(datos_grafica);
         });
-
+        setGraficaEmpleado(array_empleados_grafica);
         setgrafica(datos_grafica);
-
         setEstadisticas(datos);
     }, []);
 
@@ -205,6 +218,34 @@ function Estadisticas({ data, auth }) {
         >
             <Head title="Estadisticas" />
 
+
+            <div className="flex justify-center flex-wrap">
+                <div className="mt-20 bg-white px-5 rounded-xl">
+                    <p className="text-center text-xl my-5">Resumen promedio de Junio</p>
+                    {grafica && (
+                        <LineChart
+                            width={1000}
+                            height={500}
+                            data={grafica}
+                            margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+                        >
+                            <Line
+                                type="monotone"
+                                dataKey="horas"
+                                stroke="red"
+                            />
+                            <CartesianGrid
+                                stroke="#ccc"
+                                strokeDasharray="5 5"
+                            />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                        </LineChart>
+                    )}
+                </div>
+
+                
             {estadisticas.length && (
                 <TablaGenerica
                     data={estadisticas}
@@ -213,22 +254,31 @@ function Estadisticas({ data, auth }) {
                 ></TablaGenerica>
             )}
 
-            <div className="mt-20"></div>
-
-            {grafica && (
-                <LineChart
+                <div className="mt-20 bg-white rounded-xl px-5">
+                <p className="text-center text-xl my-5">Resumen por empleado de Junio</p>
+                {grafica && (
+                    <LineChart
                     width={1000}
                     height={500}
-                    data={grafica}
+                    data={graficaEmpleado}
                     margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
-                >
-                    <Line type="monotone" dataKey="horas" stroke="red" />
-                    <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                </LineChart>
-            )}
+                    >
+                        <Line type="monotone" dataKey="TCASTILLO" stroke="red" />
+                        <Line
+                            type="monotone"
+                            dataKey="DBOLAINES"
+                            stroke="black"
+                        />
+                        <Line type="monotone" dataKey="AAYALA" stroke="blue" />
+
+                        <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
+                    </LineChart>
+                )}
+                </div>
+            </div>
         </AuthenticatedLayout>
     );
 }
