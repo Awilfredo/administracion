@@ -49,6 +49,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/horarios', [HorarioController::class, 'index'])->name('horario.index');
     Route::patch('/asistencia/actualizar/acciones', [AsistenciaController::class, 'accionesUpdate'])->name('acciones.update');
     Route::get('/empleados', [EmpleadoController::class, 'index'])->name('empleados.index');
+    Route::get('/estadisticas', [AsistenciaController::class, 'estadisticas'])->name('estadisticas.index');
 });
 
 require __DIR__ . '/auth.php';

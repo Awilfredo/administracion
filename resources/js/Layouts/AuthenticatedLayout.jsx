@@ -72,7 +72,7 @@ export default function Authenticated({ user, header, children }) {
 
                             <li>
                                 <Link
-                                    href={route('asistencia.eventos')}
+                                    href={route("asistencia.eventos")}
                                     className={
                                         route().current("asistencia.eventos")
                                             ? navSelectedClass
@@ -108,7 +108,9 @@ export default function Authenticated({ user, header, children }) {
                                         <Link
                                             href={route("asistencia.marcas")}
                                             className={
-                                                route().current("asistencia.marcas")
+                                                route().current(
+                                                    "asistencia.marcas"
+                                                )
                                                     ? navSelectedClass
                                                     : navDefaultClass
                                             }
@@ -166,7 +168,7 @@ export default function Authenticated({ user, header, children }) {
                                             }
                                         >
                                             <svg
-                                            className="group-hover:text-cyan-600"
+                                                className="group-hover:text-cyan-600"
                                                 xmlns="http://www.w3.org/2000/svg"
                                                 width="20"
                                                 height="20"
@@ -214,8 +216,12 @@ export default function Authenticated({ user, header, children }) {
                                     </li>
                                     <li>
                                         <Link
-                                            href="#"
-                                            className="px-4 py-3 flex items-center space-x-4 rounded-md text-gray-600 group"
+                                            href={route("estadisticas.index")}
+                                            className={
+                                                route().current("estadisticas.index")
+                                                    ? navSelectedClass
+                                                    : navDefaultClass
+                                            }
                                         >
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"
@@ -269,7 +275,7 @@ export default function Authenticated({ user, header, children }) {
 
                             <li>
                                 <Link
-                                href={route("empleados.index")}
+                                    href={route("empleados.index")}
                                     className={
                                         route().current("fence.users")
                                             ? navSelectedClass

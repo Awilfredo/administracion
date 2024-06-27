@@ -8,6 +8,11 @@ import { useEffect, useState } from "react";
 function RegistrosNFC({ registros, fecha, auth }) {
     const [registrosNFC, setRegistrosNFC] = useState([]);
 
+    const filters= [
+        {id:1, name: "Entrada", key: "evento", value: "ENTRADA", checked:false },
+        {id:2,name: "Salida", key: "evento", value: "SALIDA", checked:false },
+    ]
+
     useEffect(() => {
         const datos = [];
         let registro = {};
@@ -44,6 +49,7 @@ function RegistrosNFC({ registros, fecha, auth }) {
                     data={registrosNFC}
                     headers={headers}
                     keys={headers}
+                    filters={filters}
                 ></TablaGenerica>
             ) : (
                 ""

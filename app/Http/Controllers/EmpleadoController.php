@@ -10,7 +10,7 @@ class EmpleadoController extends Controller
 {
     public function index()
     {
-        $empleados = Empleado::all();
+        $empleados = Empleado::where('anatip', 'U')->get();
         return Inertia::render('Empleados', ['empleados'=> $empleados]);
     }
 }

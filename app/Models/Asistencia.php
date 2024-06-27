@@ -26,7 +26,8 @@ class Asistencia extends Model
 
         return $resumen;
     }
-    public static function resumenUsuario($anacod, $evento){
+    public static function resumenUsuario($anacod, $evento)
+    {
         $resumen = DB::connection('san')->select("SELECT anacod, ananam, fecha, evento FROM aplicaciones.pro_eventos_asistencia WHERE evento= '$evento' AND DATE(fecha) BETWEEN CURRENT_DATE - INTERVAL '30 days' AND CURRENT_DATE AND accion_personal IS null AND anacod = '$anacod' ORDER BY fecha ASC");
         return $resumen;
     }
@@ -40,7 +41,79 @@ class Asistencia extends Model
 
     public static function registrosNFC($fecha)
     {
-        $registros = DB::connection('san')->select("SELECT u.uid, anacod, mac,fecha_registro as hora, evento FROM aplicaciones.log_accesos_sitios a left join aplicaciones.pro_anatags u ON u.uid=a.uid where fecha_registro >= (DATE('$fecha') - INTERVAL '3 HOURS') AND fecha_registro <= (DATE('$fecha') + INTERVAL '1 day' + INTERVAL '3 hours')");
+        $registros = DB::connection('san')->select("SELECT u.uid, anacod, mac,fecha_registro as hora, evento FROM aplicaciones.log_accesos_sitios a left join aplicaciones.pro_anatags u ON u.uid=a.uid where fecha_registro >= (DATE('$fecha') - INTERVAL '3 HOURS') AND fecha_registro <= (DATE('$fecha') + INTERVAL '1 day' + INTERVAL '3 hours') AND u.anacod IS NOT NULL order by u.anacod");
+        return $registros;
+    }
+
+    public static function nfcMes()
+    {
+        /*
+        $registros = DB::connection('san')->select("SELECT u.uid, u.anacod, a.mac, a.fecha_registro AS hora, a.evento 
+FROM aplicaciones.log_accesos_sitios a 
+LEFT JOIN aplicaciones.pro_anatags u ON u.uid = a.uid 
+WHERE EXTRACT(YEAR FROM a.fecha_registro) = 2024 
+  AND EXTRACT(MONTH FROM a.fecha_registro) = 6
+  AND u.anacod in(SELECT anacod FROM aplicaciones.pro_anacod WHERE anasta = 'A' AND anatip='U')
+  ORDER BY u.anacod, hora ASC");
+
+$registros = DB::connection('san')->select("SELECT u.uid, u.anacod, a.mac, a.fecha_registro AS hora, a.evento 
+FROM aplicaciones.log_accesos_sitios a 
+LEFT JOIN aplicaciones.pro_anatags u ON u.uid = a.uid 
+WHERE EXTRACT(YEAR FROM a.fecha_registro) = 2024 
+  AND EXTRACT(MONTH FROM a.fecha_registro) = 6
+
+  AND u.anacod in('CAMEJIA')
+  ORDER BY u.anacod, hora ASC");
+*/
+  $registros = DB::connection('san')->select("WITH EventosOrdenados AS (
+    SELECT
+        u.uid,
+        u.anacod,
+        a.mac,
+        a.fecha_registro AS hora,
+        a.evento,
+        LAG(a.fecha_registro) OVER (PARTITION BY u.uid, u.anacod ORDER BY a.fecha_registro) AS hora_anterior,
+        LEAD(a.fecha_registro) OVER (PARTITION BY u.uid, u.anacod ORDER BY a.fecha_registro) AS hora_siguiente,
+        LAG(a.evento) OVER (PARTITION BY u.uid, u.anacod ORDER BY a.fecha_registro) AS evento_anterior,
+        LEAD(a.evento) OVER (PARTITION BY u.uid, u.anacod ORDER BY a.fecha_registro) AS evento_siguiente
+    FROM aplicaciones.log_accesos_sitios a 
+    LEFT JOIN aplicaciones.pro_anatags u ON u.uid = a.uid 
+    WHERE EXTRACT(YEAR FROM a.fecha_registro) = 2024 
+      AND EXTRACT(MONTH FROM a.fecha_registro) = 6
+     AND u.anacod IN (SELECT anacod FROM aplicaciones.pro_anacod WHERE anasta = 'A' AND anatip='U')
+),
+datos AS(
+SELECT uid, anacod,mac, hora,
+    evento,
+    EXTRACT(HOUR FROM hora) * 3600 +
+    EXTRACT(MINUTE FROM hora) * 60 +
+    EXTRACT(SECOND FROM hora) AS segundos, 
+  ROW_NUMBER() OVER (ORDER BY anacod, hora) AS row_num
+FROM EventosOrdenados
+WHERE (evento = 'ENTRADA' AND evento_siguiente = 'SALIDA' AND DATE(hora) = DATE(hora_siguiente)) 
+   OR (evento = 'SALIDA' AND evento_anterior = 'ENTRADA' AND DATE(hora)= DATE(hora_anterior))
+ORDER BY anacod, hora),
+paired_rows AS (
+SELECT
+        n1.anacod AS anacod,
+        n1.evento AS evento1,
+        n1.hora AS hora1,
+        n2.evento AS evento2,
+        n2.hora AS hora2,
+        n1.segundos AS segundos1,
+        n2.segundos AS segundos2
+    FROM datos n1
+    JOIN datos n2 ON n1.row_num = n2.row_num - 1
+),
+resultados AS(select anacod, hora1 AS hora_entrada, hora2 AS hora_salida,segundos1, segundos2, segundos2 - segundos1 AS segundos from paired_rows where evento1='ENTRADA'),
+anacod AS (SELECT * FROM aplicaciones.pro_anacod WHERE anasta='A' AND anatip='U')
+
+SELECT r.anacod, a.ananam as nombre, r.hora_entrada AS fecha, SUM(r.segundos) FROM resultados r
+INNER JOIN anacod a ON a.anacod = r.anacod
+GROUP BY fecha, r.anacod, a.ananam ORDER BY r.anacod, fecha
+");
+
+
         return $registros;
     }
 

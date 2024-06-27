@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Search from "./Search";
 
-function TablaGenerica({data, headers, keys}) {
+function TablaGenerica({data, headers, keys, filters=null}) {
     const [resultados, setResultados] = useState(data);
     const styles = {
         height: "650px",
@@ -11,16 +11,20 @@ function TablaGenerica({data, headers, keys}) {
         "border border-2 transition duration-300 ease-in-out hover:bg-gray-300";
     const stripedDark =
         "border border-2 transition duration-300 ease-in-out hover:bg-gray-300 bg-blue-1artisan serve00";
+    
+        const handleClick = (e) => {
+        };
+
+
 
     return (
         <div>
-            <div className="">
                 <Search
                     datos={data}
                     setResultados={setResultados}
                     keys={keys}
+                    filters={filters}
                 ></Search>
-            </div>
             <div className="flex justify-center w-full">
                 <div
                     className="overflow-x-auto mx-5 mt-2 rounded-xl w-full"
@@ -45,6 +49,7 @@ function TablaGenerica({data, headers, keys}) {
                         >
                             {resultados.map((element, index) => (
                                 <tr
+                                onClick={handleClick}
                                     key={index}
                                     className={
                                         index % 2 == 0

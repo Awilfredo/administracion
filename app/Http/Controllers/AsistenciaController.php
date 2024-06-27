@@ -113,4 +113,11 @@ class AsistenciaController extends Controller
         //return json_encode($registros);
         return Inertia::render('Marcaciones', ['registros'=> $registros, 'nfc' => $nfc, 'fecha' => Carbon::today()]);
     }
+
+    public function estadisticas()
+    {
+        $data=Asistencia::nfcMes();
+        return Inertia::render('Estadisticas', ['data'=>$data]);        
+    }
+
 }

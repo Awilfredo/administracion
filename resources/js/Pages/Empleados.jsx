@@ -6,8 +6,16 @@ import { Head } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 
 function Empleados({ empleados, auth }) {
-    const headers = ["Usuario", "Nombre" , "Correo", "Telefono"];
-    const keys = ["anacod", "ananam", 'anamai', 'anatel'];
+    const headers = ["Usuario", "Nombre", 'Estado', "Correo", "Telefono"];
+    const keys = ["anacod", "ananam", 'anasta', "anamai", "anatel"];
+
+    const filters = [
+        {id:1, name: "Usuarios Activoa", key: "anasta", value: "A", checked:true },
+        {id:2,name: "Usuarios Inactivos", key: "anasta", value: "I", checked:false },
+        {id:3, name:'SV', key:'anapai', value:'SV', checked:true},
+        {id:4, name:'GT', key:'anapai', value:'GT', checked:false},
+        {id:5, name:'Pais', key:'anapai', value:['SV', 'GT'], checked:false},
+    ];
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -18,7 +26,12 @@ function Empleados({ empleados, auth }) {
             }
         >
             <Head title="Marcaciones" />
-            <TablaGenerica data={empleados} headers={headers} keys={keys}></TablaGenerica>
+            <TablaGenerica
+                data={data}
+                headers={headers}
+                keys={keys}
+                filters={filters}
+            ></TablaGenerica>
         </AuthenticatedLayout>
     );
 }
