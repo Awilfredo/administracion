@@ -95,15 +95,38 @@ class AsistenciaController extends Controller
     }
 
     public function resumen(){
-        $llegadas_Tarde = Asistencia::tarde();
-        $ausencias = Asistencia::ausencia();
-        return Inertia::render('Resumen', ['llegadas_tarde' => $llegadas_Tarde, 'ausencias' =>$ausencias]);
+        if (isset($_GET['mes'])) {
+            $mes = $_GET['mes'];
+            $anio = $_GET['anio'];
+            $resumenEventos= Asistencia::resumenMes($anio, $mes);
+            return json_encode($resumenEventos);
+        }else{
+            $resumenEventos=Asistencia::resumenAsistenciaContador(date('m'));
+            $llegadas_Tarde = Asistencia::tarde();
+            $ausencias = Asistencia::ausencia();
+            return Inertia::render('Resumen', ['llegadas_tarde' => $llegadas_Tarde, 'ausencias' =>$ausencias, 'eventos'=>$resumenEventos]);
+        }
+
+        
         //return json_encode($resumen);
     }
 
+    public function resumenFecha($anio, $mes)
+    {
+        //return null;
+        $eventos = Asistencia::resumenMes($anio, $mes);
+        return json_encode($eventos);
+        //return json_encode(['anio' => $anio, 'mes'=>$mes]);
+    }
     public function resumenUsuario($anacod, $evento){
         $resumen = Asistencia::resumenUsuario($anacod, $evento);
         return json_encode($resumen);
+    }
+
+    public function EventrosResumenContador($month)
+    {
+        $eventosResumen = Asistencia::resumenAsistenciaContador($month);
+        return json_encode($eventosResumen);
     }
 
     public function marcas(){
@@ -120,6 +143,19 @@ class AsistenciaController extends Controller
         $data=Asistencia::nfcMes();
         $empleados = Empleado::where('anatip', 'U')->where('anasta', 'A')->where('anapai', 'SV')->get();
         return Inertia::render('Estadisticas', ['data'=>$data, 'empleados'=>$empleados]);        
+    }
+
+    public function marcasCompletasDia()
+    {
+        if (isset($_GET['fecha'])) {
+            $fecha = $_GET['fecha'];
+            $marcas = Asistencia::marcasCompletasDia($fecha);
+            return json_encode($marcas);
+        }else{
+            $fechaActual = Carbon::now()->format('Y-m-d');
+            $marcas = Asistencia::marcasCompletasDia($fechaActual);
+            return Inertia::render('Asistencia/MarcasDia', ['marcas' => $marcas]);
+        }
     }
 
 }

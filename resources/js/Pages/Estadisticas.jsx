@@ -2,6 +2,7 @@ import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import TablaGenerica from "@/Components/TablaGenerica";
 import { useEffect, useState } from "react";
+
 import {
     LineChart,
     Line,
@@ -10,108 +11,27 @@ import {
     YAxis,
     Tooltip,
 } from "recharts";
+import GraficaCircular from "@/Components/GraficaCircular";
+import { ManejoFechas } from "@/Helpers/ManejoFechas";
 
 function Estadisticas({ data, auth, empleados }) {
+    const fechas = ManejoFechas();
     const headers = ["Usuario", "Nombre", "Horas dentro de la empresa"];
     const keys = ["anacod", "nombre", "horas"];
     const [estadisticas, setEstadisticas] = useState([]);
     const [grafica, setgrafica] = useState([]);
     const [graficaEmpleado, setGraficaEmpleado] = useState();
-
+    const [circularG, setCircularG] = useState({ name: "AWCRUZ" });
+    const [mes, setmes] = useState(5);
+    const [anio, setanio] = useState(2024);
+    /*
     const test = [
         { name: "Page A", uv: 400, pv: 400, amt: 2400 },
         { name: "Page A", uv: 200, pv: 300, amt: 2400 },
         { name: "Page A", uv: 400, pv: 378, amt: 2400 },
         { name: "Page A", uv: 200, pv: 50, amt: 50 },
     ];
-
-    function obtenerTimestampsMes(year, month) {
-        // Crear un array para almacenar los timestamps formateados
-        let timestamps = [];
-
-        // Iterar sobre cada día del mes
-        for (let day = 1; day <= daysInMonth(year, month); day++) {
-            // Construir la fecha y hora en formato ISO 8601 para el día actual
-            const fechaHoraISO = `${year}-${formatTwoDigits(
-                month + 1
-            )}-${formatTwoDigits(day)}T00:00:00`;
-
-            // Crear un objeto Date a partir de la fecha y hora ISO
-            const fechaHoraObj = new Date(fechaHoraISO);
-
-            // Formatear la fecha y hora según el formato deseado
-            const fechaHoraFormateada = `${fechaHoraObj.getFullYear()}-${formatTwoDigits(
-                fechaHoraObj.getMonth() + 1
-            )}-${formatTwoDigits(fechaHoraObj.getDate())} ${formatTwoDigits(
-                fechaHoraObj.getHours()
-            )}:${formatTwoDigits(fechaHoraObj.getMinutes())}:${formatTwoDigits(
-                fechaHoraObj.getSeconds()
-            )}.${formatMilliseconds(
-                fechaHoraObj.getMilliseconds()
-            )}${getTimezoneOffset(fechaHoraObj)}`;
-
-            // Agregar la fecha y hora formateada al array
-            timestamps.push(fechaHoraFormateada);
-        }
-
-        // Devolver el array de timestamps formateados
-        return timestamps;
-    }
-
-    // Función auxiliar para obtener la cantidad de días en un mes específico
-    function daysInMonth(year, month) {
-        return new Date(year, month + 1, 0).getDate();
-    }
-
-    // Función auxiliar para formatear números de un solo dígito con cero inicial
-    function formatTwoDigits(num) {
-        return num.toString().padStart(2, "0");
-    }
-
-    // Función auxiliar para formatear los milisegundos en 6 dígitos
-    function formatMilliseconds(ms) {
-        return ms.toString().padStart(6, "0");
-    }
-
-    // Función auxiliar para obtener el offset de la zona horaria en formato "-ZZ"
-    function getTimezoneOffset(date) {
-        const offsetMinutes = date.getTimezoneOffset();
-        const offsetHours = Math.abs(Math.floor(offsetMinutes / 60));
-        const offsetMinutesAbs = Math.abs(offsetMinutes % 60);
-        const offsetSign = offsetMinutes >= 0 ? "-" : "+";
-
-        return `${offsetSign}${formatTwoDigits(offsetHours)}${formatTwoDigits(
-            offsetMinutesAbs
-        )}`;
-    }
-
-    // Función auxiliar para obtener la cantidad de días en un mes específico
-    function daysInMonth(year, month) {
-        return new Date(year, month + 1, 0).getDate();
-    }
-
-    // Función auxiliar para formatear números de un solo dígito con cero inicial
-    function formatTwoDigits(num) {
-        return num.toString().padStart(2, "0");
-    }
-
-    // Ejemplo de uso: obtener timestamps para junio de 2024
-
-    function mismoDia(timestamp1, timestamp2) {
-        // Convertir timestamps a objetos Date
-        const date1 = convertirTimestampADate(timestamp1);
-        const date2 = convertirTimestampADate(timestamp2);
-        // Comparar si son del mismo día
-        return date1 == date2;
-    }
-
-    // Función para convertir un timestamp en objeto Date
-    function convertirTimestampADate(timestamp) {
-        const partes = timestamp.split(" ");
-        const fecha = partes[0];
-        return partes[0];
-    }
-
+*/
     useEffect(() => {
         const datos = [];
         let anacod = "";
@@ -129,7 +49,7 @@ function Estadisticas({ data, auth, empleados }) {
                         datos.push({
                             anacod,
                             nombre,
-                            horas: mostrarHoras(suma),
+                            horas: fechas.obtenerHoras(suma),
                         });
                         anacod = element.anacod;
                         nombre = element.nombre;
@@ -137,36 +57,36 @@ function Estadisticas({ data, auth, empleados }) {
                     }
                 }
             });
-            datos.push({ anacod, nombre, horas: mostrarHoras(suma) });
+            datos.push({ anacod, nombre, horas: fechas.obtenerHoras(suma) });
         }
 
         const data_empleados_grafica = { name: "" };
         const array_empleados_grafica = [];
 
         console.log(data_empleados_grafica);
-        const year = 2024;
-        const month = 5; // Meses en JavaScript van de 0 a 11 (junio es 5)
-        const timestampsJunio2024 = obtenerTimestampsMes(year, month);
+        const timestampsJunio2024 = fechas.obtenerTimestampsMes(anio, mes);
         const datos_grafica = [];
         let dia_elemnto = { name: "", horas: 0 };
 
         timestampsJunio2024.forEach((e) => {
-            data_empleados_grafica.name =
-                convertirTimestampADate(e).split("-")[2];
+            data_empleados_grafica.name = fechas
+                .convertirTimestampADate(e)
+                .split("-")[2];
             empleados.forEach((emp) => {
                 data_empleados_grafica[emp.anacod] = null;
             });
 
-            dia_elemnto.name = convertirTimestampADate(e);
+            dia_elemnto.name = fechas.convertirTimestampADate(e);
             let suma_horas = null;
-            let suma_elementos = null;
-            data.forEach((element) => {
-                if (mismoDia(e, element.fecha)) {
+            let suma_elementos = 0;
+            data.map((element) => {
+                if (fechas.compararDias(e, element.fecha)) {
                     data_empleados_grafica[element.anacod] = (
                         element.sum / 3600
                     ).toFixed(2);
                     suma_horas += parseFloat(element.sum);
                     suma_elementos++;
+                    console.log(suma_elementos);
                 }
             });
 
@@ -179,8 +99,8 @@ function Estadisticas({ data, auth, empleados }) {
                 datos_grafica.push({
                     name: dia_elemnto.name,
                     horas: dia_elemnto.horas,
-                });}
-            
+                });
+            }
 
             array_empleados_grafica.push({ ...data_empleados_grafica });
             console.log(datos_grafica);
@@ -190,22 +110,8 @@ function Estadisticas({ data, auth, empleados }) {
         setEstadisticas(datos);
     }, []);
 
-    const mostrarHoras = (tiempo) => {
-        //recibe hora en segundos
-        let horas = Math.floor(tiempo / (60 * 60)); // Obtener solo las horas
-        let minutos = Math.floor((tiempo % (60 * 60)) / 60);
-        // Formatear los resultados para asegurar que tengan dos dígitos
-        if (horas < 10) {
-            horas = `0${horas}`;
-        }
-        if (minutos < 10) {
-            minutos = `0${minutos}`;
-        }
-        // Concatenar horas y minutos en formato hh:mm
-        const horaFormateada = `${horas}:${minutos}`;
-        console.log(horaFormateada);
-        return horaFormateada;
-    };
+    const diasLaborales = fechas.diasLaboralesEnMes(mes, anio);
+    console.log(diasLaborales);
 
     return (
         <AuthenticatedLayout
@@ -218,10 +124,11 @@ function Estadisticas({ data, auth, empleados }) {
         >
             <Head title="Estadisticas" />
 
-
             <div className="flex justify-center flex-wrap">
                 <div className="mt-20 bg-white px-5 rounded-xl">
-                    <p className="text-center text-xl my-5">Resumen promedio de Junio</p>
+                    <p className="text-center text-xl my-5">
+                        Resumen promedio de Junio
+                    </p>
                     {grafica && (
                         <LineChart
                             width={1000}
@@ -245,38 +152,53 @@ function Estadisticas({ data, auth, empleados }) {
                     )}
                 </div>
 
-                
-            {estadisticas.length && (
-                <TablaGenerica
-                    data={estadisticas}
-                    headers={headers}
-                    keys={keys}
-                ></TablaGenerica>
-            )}
-
-                <div className="mt-20 bg-white rounded-xl px-5">
-                <p className="text-center text-xl my-5">Resumen por empleado de Junio</p>
-                {grafica && (
-                    <LineChart
-                    width={1000}
-                    height={500}
-                    data={graficaEmpleado}
-                    margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
-                    >
-                        <Line type="monotone" dataKey="TCASTILLO" stroke="red" />
-                        <Line
-                            type="monotone"
-                            dataKey="DBOLAINES"
-                            stroke="black"
-                        />
-                        <Line type="monotone" dataKey="AAYALA" stroke="blue" />
-
-                        <CartesianGrid stroke="#ccc" strokeDasharray="5 5" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
-                        <Tooltip />
-                    </LineChart>
+                {estadisticas.length && (
+                    <TablaGenerica
+                        data={estadisticas}
+                        headers={headers}
+                        keys={keys}
+                    ></TablaGenerica>
                 )}
+
+                <div className="flex w-full justify-center">
+                    <GraficaCircular data={[]}></GraficaCircular>
+                </div>
+                <div className="mt-20 bg-white rounded-xl px-5">
+                    <p className="text-center text-xl my-5">
+                        Resumen por empleado de Junio
+                    </p>
+                    {grafica && (
+                        <LineChart
+                            width={1000}
+                            height={500}
+                            data={graficaEmpleado}
+                            margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+                        >
+                            <Line
+                                type="monotone"
+                                dataKey="AWCRUZ"
+                                stroke="red"
+                            />
+                            <Line
+                                type="monotone"
+                                dataKey="TCASTILLO"
+                                stroke="black"
+                            />
+                            <Line
+                                type="monotone"
+                                dataKey="EDLOPEZ"
+                                stroke="blue"
+                            />
+
+                            <CartesianGrid
+                                stroke="#ccc"
+                                strokeDasharray="5 5"
+                            />
+                            <XAxis dataKey="name" />
+                            <YAxis />
+                            <Tooltip />
+                        </LineChart>
+                    )}
                 </div>
             </div>
         </AuthenticatedLayout>

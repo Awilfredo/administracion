@@ -8,6 +8,7 @@ use App\Models\Asistencia;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -23,18 +24,24 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 
-Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
-});
 
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
+/*
+    Route::get('/', function () {
+        return Inertia::render('Welcome', [
+            'canLogin' => Route::has('login'),
+            'canRegister' => Route::has('register'),
+            'laravelVersion' => Application::VERSION,
+            'phpVersion' => PHP_VERSION,
+        ]);
+    });*/
+
+    Route::get('/', function () {
+        return Redirect::route('dashboard');
+    });
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -44,12 +51,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('asistencia/resumen', [AsistenciaController::class, 'resumen'])->name('resumen');
     Route::patch('/asistencia/update', [AsistenciaController::class, 'update'])->name('asistencia.update');
     Route::patch('/asistencia/delete', [AsistenciaController::class, 'deleteAccion'])->name('asistencia.delete');
-    Route::get('/asistencia/marcas', [AsistenciaController::class, 'marcas'])->name('asistencia.marcas');
+    Route::get('/asistencia/marcas', [AsistenciaController::class, 'marcasCompletasDia'])->name('asistencia.marcas');
+
+    //Route::get('/asistencia/marcasTest', [AsistenciaController::class, 'marcasCompletasDia'])->name('asistencia.marcasTest');
+
     Route::get('/asistencia/resumen/{anacod}/{evento}', [AsistenciaController::class, 'resumenUsuario'])->name('usuario.resumen');
     Route::get('/horarios', [HorarioController::class, 'index'])->name('horario.index');
     Route::patch('/asistencia/actualizar/acciones', [AsistenciaController::class, 'accionesUpdate'])->name('acciones.update');
     Route::get('/empleados', [EmpleadoController::class, 'index'])->name('empleados.index');
     Route::get('/estadisticas', [AsistenciaController::class, 'estadisticas'])->name('estadisticas.index');
+    Route::get('/empleados/nuevo', [EmpleadoController::class, 'create'])->name('empleados.create');
+    Route::post('/empleados/store', [EmpleadoController::class, 'store'])->name('empleados.store');
+    Route::get('asistencia/resumen/{anio}/{mes}', [AsistenciaController::class, 'resumenFecha'])->name('resumen.fecha');
 });
 
 require __DIR__ . '/auth.php';
