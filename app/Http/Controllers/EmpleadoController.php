@@ -27,7 +27,9 @@ class EmpleadoController extends Controller
     }
 
     public function store(Request $request)
-    {
+    {   
+    
+        // dump($request->all());
         $request->validate([
             'anacod' => 'required|string|max:255',
             'nombres' => 'required|string|max:255',
@@ -47,6 +49,7 @@ class EmpleadoController extends Controller
         ]);
 
         //Empleado::store($request);
-        return Redirect::route('empleados.index');
+        // return Redirect::route('empleados.index');
+        return json_encode($request->all());
     }
 }

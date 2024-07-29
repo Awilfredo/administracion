@@ -4,6 +4,7 @@ use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\HorarioController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TestController;
 use App\Models\Asistencia;
 
 use Illuminate\Foundation\Application;
@@ -19,24 +20,24 @@ Route::get('/asistencia', function(){
     return json_encode(Asistencia::all());
 */
 Route::get('/dashboard', function () {
-    
+
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 
 
-
+Route::get('/test', [TestController::class, 'ping'])->name("test.ping");
 
 Route::middleware(['auth', 'verified'])->group(function () {
-/*
-    Route::get('/', function () {
-        return Inertia::render('Welcome', [
-            'canLogin' => Route::has('login'),
-            'canRegister' => Route::has('register'),
-            'laravelVersion' => Application::VERSION,
-            'phpVersion' => PHP_VERSION,
-        ]);
-    });*/
+    /*
+        Route::get('/', function () {
+            return Inertia::render('Welcome', [
+                'canLogin' => Route::has('login'),
+                'canRegister' => Route::has('register'),
+                'laravelVersion' => Application::VERSION,
+                'phpVersion' => PHP_VERSION,
+            ]);
+        });*/
 
     Route::get('/', function () {
         return Redirect::route('dashboard');
@@ -64,5 +65,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/empleados/store', [EmpleadoController::class, 'store'])->name('empleados.store');
     Route::get('asistencia/resumen/{anio}/{mes}', [AsistenciaController::class, 'resumenFecha'])->name('resumen.fecha');
 });
+
+
 
 require __DIR__ . '/auth.php';

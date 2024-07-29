@@ -120,6 +120,25 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+
+        'redControl' => [
+            'driver' => 'mariadb',
+            'url' => env('DB_URL3'),
+            'host' => env('DB_HOST3', '172.17.2.68'),
+            'port' => env('DB_PORT3', '3306'),
+            'database' => env('DB_DATABASE3', 'Agenda'),
+            'username' => env('DB_USERNAME3', 'root'),
+            'password' => env('DB_PASSWORD3', 'Intelfon$$'),            
+            'charset' => env('DB_CHARSET3', 'utf8'),            
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
     ],
 
     /*
