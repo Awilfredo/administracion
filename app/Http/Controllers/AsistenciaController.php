@@ -18,15 +18,17 @@ class AsistenciaController extends Controller
         $asistencias = Asistencia::whereDate("fecha", Date::today())->orderBy('id')->get();
         return Inertia::render('Eventos', ['asistencias' => $asistencias]);
 
-       // return json_encode($asistencias);
+        // return json_encode($asistencias);
     }
 
-    public function fecha($fecha){
-        $asistencias = Asistencia::whereDate("fecha",$fecha)->orderBy('id')->get();
+    public function fecha($fecha)
+    {
+        $asistencias = Asistencia::whereDate("fecha", $fecha)->orderBy('id')->get();
         return Inertia::render('Eventos', ['asistencias' => $asistencias, 'date' => $fecha]);
     }
 
-    public function nfcIndex(){
+    public function nfcIndex()
+    {
         $registros = Asistencia::registrosNFC(Carbon::now()->format('Y-m-d'));
         return Inertia::render('RegistrosNFC', ['registros' => $registros, 'fecha' => Carbon::now()->format('Y-m-d')]);
     }
@@ -53,25 +55,23 @@ class AsistenciaController extends Controller
      */
     public function accionesUpdate(Request $request)
     {
-            // Validación de los datos del request
-    $request->validate([
-        'accion_personal' => 'required|string', // Asegura que 'accion' esté presente y sea una cadena de texto
-        'users_id' => 'required|array',     // Asegura que 'ids' esté presente y sea un array
-        'users_id.*' => 'integer',          // Asegura que cada elemento del array 'ids' sea un entero
-    ]);
+        // Validación de los datos del request
+        $request->validate([
+            'accion_personal' => 'required|string', // Asegura que 'accion' esté presente y sea una cadena de texto
+            'users_id' => 'required|array',     // Asegura que 'ids' esté presente y sea un array
+            'users_id.*' => 'integer',          // Asegura que cada elemento del array 'ids' sea un entero
+        ]);
 
         // Recuperar los IDs de la solicitud
         $users_id = $request->input('users_id');
 
         // Recuperar el nuevo valor de "accion"
         $nuevaAccion = $request->input('accion_personal');
-    
+
         // Actualizar los registros
         Asistencia::whereIn('id', $users_id)->update(['accion_personal' => $nuevaAccion]);
 
         return Redirect::route('dashboard');
-
-
     }
 
     /**
@@ -81,7 +81,6 @@ class AsistenciaController extends Controller
     {
         $asistencia = Asistencia::find($request->id);
         $asistencia->update($request->all());
-
     }
 
     /**
@@ -94,20 +93,21 @@ class AsistenciaController extends Controller
         $asistencia->save();
     }
 
-    public function resumen(){
+    public function resumen()
+    {
         if (isset($_GET['mes'])) {
             $mes = $_GET['mes'];
             $anio = $_GET['anio'];
-            $resumenEventos= Asistencia::resumenMes($anio, $mes);
+            $resumenEventos = Asistencia::resumenMes($anio, $mes);
             return json_encode($resumenEventos);
-        }else{
-            $resumenEventos=Asistencia::resumenAsistenciaContador(date('m'));
+        } else {
+            $resumenEventos = Asistencia::resumenAsistenciaContador(date('m'));
             $llegadas_Tarde = Asistencia::tarde();
             $ausencias = Asistencia::ausencia();
-            return Inertia::render('Resumen', ['llegadas_tarde' => $llegadas_Tarde, 'ausencias' =>$ausencias, 'eventos'=>$resumenEventos]);
+            return Inertia::render('Resumen', ['llegadas_tarde' => $llegadas_Tarde, 'ausencias' => $ausencias, 'eventos' => $resumenEventos]);
         }
 
-        
+
         //return json_encode($resumen);
     }
 
@@ -118,7 +118,8 @@ class AsistenciaController extends Controller
         return json_encode($eventos);
         //return json_encode(['anio' => $anio, 'mes'=>$mes]);
     }
-    public function resumenUsuario($anacod, $evento){
+    public function resumenUsuario($anacod, $evento)
+    {
         $resumen = Asistencia::resumenUsuario($anacod, $evento);
         return json_encode($resumen);
     }
@@ -129,33 +130,40 @@ class AsistenciaController extends Controller
         return json_encode($eventosResumen);
     }
 
-    public function marcas(){
+    public function marcas()
+    {
         $registros = Asistencia::marcas(Carbon::today());
         $nfc = Asistencia::registrosNFC(Carbon::now()->format('Y-m-d'));
         //$registros = Asistencia::marcas( Carbon::parse('2024-06-01'));
         //return Inertia::render('Marcaciones', ['registros'=> $registros, 'fecha' => Carbon::parse('2024-06-01')]);
         //return json_encode($registros);
-        return Inertia::render('Marcaciones', ['registros'=> $registros, 'nfc' => $nfc, 'fecha' => Carbon::today()]);
+        return Inertia::render('Marcaciones', ['registros' => $registros, 'nfc' => $nfc, 'fecha' => Carbon::today()]);
     }
 
     public function estadisticas()
     {
-        $data=Asistencia::nfcMes();
+        $data = Asistencia::nfcMes();
         $empleados = Empleado::where('anatip', 'U')->where('anasta', 'A')->where('anapai', 'SV')->get();
-        return Inertia::render('Estadisticas', ['data'=>$data, 'empleados'=>$empleados]);        
+        return Inertia::render('Estadisticas', ['data' => $data, 'empleados' => $empleados]);
     }
 
     public function marcasCompletasDia()
     {
         if (isset($_GET['fecha'])) {
-            $fecha = $_GET['fecha'];
-            $marcas = Asistencia::marcasCompletasDia($fecha);
-            return json_encode($marcas);
-        }else{
+            if (isset($_GET['busqueda']) && $_GET['busqueda'] == 'mes') {
+                $fecha = $_GET['fecha'];
+                $marcas = Asistencia::marcasCompletasMes($fecha);
+                return json_encode($marcas);
+            } else {
+
+                $fecha = $_GET['fecha'];
+                $marcas = Asistencia::marcasCompletasDia($fecha);
+                return json_encode($marcas);
+            }
+        } else {
             $fechaActual = Carbon::now()->format('Y-m-d');
             $marcas = Asistencia::marcasCompletasDia($fechaActual);
             return Inertia::render('Asistencia/MarcasDia', ['marcas' => $marcas]);
         }
     }
-
 }

@@ -73,7 +73,18 @@ function Resumen({ auth, ausencias, llegadas_tarde, eventos }) {
 
     const conditionalRowStyles = [
         {
-            when: (row) => row.veces_tarde > 1,
+            when: (row) => row.veces_tarde > 2 ||  row.veces_ausente > 2,
+            style: {
+                backgroundColor: "#d19191",
+                color: "white",
+                "&:hover": {
+                    cursor: "pointer",
+                },
+            },
+        },
+
+        {
+            when: (row) => row.veces_tarde > 3 || row.veces_ausente > 3,
             style: {
                 backgroundColor: "red",
                 color: "white",
@@ -82,6 +93,8 @@ function Resumen({ auth, ausencias, llegadas_tarde, eventos }) {
                 },
             },
         },
+
+
     ];
 
 

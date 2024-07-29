@@ -1,4 +1,5 @@
 import BuscarFecha from "@/Components/BuscarFecha";
+import BuscarMes from "@/Components/BuscarMes";
 import Search from "@/Components/Search";
 import { ExportCSV } from "@/Helpers/ExportCSV";
 import { ManejoFechas } from "@/Helpers/ManejoFechas";
@@ -10,21 +11,27 @@ function Marcaciones({ auth, marcas }) {
     const keys = ["anacod", "ananam"];
     const [marcas_completas, setMarcas_completas] = useState(marcas);
     const [resultados, setResultados] = useState(marcas);
-    const { obtenerHoraDesdeFecha, fechaActual } = ManejoFechas();
+    const { obtenerHoraDesdeFecha, fechaActual, mesActual, anioActual } = ManejoFechas();
     const { downloadCSV, Export } = ExportCSV();
     const [fecha, setFecha] = useState(fechaActual);
     const [fechaVista, setFechaVista] = useState(fechaActual);
     const [loading, setloading] = useState(false);
+    const [mes, setMes] = useState(mesActual);
+    const [busqueda, setBusqueda] = useState("dia");
+    const [anio, setAnio] = useState(anioActual);
+
     const columns = [
         {
             name: "Usuario",
             selector: (row) => row.anacod,
             sortable: true,
+
         },
         {
             name: "Nombre",
             selector: (row) => row.ananam || "Sin marca",
             sortable: true,
+            grow:3
         },
         {
             name: "Fecha",
@@ -68,7 +75,7 @@ function Marcaciones({ auth, marcas }) {
         },
     ];
 
-    const handleSearch = () => {
+    const handleSearchDia = () => {
         fetch(`/asistencia/marcas?fecha=${fecha}`)
             .then((res) => {
                 setloading(true);
@@ -84,6 +91,24 @@ function Marcaciones({ auth, marcas }) {
                 setFechaVista(fecha);
             });
     };
+
+    const handleSearchMes = (e) =>{
+        e.preventDefault();
+        fetch(`/asistencia/marcas?fecha=${anio}-${mes}-01&busqueda=mes`)
+            .then((res) => {
+                setloading(true);
+                return res.json();
+            })
+            .then((response) => {
+                console.log(response);
+                setMarcas_completas(response);
+                setResultados(response);
+            })
+            .finally((e) => {
+                setloading(false);
+                setFechaVista(` del mes de ${mes} del ${anio}`);
+            });
+    }
 
     const descargar = useMemo(
         () => (
@@ -124,12 +149,44 @@ function Marcaciones({ auth, marcas }) {
             <Head title="Marcaciones" />
 
             <div className="m-10">
-                <BuscarFecha
-                    max={fechaActual()}
-                    value={fecha}
-                    onChange={(e) => setFecha(e.target.value)}
-                    onClick={handleSearch}
-                ></BuscarFecha>
+                <div className="flex items-center mb-5">
+                    <p className="text-gray-800">Buscar por :</p>
+                    <div className="mx-5">
+                        <label htmlFor="mes">Mes</label>
+                        <input
+                            type="radio"
+                            name="busqueda"
+                            id="mes"
+                            className="mx-2"
+                            checked={busqueda === 'mes'}
+                            value="mes"
+                            onChange={(e) => setBusqueda(e.target.value)}
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="dia">Dia</label>
+                        <input
+                            type="radio"
+                            name="busqueda"
+                            id="dia"
+                            value="dia"
+                            className="mx-2"
+                            checked={busqueda==='dia'}
+                            onChange={(e) => setBusqueda(e.target.value)}
+                        />
+                    </div>
+                </div>
+
+                {busqueda == "dia" ? (
+                    <BuscarFecha
+                        max={fechaActual()}
+                        value={fecha}
+                        onChange={(e) => setFecha(e.target.value)}
+                        onClick={handleSearchDia}
+                    ></BuscarFecha>
+                ) : (
+                    <BuscarMes mes={mes} setMes={setMes} handleSubmit={handleSearchMes} anio={anio} setAnio={setAnio}></BuscarMes>
+                )}
                 <Search
                     datos={marcas_completas}
                     setResultados={setResultados}
