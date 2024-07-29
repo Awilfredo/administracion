@@ -3,11 +3,12 @@ import { Head, useForm } from "@inertiajs/react";
 import TextInput from "./Partials/TextInput";
 import Select from "./Partials/Select";
 import { ManejoFechas } from "@/Helpers/ManejoFechas";
-function Create({ auth, jefes, areas, posiciones, horarios, errors}) {
+function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors}) {
     const { fechaActual } = ManejoFechas();
     const { data, setData, post, processing } = useForm({
         anacod: "",
-        ananam: "",
+        nombres:"",
+        apellidos:"",
         anamai: "",
         anapas: "",
         fecha_nacimiento: "",
@@ -65,13 +66,26 @@ function Create({ auth, jefes, areas, posiciones, horarios, errors}) {
                                     }
                                 ></TextInput>
                                 <TextInput
-                                    label="Nombre completo"
-                                    placeholder="Juan Carlos Perez Sosa"
+                                    label="Nombres"
+                                    placeholder="Juan Carlos"
                                     value={data.ananam}
                                     className={errors.ananam && 'border-red-500'}
                                     onChange={(e) =>
                                         setData(
-                                            "ananam",
+                                            "nombres",
+                                            e.target.value.toUpperCase()
+                                        )
+                                    }
+                                ></TextInput>
+
+                                <TextInput
+                                    label="Apellidos"
+                                    placeholder="Perez Sosa"
+                                    value={data.ananam}
+                                    className={errors.ananam && 'border-red-500'}
+                                    onChange={(e) =>
+                                        setData(
+                                            "apellidos",
                                             e.target.value.toUpperCase()
                                         )
                                     }

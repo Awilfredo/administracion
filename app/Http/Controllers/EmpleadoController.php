@@ -18,18 +18,20 @@ class EmpleadoController extends Controller
 
     public function create()
     {
+        $anacods = Empleado::pluck('anacod');
         $horarios = Horario::all();
         $jefes = Empleado::jefes();
         $areas =Empleado::areas();
         $posiciones = Empleado::posiciones();
-        return Inertia::render('Empleado/Create', ['jefes' => $jefes, 'areas' => $areas, 'posiciones' => $posiciones, 'horarios' => $horarios]);
+        return Inertia::render('Empleado/Create', ['anacods'=>$anacods, 'jefes' => $jefes, 'areas' => $areas, 'posiciones' => $posiciones, 'horarios' => $horarios]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'anacod' => 'required|string|max:255',
-            'ananam' => 'required|string|max:255',
+            'nombres' => 'required|string|max:255',
+            'apellidos' => 'required|string|max:255',
             'anamai' => 'required|string|max:255',
             'anapas' => 'required|string|max:255',
             'fecha_nacimiento' => 'required|string|max:255',
@@ -44,7 +46,7 @@ class EmpleadoController extends Controller
             'horario_id' => 'required|string|max:255',
         ]);
 
-        Empleado::store($request);
+        //Empleado::store($request);
         return Redirect::route('empleados.index');
     }
 }
