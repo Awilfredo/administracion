@@ -4,7 +4,7 @@ function BuscarMes({ onClick, mes, setMes, setAnio, anio }) {
     const {mesActual, meses} = ManejoFechas();
     return (
         <div>
-            <select onChange={(e) => setAnio(e.target.value)}>
+            <select onChange={(e) => setAnio(e.target.value)} value={anio}>
                 <option value="2024" selected={anio==='2024'}>2024</option>
                 <option value="2025" selected={anio==='2025'}>2025</option>
                 <option value="2026" selected={anio==='2026'}>2026</option>

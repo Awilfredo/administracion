@@ -57,66 +57,28 @@ class EmpleadoController extends Controller
         // Obtener todos los archivos del request
         $files = $request->allFiles();
 
-        // foreach ($files as $key => $fileArray) {
-        //     // Si $fileArray es un array de archivos
-        //     if (is_array($fileArray)) {
-        //         foreach ($fileArray as $file) {
-        //             // Asegúrate de que $file es una instancia de UploadedFile
-        //             if ($file instanceof \Illuminate\Http\UploadedFile) {
+         foreach ($files as $key => $fileArray) {
+             // Si $fileArray es un array de archivos
+             if (is_array($fileArray)) {
+                 foreach ($fileArray as $file) {
+                     // Asegúrate de que $file es una instancia de UploadedFile
+                     if ($file instanceof \Illuminate\Http\UploadedFile) {
 
-        //                 \Log::info('File properties: ' . print_r($file, true));
+                         \Log::info('File properties: ' . print_r($file, true));
 
-        //                 // Obtener el campo 'document' asociado a este archivo
-        //                 $document = $request->input("files.{$key}.document");
+                         // Obtener el campo 'document' asociado a este archivo
+                         $document = $request->input("files.{$key}.document");
 
-        //                 \Log::info('Nombre del archivo: ' . $file->getClientOriginalName());
-        //                 // \Log::info('Tipo de archivo: ' . $file->getMimeType());
-        //                 // \Log::info('Tamaño del archivo: ' . $file->getSize());
-        //                 // \Log::info('Documento: ' . $document); // Log el valor de document                        
-        //             }
-        //         }
-        //     }
-        // }
+                         \Log::info('Nombre del archivo: ' . $file->getClientOriginalName());
+                         // \Log::info('Tipo de archivo: ' . $file->getMimeType());
+                         // \Log::info('Tamaño del archivo: ' . $file->getSize());
+                         // \Log::info('Documento: ' . $document); // Log el valor de document                        
+                     }
+                 }
+             }
+         }
 
-        foreach ($files as $key => $fileArray) {
-            if (is_array($fileArray)) {
-                foreach ($fileArray as $file) {
-                    // Asegúrate de que $file es una instancia de UploadedFile
-                    if ($file instanceof \Illuminate\Http\UploadedFile) {
-                        // Obtener el campo 'document' asociado a este archivo
-                        $document = $request->input("files.$key");
-    
-                        // Construir un array con todas las propiedades del archivo
-                        $fileProperties = [
-                            'original_name' => $file->getClientOriginalName(),
-                            'mime_type' => $file->getMimeType(),
-                            'size' => $file->getSize(),
-                            'document' => $key,
-                            'path' => $file->getPathname()
-                        ];
-    
-                        // Registrar las propiedades del archivo en el log
-                        \Log::info('File properties: ' . print_r($fileProperties, true));
-    
-                        // Puedes procesar los archivos aquí según tus necesidades
-                    }
-                }
-            } else {
-                if ($fileArray instanceof \Illuminate\Http\UploadedFile) {
-                    $document = $request->input("files.$key.document");
-    
-                    $fileProperties = [
-                        'original_name' => $fileArray->getClientOriginalName(),
-                        'mime_type' => $fileArray->getMimeType(),
-                        'size' => $fileArray->getSize(),
-                        'document' => $document,
-                        'path' => $fileArray->getPathname()
-                    ];
-    
-                    \Log::info('File properties: ' . print_r($fileProperties, true));
-                }
-            }
-        }
+        
 
         // Empleado::store($request);
         // return Redirect::route('empleados.index');

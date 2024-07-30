@@ -115,7 +115,9 @@ export const ManejoFechas = () => {
         return ms.toString().padStart(6, "0");
     }
 
-    function obtenerTimestampsMes(year, month) {
+    function obtenerTimestampsMes(anio, mes) {
+        let year = parseInt(anio);
+        let month= parseInt(mes)-1;
         //recibe el año y el mes y retorna un array con las fechas de los dias en formato timestamp
 
         // Crear un array para almacenar los timestamps formateados
@@ -186,6 +188,23 @@ export const ManejoFechas = () => {
         { name: "Diciembre", value: 12 },
     ];
 
+    function convertirHorasAFloat(time) {
+        // Separar minutos y segundos usando ':' como delimitador
+        const [horas, minutos] = time.split(':').map(Number);
+        
+        // Convertir minutos a horas
+        const hoursFromMinutes = minutos / 60;
+        
+        // Convertir segundos a horas
+
+        
+        // Sumar las horas obtenidas
+        const totalHours = horas + hoursFromMinutes;
+        
+        return parseFloat(totalHours.toFixed(2));
+    }
+    
+
     return {
         compararDias,
         convertirTimestampADate,
@@ -202,5 +221,6 @@ export const ManejoFechas = () => {
         anioActual,
         obtenerHoraDesdeTimestamp,
         obtenerHoraDesdeFecha,
+        convertirHorasAFloat
     };
 };

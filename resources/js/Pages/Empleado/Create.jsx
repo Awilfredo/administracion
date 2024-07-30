@@ -50,7 +50,25 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
     const { generatePassword, makeAnacod } = CrearEmpleado();
 
     const fileTypes = ["JPG", "PNG", "GIF", "JPEG"];
+
     const handleChangeFile = (file, document) => {
+        const customFile={document, file}
+        console.log(customFile);
+        if (data.files.length) {
+            let archivos = [...data.files];
+            let filtrados = archivos.filter(obj => obj.document != document);
+            filtrados.push(customFile);
+            setData('files', filtrados);
+        }else{
+            setData('files', [customFile])
+        }
+
+        console.log(data.files);
+    }
+
+
+    /*const handleChangeFile = (file, document) => {
+
 
         file.document = document;
         console.log(file);
@@ -67,7 +85,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         } else {
             setData({ ...data, files: [...data.files, file] });
         }
-    };
+    };*/
 
     useEffect(() => {
         console.log(data.files);

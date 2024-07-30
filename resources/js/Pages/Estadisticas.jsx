@@ -1,6 +1,5 @@
 import { Head } from "@inertiajs/react";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import TablaGenerica from "@/Components/TablaGenerica";
 import { useEffect, useState } from "react";
 
 import {
@@ -13,26 +12,33 @@ import {
 } from "recharts";
 import GraficaCircular from "@/Components/GraficaCircular";
 import { ManejoFechas } from "@/Helpers/ManejoFechas";
+import DataTable from "react-data-table-component";
+import Search from "@/Components/Search";
+import BuscarMes from "@/Components/BuscarMes";
 
-function Estadisticas({ data, auth, empleados }) {
-    const fechas = ManejoFechas();
+function Estadisticas({ datos, auth, empleados }) {
+    const [data, setData] = useState(datos);
     const headers = ["Usuario", "Nombre", "Horas dentro de la empresa"];
     const keys = ["anacod", "nombre", "horas"];
     const [estadisticas, setEstadisticas] = useState([]);
     const [grafica, setgrafica] = useState([]);
     const [graficaEmpleado, setGraficaEmpleado] = useState();
     const [circularG, setCircularG] = useState({ name: "AWCRUZ" });
-    const [mes, setmes] = useState(5);
-    const [anio, setanio] = useState(2024);
-    /*
-    const test = [
-        { name: "Page A", uv: 400, pv: 400, amt: 2400 },
-        { name: "Page A", uv: 200, pv: 300, amt: 2400 },
-        { name: "Page A", uv: 400, pv: 378, amt: 2400 },
-        { name: "Page A", uv: 200, pv: 50, amt: 50 },
-    ];
-*/
+    const [resultados, setResultados] = useState([]);
+    const { obtenerHoras ,anioActual, mesActual, meses, convertirTimestampADate, obtenerTimestampsMes, diasLaboralesEnMes, compararDias, convertirHorasAFloat} = ManejoFechas();
+    const [mes, setmes] = useState(mesActual());
+    const [anio, setanio] = useState(anioActual());
+    const [horasLaborales, setHorasLaborales] = useState(0);
+    const [showDated, setShowDated] = useState("");
+
     useEffect(() => {
+        setHorasLaborales(diasLaboralesEnMes(mes,anio).horasLaborales);
+        console.log(diasLaboralesEnMes(mes,anio).horasLaborales);
+        meses.map(element=>{
+            if(element.value == mes){
+                setShowDated(`${element.name} del ${anio}`)
+            }
+        })
         const datos = [];
         let anacod = "";
         let nombre = "";
@@ -49,7 +55,7 @@ function Estadisticas({ data, auth, empleados }) {
                         datos.push({
                             anacod,
                             nombre,
-                            horas: fechas.obtenerHoras(suma),
+                            horas: obtenerHoras(suma),
                         });
                         anacod = element.anacod;
                         nombre = element.nombre;
@@ -57,36 +63,34 @@ function Estadisticas({ data, auth, empleados }) {
                     }
                 }
             });
-            datos.push({ anacod, nombre, horas: fechas.obtenerHoras(suma) });
+            datos.push({ anacod, nombre, horas: obtenerHoras(suma) });
         }
 
         const data_empleados_grafica = { name: "" };
         const array_empleados_grafica = [];
 
         console.log(data_empleados_grafica);
-        const timestampsJunio2024 = fechas.obtenerTimestampsMes(anio, mes);
+        const timestampsJunio2024 = obtenerTimestampsMes(anio, mes);
         const datos_grafica = [];
         let dia_elemnto = { name: "", horas: 0 };
 
         timestampsJunio2024.forEach((e) => {
-            data_empleados_grafica.name = fechas
-                .convertirTimestampADate(e)
+            data_empleados_grafica.name = convertirTimestampADate(e)
                 .split("-")[2];
             empleados.forEach((emp) => {
                 data_empleados_grafica[emp.anacod] = null;
             });
 
-            dia_elemnto.name = fechas.convertirTimestampADate(e);
+            dia_elemnto.name = convertirTimestampADate(e);
             let suma_horas = null;
             let suma_elementos = 0;
             data.map((element) => {
-                if (fechas.compararDias(e, element.fecha)) {
+                if (compararDias(e, element.fecha)) {
                     data_empleados_grafica[element.anacod] = (
                         element.sum / 3600
                     ).toFixed(2);
                     suma_horas += parseFloat(element.sum);
                     suma_elementos++;
-                    console.log(suma_elementos);
                 }
             });
 
@@ -108,10 +112,33 @@ function Estadisticas({ data, auth, empleados }) {
         setGraficaEmpleado(array_empleados_grafica);
         setgrafica(datos_grafica);
         setEstadisticas(datos);
-    }, []);
+        setResultados(datos);
+    }, [data]);
 
-    const diasLaborales = fechas.diasLaboralesEnMes(mes, anio);
+    const handleSearchMonth = (e) => {
+         console.log(mes, anio)
+         fetch(`/estadisticas?mes=${mes}&anio=${anio}`).then((res)=>res.json()).then((response)=>setData(response));
+    };
+
+    const diasLaborales = diasLaboralesEnMes(mes, anio);
     console.log(diasLaborales);
+    const columns = [
+        {
+            name: "Usuario",
+            selector: (row) => row.anacod,
+            sortable: true,
+        },
+        {
+            name: "Nombre",
+            selector: (row) => row.nombre,
+            sortable: true,
+        },
+        {
+            name: "Horas",
+            selector: (row) => row.horas,
+            sortable: true,
+        },
+    ];
 
     return (
         <AuthenticatedLayout
@@ -125,10 +152,14 @@ function Estadisticas({ data, auth, empleados }) {
             <Head title="Estadisticas" />
 
             <div className="flex justify-center flex-wrap">
+                <div className="w-full mx-10 mt-5">
+                    <BuscarMes anio={anio} mes={mes} setAnio={setanio} setMes={setmes} onClick={handleSearchMonth}></BuscarMes>
+                </div>
                 <div className="mt-20 bg-white px-5 rounded-xl">
                     <p className="text-center text-xl my-5">
-                        Resumen promedio de Junio
+                        Resumen promedio del mes de {showDated}
                     </p>
+
                     {grafica && (
                         <LineChart
                             width={1000}
@@ -153,21 +184,33 @@ function Estadisticas({ data, auth, empleados }) {
                 </div>
 
                 {estadisticas.length && (
-                    <TablaGenerica
-                        data={estadisticas}
-                        headers={headers}
-                        keys={keys}
-                    ></TablaGenerica>
+                    <div className="sm:w-full lg:w-4/5 mt-10">
+                        <Search
+                            placeholder="Buscar empleado"
+                            datos={estadisticas}
+                            setResultados={setResultados}
+                            keys={keys}
+                        ></Search>
+                        <DataTable
+                            title={`Horas dentro de la empresa por empleado - ${showDated}`}
+                            data={resultados}
+                            columns={columns}
+                            fixedHeader
+                        ></DataTable>
+                    </div>
                 )}
 
                 <div className="flex w-full justify-center">
-                    <GraficaCircular data={[]}></GraficaCircular>
+                    { resultados.length &&
+
+                        <GraficaCircular data={[{name:resultados[0].anacod, value:convertirHorasAFloat(resultados[0].horas)},{name:'Horas restantes', value: parseFloat((horasLaborales- convertirHorasAFloat(resultados[0].horas)).toFixed(2)) }]}></GraficaCircular>
+                    }
                 </div>
+                    {(grafica && resultados.length) && (
                 <div className="mt-20 bg-white rounded-xl px-5">
                     <p className="text-center text-xl my-5">
-                        Resumen por empleado de Junio
+                    {resultados[0].anacod} - Resumen  de {showDated} 
                     </p>
-                    {grafica && (
                         <LineChart
                             width={1000}
                             height={500}
@@ -176,18 +219,8 @@ function Estadisticas({ data, auth, empleados }) {
                         >
                             <Line
                                 type="monotone"
-                                dataKey="AWCRUZ"
+                                dataKey={resultados[0].anacod}
                                 stroke="red"
-                            />
-                            <Line
-                                type="monotone"
-                                dataKey="TCASTILLO"
-                                stroke="black"
-                            />
-                            <Line
-                                type="monotone"
-                                dataKey="EDLOPEZ"
-                                stroke="blue"
                             />
 
                             <CartesianGrid
@@ -198,8 +231,8 @@ function Estadisticas({ data, auth, empleados }) {
                             <YAxis />
                             <Tooltip />
                         </LineChart>
-                    )}
                 </div>
+                    )}
             </div>
         </AuthenticatedLayout>
     );

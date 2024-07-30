@@ -94,7 +94,6 @@ function Marcaciones({ auth, marcas }) {
     };
 
     const handleSearchMes = (e) =>{
-        e.preventDefault();
         fetch(`/asistencia/marcas?fecha=${anio}-${mes}-01&busqueda=mes`)
             .then((res) => {
                 setloading(true);
@@ -150,7 +149,7 @@ function Marcaciones({ auth, marcas }) {
             <Head title="Marcaciones" />
 
             <div className="m-10">
-                <SeleccionarMesODia busqueda setBusqueda></SeleccionarMesODia>
+                <SeleccionarMesODia busqueda={busqueda} setBusqueda={setBusqueda}></SeleccionarMesODia>
                 {busqueda == "dia" ? (
                     <BuscarFecha
                         max={fechaActual()}
@@ -159,7 +158,7 @@ function Marcaciones({ auth, marcas }) {
                         onClick={handleSearchDia}
                     ></BuscarFecha>
                 ) : (
-                    <BuscarMes mes={mes} setMes={setMes} handleSubmit={handleSearchMes} anio={anio} setAnio={setAnio}></BuscarMes>
+                    <BuscarMes mes={mes} setMes={setMes} onClick={handleSearchMes} anio={anio} setAnio={setAnio}></BuscarMes>
                 )}
                 <Search
                     datos={marcas_completas}

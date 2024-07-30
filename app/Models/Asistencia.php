@@ -81,7 +81,7 @@ ORDER BY anacod, hora");
 return $registros;
     }
 
-    public static function nfcMes()
+    public static function horasNFCMes($anio, $mes)
     {
         /*
         $registros = DB::connection('san')->select("SELECT u.uid, u.anacod, a.mac, a.fecha_registro AS hora, a.evento 
@@ -114,8 +114,8 @@ WHERE EXTRACT(YEAR FROM a.fecha_registro) = 2024
         LEAD(a.evento) OVER (PARTITION BY u.uid, u.anacod ORDER BY a.fecha_registro) AS evento_siguiente
     FROM aplicaciones.log_accesos_sitios a 
     LEFT JOIN aplicaciones.pro_anatags u ON u.uid = a.uid 
-    WHERE EXTRACT(YEAR FROM a.fecha_registro) = 2024 
-      AND EXTRACT(MONTH FROM a.fecha_registro) = 6
+    WHERE EXTRACT(YEAR FROM a.fecha_registro) = $anio 
+      AND EXTRACT(MONTH FROM a.fecha_registro) = $mes
      AND u.anacod IN (SELECT anacod FROM aplicaciones.pro_anacod WHERE anasta = 'A' AND anatip='U')
 ),
 datos AS(

@@ -15,6 +15,7 @@ function RegistrosNFC({ registros, auth }) {
     const [fecha, setfecha] = useState(fechaActual());
     const [anio, setAnio] = useState(anioActual());
     const [mes, setMes] = useState(mesActual());
+    const [loading, setLoading] = useState(false);
 
     const filters = [
         {
@@ -74,7 +75,8 @@ function RegistrosNFC({ registros, auth }) {
     }, []);
 
     const handleSearchMes = ()=>{
-          fetch(`asistencia/nfc?busqueda=mes&anio=${anio}&mes=${mes}`)
+        setLoading(true)
+          fetch(`/asistencia/nfc?busqueda=mes&anio=${anio}&mes=${mes}`)
         .then((res) => {
             //setloading(true);
             return res.json();
@@ -85,14 +87,28 @@ function RegistrosNFC({ registros, auth }) {
             setResultados(response);
         })
         .finally((e) => {
-            //setloading(false);
+            setLoading(false);
             //setFechaVista(` del mes de ${mes} del ${anio}`);
         });
 
     }
     
     const handleSearchDia = (e) => {
-        console.log(fecha);
+        setLoading(true)
+        fetch(`/asistencia/nfc?fecha=${fecha}`)
+      .then((res) => {
+          //setloading(true);
+          return res.json();
+      })
+      .then((response) => {
+          console.log(response);
+          setRegistrosNFC(response);
+          setResultados(response);
+      })
+      .finally((e) => {
+          setLoading(false);
+          //setFechaVista(` del mes de ${mes} del ${anio}`);
+      });
     };
 
     const headers = ["hora", "anacod", "evento"];
@@ -116,7 +132,7 @@ function RegistrosNFC({ registros, auth }) {
                     <BuscarMes anio={anio} setAnio={setAnio} mes={mes} setMes={setMes} onClick={handleSearchMes}></BuscarMes>
                 )}
 
-                {registrosNFC.length ? (
+                {(registrosNFC.length && !loading) ? (
                     <div>
                         <Search
                             datos={registrosNFC}

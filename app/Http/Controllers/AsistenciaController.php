@@ -29,21 +29,22 @@ class AsistenciaController extends Controller
 
     public function nfcIndex()
     {
-        if (isset($_GET['fecha'])) {
+        $registros = Asistencia::registrosNFC(Carbon::now()->format('Y-m-d'));
+       // 
+
+        if (isset($_GET['fecha']) || isset($_GET['busqueda'])) {
             if (isset($_GET['busqueda']) && $_GET['busqueda'] == 'mes') {
                 $mes = $_GET['mes'];
                 $anio = $_GET['anio'];
-                $registros = Asistencia::marcasCompletasMes($anio, $mes);
+                $registros = Asistencia::registrosNFCMes($anio, $mes);
                 return json_encode($registros);
             } else {
-
                 $fecha = $_GET['fecha'];
                 $registros = Asistencia::registrosNFC($fecha);
                 return json_encode($registros);
             }
         } else {
-            $registros = Asistencia::registrosNFC(Carbon::now()->format('Y-m-d'));
-            return Inertia::render('RegistrosNFC', ['registros' => $registros]);
+            return Inertia::render('RegistrosNFC', ['registros' => $registros, 'fecha' => Carbon::now()->format('Y-m-d')]);
         }
     }
     public function create()
@@ -156,9 +157,15 @@ class AsistenciaController extends Controller
 
     public function estadisticas()
     {
-        $data = Asistencia::nfcMes();
         $empleados = Empleado::where('anatip', 'U')->where('anasta', 'A')->where('anapai', 'SV')->get();
-        return Inertia::render('Estadisticas', ['data' => $data, 'empleados' => $empleados]);
+        if(isset($_GET['mes']) && isset($_GET['mes'])){
+            $datos = Asistencia::horasNFCMes($_GET['anio'], $_GET['mes']);
+            return json_encode($datos);
+        }else{
+            $now= Carbon::now();
+            $data = Asistencia::horasNFCMes($now->format('Y'), $now->format('m'));
+            return Inertia::render('Estadisticas', ['datos' => $data, 'empleados' => $empleados]);
+        }
     }
 
     public function marcasCompletasDia()
@@ -169,7 +176,6 @@ class AsistenciaController extends Controller
                 $marcas = Asistencia::marcasCompletasMes($fecha);
                 return json_encode($marcas);
             } else {
-
                 $fecha = $_GET['fecha'];
                 $marcas = Asistencia::marcasCompletasDia($fecha);
                 return json_encode($marcas);
