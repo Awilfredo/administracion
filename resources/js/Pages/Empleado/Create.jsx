@@ -107,7 +107,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         <AuthenticatedLayout user={auth.user} header={<p>Alta de empleado</p>}>
             <Head title="Alta" />
             <div className="flex justify-center mt-5">
-                <div className="w-3/5">
+                <div className="sm:w-full lg:w-4/5">
                     <form onSubmit={handleSubmit}>
                         <div className="bg-white p-5 rounded-xl">
                             <div>
@@ -116,7 +116,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                 </p>
                                 <hr className="h-1 my-5 bg-red-800" />
                             </div>
-                            <div className="grid grid-cols-2 gap-4 mb-5">
+                            <div className="grid lg:grid-cols-2 sm:grid-cols-1 md:grid-cols-1 gap-4 mb-5">
                                 <TextInput
                                     label="Nombres"
                                     placeholder="Juan Carlos"
@@ -247,14 +247,14 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                             </div>
                         </div>
 
-                        <div className="bg-white p-5 mt-10 rounded-xl">
+                        <div className="bg-white p-5  mt-10 rounded-xl">
                             <div className="">
                                 <p className="text-xl">
                                     Informacion de empleado
                                 </p>
                                 <hr className="h-1 my-5 bg-red-800" />
                             </div>
-                            <div className="grid grid-cols-2 gap-4 mb-5">
+                            <div className="grid lg:grid-cols-2 sm:grid-cols-1 md:grid-cols-1 gap-4 mb-5">
                                 <TextInput
                                     label="Codigo de usuario"
                                     placeholder="anacod"
@@ -273,7 +273,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                     disabled={true}
                                 ></TextInput>
                                 <TextInput
-                                    label="Codigo de usuario"
+                                    label="Usuario de Mensajeria"
                                     placeholder="Usuario Mensajeria"
                                     value={data.usuario_mensajeria}
                                     className={
