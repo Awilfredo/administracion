@@ -4,8 +4,8 @@ import TextInput from "./Partials/TextInput";
 import Select from "./Partials/Select";
 import { ManejoFechas } from "@/Helpers/ManejoFechas";
 import { useEffect } from "react";
-import generator from 'generate-password-browser';
-
+import generator from "generate-password-browser";
+import { FileUploader } from "react-drag-drop-files";
 
 const generatePassword = () => {
     const password = generator.generate({
@@ -32,7 +32,10 @@ function makeAnacod({ nombres, apellidos, anacods }) {
                 return tryFirst;
             }
 
-            let trySecond = arrNombres[0].charAt(0) + arrNombres[1].charAt(0) + arrApellidos[0];
+            let trySecond =
+                arrNombres[0].charAt(0) +
+                arrNombres[1].charAt(0) +
+                arrApellidos[0];
             if (!anacods.includes(trySecond)) {
                 console.log(`Segundo anacod sugerido`);
                 return trySecond;
@@ -50,7 +53,10 @@ function makeAnacod({ nombres, apellidos, anacods }) {
                 return tryTercero;
             }
 
-            let tryCuarto = arrNombres[0].charAt(0) + arrNombres[1].charAt(0) + arrApellidos[1];
+            let tryCuarto =
+                arrNombres[0].charAt(0) +
+                arrNombres[1].charAt(0) +
+                arrApellidos[1];
             if (!anacods.includes(tryCuarto)) {
                 console.log(`Cuarto anacod sugerido`);
                 return tryCuarto;
@@ -59,9 +65,8 @@ function makeAnacod({ nombres, apellidos, anacods }) {
     } catch (error) {
         console.log(error);
     }
-    return '';
+    return "";
 }
-
 
 function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
     const { fechaActual } = ManejoFechas();
@@ -69,6 +74,11 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         anacod: "",
         nombres: "",
         apellidos: "",
+        direccion: "",
+        dui: "",
+        nit: "",
+        isss: "",
+        genero: "m",
         anamai: "",
         anapas: "",
         fecha_nacimiento: "",
@@ -77,45 +87,53 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         anapos: "",
         isBoss: false,
         anarea: "",
+        salario: 0,
+        cuenta_bancaria: "",
         anatel: "",
         anajef: "",
         folcod: "",
+        sim:'',
+        imei:'',
         anaext: "",
         horario_id: 1,
+        file: null,
     });
+
+    const fileTypes = ["JPG", "PNG", "GIF", "JPEG"];
+    const handleChangeFile = (file) => {
+        console.log(file);
+        setData("file", file);
+        console.log(data.file);
+    };
+
     // console.log(errors)
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log(data);
-        post(route('empleados.store'));
+        post(route("empleados.store"));
     };
 
     function estaVacio() {
         // Verificar si el objeto no tiene ninguna propiedad propia
         for (var key in errors) {
-            if (errors.hasOwnProperty(key))
-                return false;
+            if (errors.hasOwnProperty(key)) return false;
         }
         return true;
     }
 
     useEffect(() => {
-        console.log('use effect');
+        console.log("use effect");
         try {
             let anastasio = makeAnacod({ ...data, anacods: anacods });
             let amamai = anastasio.toLowerCase() + "@red.com.sv";
             setData({ ...data, anacod: anastasio, anamai: amamai });
-        } catch (e) {
-
-        }
-    }, [data.nombres, data.apellidos])
-
+        } catch (e) {}
+    }, [data.nombres, data.apellidos]);
 
     useEffect(() => {
         let pwd = generatePassword();
         setData({ ...data, anapas: pwd });
-    }, [])
-
+    }, []);
 
     // console.log(areas, jefes, horarios);
     return (
@@ -136,7 +154,9 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                     label="Codigo de usuario"
                                     placeholder="anacod"
                                     value={data.anacod}
-                                    className={errors.anacod && 'border-red-500'}
+                                    className={
+                                        errors.anacod && "border-red-500"
+                                    }
                                     onChange={(e) =>
                                         setData(
                                             "anacod",
@@ -148,31 +168,37 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                     label="Nombres"
                                     placeholder="Juan Carlos"
                                     value={data.nombres}
-                                    className={errors.ananam && 'border-red-500'}
+                                    className={
+                                        errors.ananam && "border-red-500"
+                                    }
                                     onChange={(e) =>
                                         setData(
                                             "nombres",
                                             e.target.value.toUpperCase()
                                         )
                                     }
-                                // onBlur={makeAnacod({ ...data, anacods: anacods, setData: setData, data })}
+                                    // onBlur={makeAnacod({ ...data, anacods: anacods, setData: setData, data })}
                                 ></TextInput>
 
                                 <TextInput
                                     label="Apellidos"
                                     placeholder="Perez Sosa"
                                     value={data.apellidos}
-                                    className={errors.ananam && 'border-red-500'}
+                                    className={
+                                        errors.ananam && "border-red-500"
+                                    }
                                     onChange={(e) =>
                                         setData(
                                             "apellidos",
                                             e.target.value.toUpperCase()
                                         )
                                     }
-                                // onBlur={makeAnacod({ ...data, anacods: anacods, setData: setData, data })}
+                                    // onBlur={makeAnacod({ ...data, anacods: anacods, setData: setData, data })}
                                 ></TextInput>
                                 <TextInput
-                                    className={errors.anamai && 'border-red-500'}
+                                    className={
+                                        errors.anamai && "border-red-500"
+                                    }
                                     label="Email"
                                     placeholder="example@red.com.sv"
                                     value={data.anamai}
@@ -182,7 +208,9 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                     }
                                 ></TextInput>
                                 <TextInput
-                                    className={errors.anapas && 'border-red-500'}
+                                    className={
+                                        errors.anapas && "border-red-500"
+                                    }
                                     label="Contraseña"
                                     placeholder=""
                                     value={data.anapas}
@@ -190,8 +218,66 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                         setData("anapas", e.target.value.trim())
                                     }
                                 ></TextInput>
+
                                 <TextInput
-                                    className={errors.fecha_nacimiento && 'border-red-500'}
+                                    className={
+                                        errors.anapas && "border-red-500"
+                                    }
+                                    label="DUI"
+                                    placeholder="DUI"
+                                    value={data.dui}
+                                    onChange={(e) =>
+                                        setData("dui", e.target.value.trim())
+                                    }
+                                ></TextInput>
+
+                                <TextInput
+                                    className={
+                                        errors.anapas && "border-red-500"
+                                    }
+                                    label="NIT"
+                                    placeholder="NIT"
+                                    value={data.nit}
+                                    onChange={(e) =>
+                                        setData("nit", e.target.value.trim())
+                                    }
+                                ></TextInput>
+                                <TextInput
+                                    className={
+                                        errors.anapas && "border-red-500"
+                                    }
+                                    label="ISSS"
+                                    placeholder="Numero de ISSS"
+                                    value={data.isss}
+                                    onChange={(e) =>
+                                        setData("isss", e.target.value.trim())
+                                    }
+                                ></TextInput>
+                                <Select
+                                    label="Genero"
+                                    onChange={(e) =>
+                                        setData("genero", e.target.value)
+                                    }
+                                >
+                                    <option value="m">Masculino</option>
+                                    <option value="f">Femenino</option>
+                                </Select>
+                                <TextInput
+                                    className={
+                                        errors.direccion && "border-red-500"
+                                    }
+                                    label="Direccion"
+                                    placeholder="Direccion"
+                                    value={data.direccion}
+                                    onChange={(e) =>
+                                        setData("direccion", e.target.value)
+                                    }
+                                ></TextInput>
+                                <TextInput
+                                    className={
+                                        errors.fecha_nacimiento &&
+                                        "border-red-500"
+                                    }
                                     type="Date"
                                     label="Fecha de nacimiento"
                                     value={data.fecha_nacimiento}
@@ -202,6 +288,15 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                         )
                                     }
                                 ></TextInput>
+                            </div>
+                            <div className="w-100 mx-auto">
+                                {data.file && <p>{data.file.name}</p>}
+                                <FileUploader
+                                    className="w-100"
+                                    handleChange={handleChangeFile}
+                                    name="file"
+                                    types={fileTypes}
+                                />
                             </div>
                         </div>
 
@@ -214,7 +309,9 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                             </div>
                             <div className="grid grid-cols-2 gap-4 mb-5">
                                 <TextInput
-                                    className={errors.fecha_ingreso && 'border-red-500'}
+                                    className={
+                                        errors.fecha_ingreso && "border-red-500"
+                                    }
                                     type="Date"
                                     label="Fecha de ingreso"
                                     value={data.fecha_ingreso}
@@ -223,7 +320,9 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                     }
                                 ></TextInput>
                                 <Select
-                                    className={errors.anapai && 'border-red-500'}
+                                    className={
+                                        errors.anapai && "border-red-500"
+                                    }
                                     label="Pais"
                                     value={data.anapai}
                                     onChange={(e) =>
@@ -234,7 +333,9 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                     <option value="GT">Guatemala</option>
                                 </Select>
                                 <TextInput
-                                    className={errors.anarea && 'border-red-500'}
+                                    className={
+                                        errors.anarea && "border-red-500"
+                                    }
                                     list="areas"
                                     label="Area"
                                     placeholder="IT"
@@ -254,7 +355,9 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                     ))}
                                 </datalist>
                                 <TextInput
-                                    className={errors.anapos && 'border-red-500'}
+                                    className={
+                                        errors.anapos && "border-red-500"
+                                    }
                                     list="posiciones"
                                     label="Posicion"
                                     placeholder="Asistente administrativo"
@@ -267,7 +370,14 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                     }
                                 ></TextInput>
                                 <datalist id="posiciones">
-                                    {posiciones.map((element, index) => <option key={index} value={element.anapos}>{element.anapos}</option>)}
+                                    {posiciones.map((element, index) => (
+                                        <option
+                                            key={index}
+                                            value={element.anapos}
+                                        >
+                                            {element.anapos}
+                                        </option>
+                                    ))}
                                 </datalist>
 
                                 <div className="flex items-center mb-5">
@@ -279,7 +389,9 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                             name="isBoss"
                                             id="jefe"
                                             className="mx-2"
-                                            onChange={(e) => setData('isBoss', true)}
+                                            onChange={(e) =>
+                                                setData("isBoss", true)
+                                            }
                                             checked={data.isBoss}
                                         />
                                     </div>
@@ -290,21 +402,28 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                             name="isBoss"
                                             id="noJefe"
                                             className="mx-2"
-                                            onChange={(e) => setData('isBoss', false)}
+                                            onChange={(e) =>
+                                                setData("isBoss", false)
+                                            }
                                             checked={!data.isBoss}
                                         />
                                     </div>
                                 </div>
 
-
-
                                 <TextInput
-                                    className={errors.anajef && 'border-red-500'}
+                                    className={
+                                        errors.anajef && "border-red-500"
+                                    }
                                     label="Jefe"
                                     placeholder="Ingresa el jefe"
                                     list="jefes"
                                     value={data.anajef}
-                                    onChange={(e) => setData('anajef', e.target.value.toUpperCase().trim())}
+                                    onChange={(e) =>
+                                        setData(
+                                            "anajef",
+                                            e.target.value.toUpperCase().trim()
+                                        )
+                                    }
                                 ></TextInput>
                                 <datalist id="jefes">
                                     {jefes.map((element, index) => (
@@ -313,8 +432,38 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                         </option>
                                     ))}
                                 </datalist>
+
                                 <TextInput
-                                    className={errors.anatel && 'border-red-500'}
+                                    className={
+                                        errors.salario && "border-red-500"
+                                    }
+                                    label="Salario"
+                                    placeholder="salario"
+                                    type="number"
+                                    value={data.salario}
+                                    onChange={(e) =>
+                                        setData("salario", e.target.value)
+                                    }
+                                ></TextInput>
+                                <TextInput
+                                    className={
+                                        errors.cuenta && "border-red-500"
+                                    }
+                                    label="Cuenta"
+                                    placeholder="Cuenta"
+                                    value={data.cuenta_bancaria}
+                                    onChange={(e) =>
+                                        setData(
+                                            "cuenta_bancaria",
+                                            e.target.value
+                                        )
+                                    }
+                                ></TextInput>
+
+                                <TextInput
+                                    className={
+                                        errors.anatel && "border-red-500"
+                                    }
                                     label="Numero Asignado"
                                     placeholder="77778888"
                                     value={data.anatel}
@@ -323,7 +472,9 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                     }
                                 ></TextInput>
                                 <TextInput
-                                    className={errors.folcod && 'border-red-500'}
+                                    className={
+                                        errors.folcod && "border-red-500"
+                                    }
                                     label="Anexo"
                                     placeholder="342587"
                                     value={data.folcod}
@@ -331,8 +482,35 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                         setData("folcod", e.target.value.trim())
                                     }
                                 ></TextInput>
+
                                 <TextInput
-                                    className={errors.anaext && 'border-red-500'}
+                                    className={
+                                        errors.imei && "border-red-500"
+                                    }
+                                    label="IMEI"
+                                    placeholder="56896235656456456"
+                                    value={data.imei}
+                                    onChange={(e) =>
+                                        setData("imei", e.target.value.trim())
+                                    }
+                                ></TextInput>
+
+                                <TextInput
+                                    className={
+                                        errors.sim && "border-red-500"
+                                    }
+                                    label="SIMCARD"
+                                    placeholder="342587"
+                                    value={data.sim}
+                                    onChange={(e) =>
+                                        setData("sim", e.target.value.trim())
+                                    }
+                                ></TextInput>
+
+                                <TextInput
+                                    className={
+                                        errors.anaext && "border-red-500"
+                                    }
                                     label="Extencion"
                                     placeholder="2000"
                                     value={data.anaext}
@@ -347,11 +525,19 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                         setData("horario_id", e.target.value)
                                     }
                                 >
-                                    {horarios.map((element, index) => <option key={index} value={element.id}>{element.nombre}</option>)}
-
+                                    {horarios.map((element, index) => (
+                                        <option key={index} value={element.id}>
+                                            {element.nombre}
+                                        </option>
+                                    ))}
                                 </Select>
                             </div>
-                            {!estaVacio() && <p className="bg-red-200 rounded px-5 py-2 h-10 text-gray-800 text-center">Se han encontrado errores en los datos proporcionados</p>}
+                            {!estaVacio() && (
+                                <p className="bg-red-200 rounded px-5 py-2 h-10 text-gray-800 text-center">
+                                    Se han encontrado errores en los datos
+                                    proporcionados
+                                </p>
+                            )}
                         </div>
                         <div className="flex w-full justify-center">
                             <button className="my-10 bg-blue-500 text-white px-5 py-4 hover:bg-blue-700 rounded-xl">

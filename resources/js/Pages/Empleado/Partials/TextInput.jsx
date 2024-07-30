@@ -7,7 +7,8 @@ function TextInput({
     value = "",
     onChange,
     list = "",
-    className=''
+    className='', 
+    ...props
 }) {
     const inputId = useId();
     return (
@@ -19,6 +20,7 @@ function TextInput({
                 {label}
             </label>
             <input
+                props
                 list={list}
                 onChange={onChange}
                 type={type}

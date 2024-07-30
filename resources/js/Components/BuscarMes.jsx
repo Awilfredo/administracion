@@ -1,9 +1,9 @@
 import { ManejoFechas } from "@/Helpers/ManejoFechas";
 
-function BuscarMes({ handleSubmit, mes, setMes, setAnio, anio }) {
+function BuscarMes({ onClick, mes, setMes, setAnio, anio }) {
     const {mesActual, meses} = ManejoFechas();
     return (
-        <form onSubmit={handleSubmit}>
+        <div>
             <select onChange={(e) => setAnio(e.target.value)}>
                 <option value="2024" selected={anio==='2024'}>2024</option>
                 <option value="2025" selected={anio==='2025'}>2025</option>
@@ -22,8 +22,8 @@ function BuscarMes({ handleSubmit, mes, setMes, setAnio, anio }) {
                     </option>
                 ))}
             </select>
-            <button className="bg-blue-500 text-white rounded-xl px-5 py-2 mx-5 hover:bg-blue-700">Buscar</button>
-        </form>
+            <button className="bg-blue-500 text-white rounded-xl px-5 py-2 mx-5 hover:bg-blue-700" onClick={onClick}>Buscar</button>
+        </div>
     );
 }
 

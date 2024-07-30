@@ -1,17 +1,55 @@
-import GenericTable from "@/Components/GenericTable";
+import BuscarFecha from "@/Components/BuscarFecha";
+import BuscarMes from "@/Components/BuscarMes";
 import Search from "@/Components/Search";
-import TablaGenerica from "@/Components/TablaGenerica";
+import SeleccionarMesODia from "@/Components/SeleccionarMesODia";
+import { ManejoFechas } from "@/Helpers/ManejoFechas";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, Link, useForm } from "@inertiajs/react";
 import { useEffect, useState } from "react";
+import DataTable from "react-data-table-component";
 
-function RegistrosNFC({ registros, fecha, auth }) {
+function RegistrosNFC({ registros, auth }) {
     const [registrosNFC, setRegistrosNFC] = useState([]);
+    const [resultados, setResultados] = useState(registros);
+    const [busqueda, setBusqueda] = useState("dia");
+    const {fechaActual, anioActual, mesActual} = ManejoFechas();
+    const [fecha, setfecha] = useState(fechaActual());
+    const [anio, setAnio] = useState(anioActual());
+    const [mes, setMes] = useState(mesActual());
 
-    const filters= [
-        {id:1, name: "Entrada", key: "evento", value: "ENTRADA", checked:false },
-        {id:2,name: "Salida", key: "evento", value: "SALIDA", checked:false },
-    ]
+    const filters = [
+        {
+            id: 1,
+            name: "Entrada",
+            key: "evento",
+            value: "ENTRADA",
+            checked: false,
+        },
+        {
+            id: 2,
+            name: "Salida",
+            key: "evento",
+            value: "SALIDA",
+            checked: false,
+        },
+    ];
+
+    const columns = [
+        {
+            name: "Hora",
+            selector: (row) => row.hora,
+            sortable: true,
+        },
+        {
+            name: "Usuario",
+            selector: (row) => row.anacod,
+            sortable: true,
+        },
+        {
+            name: "Evento",
+            selector: (row) => row.evento,
+            sortable: true,
+        },
+    ];
 
     useEffect(() => {
         const datos = [];
@@ -32,9 +70,32 @@ function RegistrosNFC({ registros, fecha, auth }) {
             datos.push(registro);
         });
         setRegistrosNFC(datos);
+        setResultados(datos);
     }, []);
 
-    const headers = ["hora", "anacod", "uid", "mac", "evento"];
+    const handleSearchMes = ()=>{
+          fetch(`asistencia/nfc?busqueda=mes&anio=${anio}&mes=${mes}`)
+        .then((res) => {
+            //setloading(true);
+            return res.json();
+        })
+        .then((response) => {
+            console.log(response);
+            setRegistrosNFC(response);
+            setResultados(response);
+        })
+        .finally((e) => {
+            //setloading(false);
+            //setFechaVista(` del mes de ${mes} del ${anio}`);
+        });
+
+    }
+    
+    const handleSearchDia = (e) => {
+        console.log(fecha);
+    };
+
+    const headers = ["hora", "anacod", "evento"];
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -44,16 +105,34 @@ function RegistrosNFC({ registros, fecha, auth }) {
                 </h2>
             }
         >
-            {registrosNFC.length ? (
-                <TablaGenerica
-                    data={registrosNFC}
-                    headers={headers}
-                    keys={headers}
-                    filters={filters}
-                ></TablaGenerica>
-            ) : (
-                ""
-            )}
+            <div className="mx-10 mt-5">
+                <SeleccionarMesODia
+                    busqueda={busqueda}
+                    setBusqueda={setBusqueda}
+                ></SeleccionarMesODia>
+                {busqueda == "dia" ? (
+                    <BuscarFecha max={fechaActual()} onChange={(e)=>setfecha(e.target.value)} value={fecha} onClick={handleSearchDia}></BuscarFecha>
+                ) : (
+                    <BuscarMes anio={anio} setAnio={setAnio} mes={mes} setMes={setMes} onClick={handleSearchMes}></BuscarMes>
+                )}
+
+                {registrosNFC.length ? (
+                    <div>
+                        <Search
+                            datos={registrosNFC}
+                            setResultados={setResultados}
+                            keys={headers}
+                        ></Search>
+                        <DataTable
+                            data={resultados}
+                            columns={columns}
+                            fixedHeader={true}
+                        ></DataTable>
+                    </div>
+                ) : (
+                    ""
+                )}
+            </div>
         </AuthenticatedLayout>
     );
 }

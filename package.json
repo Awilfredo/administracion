@@ -22,6 +22,7 @@
     "dependencies": {
         "generate-password-browser": "^1.1.0",
         "react-data-table-component": "^7.6.2",
+        "react-drag-drop-files": "^2.3.10",
         "recharts": "^2.12.7"
     }
 }

@@ -29,8 +29,22 @@ class AsistenciaController extends Controller
 
     public function nfcIndex()
     {
-        $registros = Asistencia::registrosNFC(Carbon::now()->format('Y-m-d'));
-        return Inertia::render('RegistrosNFC', ['registros' => $registros, 'fecha' => Carbon::now()->format('Y-m-d')]);
+        if (isset($_GET['fecha'])) {
+            if (isset($_GET['busqueda']) && $_GET['busqueda'] == 'mes') {
+                $mes = $_GET['mes'];
+                $anio = $_GET['anio'];
+                $registros = Asistencia::marcasCompletasMes($anio, $mes);
+                return json_encode($registros);
+            } else {
+
+                $fecha = $_GET['fecha'];
+                $registros = Asistencia::registrosNFC($fecha);
+                return json_encode($registros);
+            }
+        } else {
+            $registros = Asistencia::registrosNFC(Carbon::now()->format('Y-m-d'));
+            return Inertia::render('RegistrosNFC', ['registros' => $registros]);
+        }
     }
     public function create()
     {

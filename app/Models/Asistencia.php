@@ -70,6 +70,17 @@ class Asistencia extends Model
         return $registros;
     }
 
+    public static function registrosNFCMes($anio, $mes)
+    {
+        $registros = DB::connection('san')->select("SELECT u.uid, anacod, mac,fecha_registro as hora, evento FROM aplicaciones.log_accesos_sitios a 
+left join aplicaciones.pro_anatags u ON u.uid=a.uid where EXTRACT(YEAR FROM a.fecha_registro) = $anio
+AND EXTRACT(MONTH FROM a.fecha_registro) = $mes
+AND u.anacod IS NOT NULL
+ORDER BY anacod, hora");
+
+return $registros;
+    }
+
     public static function nfcMes()
     {
         /*
@@ -373,9 +384,9 @@ ORDER BY
         return $marcas;
     }
 
- public static function marcasCompletasMes($fecha)
- {
-    $marcas = DB::connection('san')->select("WITH calendario_mes AS (
+    public static function marcasCompletasMes($fecha)
+    {
+        $marcas = DB::connection('san')->select("WITH calendario_mes AS (
     SELECT 
         generate_series(
             DATE_TRUNC('MONTH', DATE '$fecha')::DATE,  -- Primer día del mes deseado
@@ -524,7 +535,6 @@ ON
 ORDER BY 
     a.anacod, a.fecha;
 ");
-    return $marcas;
- }
-
+        return $marcas;
+    }
 }
