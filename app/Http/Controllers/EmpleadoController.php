@@ -31,7 +31,7 @@ class EmpleadoController extends Controller
     {
 
         // dump($request->all());
-        $request->validate([
+       /* $request->validate([
             'anacod' => 'required|string|max:255',
             'nombres' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
@@ -47,12 +47,12 @@ class EmpleadoController extends Controller
             'folcod' => 'required|string|max:255',
             'anaext' => 'required|string|max:255',
             'horario_id' => 'required|string|max:255',
-        ]);
+        ]);*/
 
 
         // Instanciar el modelo
-        $hiring = new Hiring();
-        $hiring->newHiring($request);
+        //$hiring = new Hiring();
+        //$hiring->newHiring($request);
 
         //Empleado::store($request);
         // return Redirect::route('empleados.index');

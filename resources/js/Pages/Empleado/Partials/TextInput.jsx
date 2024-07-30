@@ -8,7 +8,7 @@ function TextInput({
     onChange,
     list = "",
     className='', 
-    ...props
+    disabled = false
 }) {
     const inputId = useId();
     return (
@@ -20,7 +20,7 @@ function TextInput({
                 {label}
             </label>
             <input
-                props
+                disabled={disabled}
                 list={list}
                 onChange={onChange}
                 type={type}

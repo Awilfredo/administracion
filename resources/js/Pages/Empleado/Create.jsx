@@ -4,69 +4,9 @@ import TextInput from "./Partials/TextInput";
 import Select from "./Partials/Select";
 import { ManejoFechas } from "@/Helpers/ManejoFechas";
 import { useEffect } from "react";
-import generator from "generate-password-browser";
+
 import { FileUploader } from "react-drag-drop-files";
-
-const generatePassword = () => {
-    const password = generator.generate({
-        length: 6,
-        numbers: true,
-        symbols: false,
-        uppercase: true,
-        lowercase: true,
-    });
-    console.log(password);
-    return password;
-};
-
-function makeAnacod({ nombres, apellidos, anacods }) {
-    console.log(`makeAnacod`);
-    try {
-        if (nombres.length > 0 && apellidos.length > 0 && anacods.length > 0) {
-            let arrNombres = nombres.split(" ");
-            let arrApellidos = apellidos.split(" ");
-
-            let tryFirst = arrNombres[0].charAt(0) + arrApellidos[0];
-            if (!anacods.includes(tryFirst)) {
-                console.log(`Primer anacod sugerido`);
-                return tryFirst;
-            }
-
-            let trySecond =
-                arrNombres[0].charAt(0) +
-                arrNombres[1].charAt(0) +
-                arrApellidos[0];
-            if (!anacods.includes(trySecond)) {
-                console.log(`Segundo anacod sugerido`);
-                return trySecond;
-            }
-
-            console.log(`arrApellidos.length `, arrApellidos.length);
-            console.log(`arrNombres.length `, arrNombres.length);
-            if (arrApellidos.length <= 1) return;
-            if (arrNombres.length <= 1) return;
-
-            let tryTercero = arrNombres[1].charAt(0) + arrApellidos[1];
-            console.log(tryTercero);
-            if (!anacods.includes(tryTercero)) {
-                console.log(`Tercero anacod sugerido`);
-                return tryTercero;
-            }
-
-            let tryCuarto =
-                arrNombres[0].charAt(0) +
-                arrNombres[1].charAt(0) +
-                arrApellidos[1];
-            if (!anacods.includes(tryCuarto)) {
-                console.log(`Cuarto anacod sugerido`);
-                return tryCuarto;
-            }
-        }
-    } catch (error) {
-        console.log(error);
-    }
-    return "";
-}
+import { CrearEmpleado } from "@/Helpers/CrearEmpleado";
 
 function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
     const { fechaActual } = ManejoFechas();
@@ -75,36 +15,63 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         nombres: "",
         apellidos: "",
         direccion: "",
+        hijos: "",
         dui: "",
         nit: "",
         isss: "",
         genero: "m",
         anamai: "",
+        hijos: "efwefwef",
         anapas: "",
         fecha_nacimiento: "",
         anapai: "SV",
         fecha_ingreso: fechaActual(),
         anapos: "",
+        usuario_mensajeria: "",
+        usuario_red_control: "",
         isBoss: false,
         anarea: "",
         salario: 0,
         cuenta_bancaria: "",
         anatel: "",
+        anatel_real: "",
         anajef: "",
         folcod: "",
-        sim:'',
-        imei:'',
+        folcod_real: "",
+        sim: "",
+        imei: "",
+        sim_real: "",
+        imei_real: "",
         anaext: "",
         horario_id: 1,
-        file: null,
+        files: [],
     });
 
+    const { generatePassword, makeAnacod } = CrearEmpleado();
+
     const fileTypes = ["JPG", "PNG", "GIF", "JPEG"];
-    const handleChangeFile = (file) => {
+    const handleChangeFile = (file, document) => {
+
+       file.document = document;
         console.log(file);
-        setData("file", file);
-        console.log(data.file);
+        console.log(data.files.length);
+        if (data.files.length) {
+            let map_old_files = data.files.reduce((acc, item) => {
+                acc.set(item.document, item);
+                return acc;
+            }, new Map());
+
+            map_old_files.set(document, file)
+            
+            setData({ ...data, files: [...Array.from(map_old_files.values())]});
+        } else {
+            setData({ ...data, files: [...data.files, file] });
+        }
     };
+
+    useEffect(() => {
+        console.log(data.files);
+    }, [data.files]);
 
     // console.log(errors)
     const handleSubmit = (e) => {
@@ -151,20 +118,6 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                             </div>
                             <div className="grid grid-cols-2 gap-4 mb-5">
                                 <TextInput
-                                    label="Codigo de usuario"
-                                    placeholder="anacod"
-                                    value={data.anacod}
-                                    className={
-                                        errors.anacod && "border-red-500"
-                                    }
-                                    onChange={(e) =>
-                                        setData(
-                                            "anacod",
-                                            e.target.value.trim().toUpperCase()
-                                        )
-                                    }
-                                ></TextInput>
-                                <TextInput
                                     label="Nombres"
                                     placeholder="Juan Carlos"
                                     value={data.nombres}
@@ -195,18 +148,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                     }
                                     // onBlur={makeAnacod({ ...data, anacods: anacods, setData: setData, data })}
                                 ></TextInput>
-                                <TextInput
-                                    className={
-                                        errors.anamai && "border-red-500"
-                                    }
-                                    label="Email"
-                                    placeholder="example@red.com.sv"
-                                    value={data.anamai}
-                                    type="email"
-                                    onChange={(e) =>
-                                        setData("anamai", e.target.value.trim())
-                                    }
-                                ></TextInput>
+
                                 <TextInput
                                     className={
                                         errors.anapas && "border-red-500"
@@ -289,14 +231,19 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                     }
                                 ></TextInput>
                             </div>
-                            <div className="w-100 mx-auto">
-                                {data.file && <p>{data.file.name}</p>}
-                                <FileUploader
-                                    className="w-100"
-                                    handleChange={handleChangeFile}
-                                    name="file"
-                                    types={fileTypes}
-                                />
+
+                            <div>
+                                <label htmlFor="hijos" className="w-full">
+                                    Informacion de hijos
+                                </label>
+                                <textarea
+                                    id="hijos"
+                                    className="w-full"
+                                    value={data.hijos}
+                                    onChange={(e) =>
+                                        setData("hijos", e.target.value)
+                                    }
+                                ></textarea>
                             </div>
                         </div>
 
@@ -308,6 +255,60 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                 <hr className="h-1 my-5 bg-red-800" />
                             </div>
                             <div className="grid grid-cols-2 gap-4 mb-5">
+                                <TextInput
+                                    label="Codigo de usuario"
+                                    placeholder="anacod"
+                                    value={data.anacod}
+                                    className={
+                                        errors.anacod
+                                            ? "border-red-500 bg-gray-300"
+                                            : "bg-gray-300"
+                                    }
+                                    onChange={(e) =>
+                                        setData(
+                                            "anacod",
+                                            e.target.value.trim().toUpperCase()
+                                        )
+                                    }
+                                    disabled={true}
+                                ></TextInput>
+                                <TextInput
+                                    label="Codigo de usuario"
+                                    placeholder="Usuario Mensajeria"
+                                    value={data.usuario_mensajeria}
+                                    className={
+                                        errors.usuario_mensajeria
+                                            ? "border-red-500 bg-gray-300"
+                                            : "bg-gray-300"
+                                    }
+                                    disabled={true}
+                                ></TextInput>
+                                <TextInput
+                                    label="Usuario red control"
+                                    placeholder="Usuario red control"
+                                    value={data.usuario_red_control}
+                                    className={
+                                        errors.usuario_red_control
+                                            ? "border-red-500 bg-gray-300"
+                                            : "bg-gray-300"
+                                    }
+                                    disabled={true}
+                                ></TextInput>
+                                <TextInput
+                                    label="Email"
+                                    placeholder="example@red.com.sv"
+                                    value={data.anamai}
+                                    type="email"
+                                    className={
+                                        errors.anamai
+                                            ? "border-red-500 bg-gray-300"
+                                            : "bg-gray-300"
+                                    }
+                                    onChange={(e) =>
+                                        setData("anamai", e.target.value.trim())
+                                    }
+                                    disabled={true}
+                                ></TextInput>
                                 <TextInput
                                     className={
                                         errors.fecha_ingreso && "border-red-500"
@@ -462,20 +463,9 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
 
                                 <TextInput
                                     className={
-                                        errors.anatel && "border-red-500"
-                                    }
-                                    label="Numero Asignado"
-                                    placeholder="77778888"
-                                    value={data.anatel}
-                                    onChange={(e) =>
-                                        setData("anatel", e.target.value.trim())
-                                    }
-                                ></TextInput>
-                                <TextInput
-                                    className={
                                         errors.folcod && "border-red-500"
                                     }
-                                    label="Anexo"
+                                    label="Anexo INRICO"
                                     placeholder="342587"
                                     value={data.folcod}
                                     onChange={(e) =>
@@ -485,25 +475,87 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
 
                                 <TextInput
                                     className={
-                                        errors.imei && "border-red-500"
+                                        errors.folcod && "border-red-500"
                                     }
-                                    label="IMEI"
+                                    label="Anexo REALPTT"
+                                    placeholder="342587"
+                                    value={data.folcod_real}
+                                    onChange={(e) =>
+                                        setData(
+                                            "folcod_real",
+                                            e.target.value.trim()
+                                        )
+                                    }
+                                ></TextInput>
+
+                                <TextInput
+                                    className={
+                                        errors.anatel && "border-red-500"
+                                    }
+                                    label="Numero Asignado INRICO"
+                                    placeholder="77778888"
+                                    value={data.anatel}
+                                    onChange={(e) =>
+                                        setData("anatel", e.target.value.trim())
+                                    }
+                                ></TextInput>
+
+                                <TextInput
+                                    className={
+                                        errors.anatel_real && "border-red-500"
+                                    }
+                                    label="Numero asignado REALPTT"
+                                    placeholder="77778888"
+                                    value={data.anatel_real}
+                                    onChange={(e) =>
+                                        setData("anatel", e.target.value.trim())
+                                    }
+                                ></TextInput>
+
+                                <TextInput
+                                    className={errors.imei && "border-red-500"}
+                                    label="IMEI INRICO"
                                     placeholder="56896235656456456"
                                     value={data.imei}
                                     onChange={(e) =>
                                         setData("imei", e.target.value.trim())
                                     }
                                 ></TextInput>
-
                                 <TextInput
                                     className={
-                                        errors.sim && "border-red-500"
+                                        errors.imei_real && "border-red-500"
                                     }
-                                    label="SIMCARD"
-                                    placeholder="342587"
+                                    label="IMEI REALPTT"
+                                    placeholder="56896235656456456"
+                                    value={data.imei_real}
+                                    onChange={(e) =>
+                                        setData(
+                                            "imei_real",
+                                            e.target.value.trim()
+                                        )
+                                    }
+                                ></TextInput>
+
+                                <TextInput
+                                    className={errors.sim && "border-red-500"}
+                                    label="SIMCARD INRICO"
+                                    placeholder="342587564564218"
                                     value={data.sim}
                                     onChange={(e) =>
                                         setData("sim", e.target.value.trim())
+                                    }
+                                ></TextInput>
+
+                                <TextInput
+                                    className={errors.sim && "border-red-500"}
+                                    label="SIMCARD REALPTT"
+                                    placeholder="34258756456456456"
+                                    value={data.sim_real}
+                                    onChange={(e) =>
+                                        setData(
+                                            "sim_real",
+                                            e.target.value.trim()
+                                        )
                                     }
                                 ></TextInput>
 
@@ -531,6 +583,61 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                         </option>
                                     ))}
                                 </Select>
+                                <FileUploader
+                                    label="Subir imagen de perfil"
+                                    name="imagen"
+                                    handleChange={(file) =>
+                                        handleChangeFile(file, "imagen")
+                                    }
+                                ></FileUploader>
+                                <FileUploader
+                                    label="Subir imagen dui frente"
+                                    name="dui_frente"
+                                    handleChange={(file) =>
+                                        handleChangeFile(file, "dui_frente")
+                                    }
+                                ></FileUploader>
+                                <FileUploader
+                                    label="Subir imagen atas"
+                                    name="dui_atras"
+                                    handleChange={(file) =>
+                                        handleChangeFile(file, "dui_atras")
+                                    }
+                                ></FileUploader>
+                                <FileUploader
+                                    label="Solvencia de PNC"
+                                    name="solvencia_pnc"
+                                    handleChange={(file) =>
+                                        handleChangeFile(file, "solvencia")
+                                    }
+                                ></FileUploader>
+                                <FileUploader
+                                    label="subir Curriculum"
+                                    handleChange={(file) =>
+                                        handleChangeFile(file, "curriculum")
+                                    }
+                                ></FileUploader>
+                                <FileUploader
+                                    label="Subir antecedentes penales"
+                                    handleChange={(file) =>
+                                        handleChangeFile(file, "antecedentes")
+                                    }
+                                ></FileUploader>
+                                <FileUploader
+                                    label="Imagen resultados de laboratorio"
+                                    handleChange={(file) =>
+                                        handleChangeFile(file, "laboratorio")
+                                    }
+                                ></FileUploader>
+                                <FileUploader
+                                    label="Subir imagen de carta de referencia"
+                                    handleChange={(file) =>
+                                        handleChangeFile(
+                                            file,
+                                            "carta_referencia"
+                                        )
+                                    }
+                                ></FileUploader>
                             </div>
                             {!estaVacio() && (
                                 <p className="bg-red-200 rounded px-5 py-2 h-10 text-gray-800 text-center">
