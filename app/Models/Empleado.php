@@ -69,15 +69,5 @@ class Empleado extends Model
 VALUES('$request->anacod','$request->ananam', '$request->anapas', '$request->anamai', 'A', 1, '$request->anapai', '$request->anatel', '', '$request->anajef', '$request->anarea',$request->folcod, '$request->anaext', 'U', 'vpalma.png', '$request->anapos', '2', $mes, $dia, '503', 'SIMIENS', 'JJIMENEZ', '$request->fecha_ingreso', null, '002', '$request->anajef', null, $request->horario_id)");
     }
 
-    public static function crearUsuariosRedControl($request)
-    {
-        
-    }
-
-    public static function newHiring($request)
-    {
-
-    }
-
     use HasFactory;
 }

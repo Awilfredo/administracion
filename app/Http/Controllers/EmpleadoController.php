@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Empleado;
 use App\Models\Horario;
+use App\Models\Hiring;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -13,7 +14,7 @@ class EmpleadoController extends Controller
     public function index()
     {
         $empleados = Empleado::where('anatip', 'U')->where('anasta', 'A')->get();
-        return Inertia::render('Empleados', ['empleados'=> $empleados]);
+        return Inertia::render('Empleados', ['empleados' => $empleados]);
     }
 
     public function create()
@@ -21,14 +22,14 @@ class EmpleadoController extends Controller
         $anacods = Empleado::pluck('anacod');
         $horarios = Horario::all();
         $jefes = Empleado::jefes();
-        $areas =Empleado::areas();
+        $areas = Empleado::areas();
         $posiciones = Empleado::posiciones();
-        return Inertia::render('Empleado/Create', ['anacods'=>$anacods, 'jefes' => $jefes, 'areas' => $areas, 'posiciones' => $posiciones, 'horarios' => $horarios]);
+        return Inertia::render('Empleado/Create', ['anacods' => $anacods, 'jefes' => $jefes, 'areas' => $areas, 'posiciones' => $posiciones, 'horarios' => $horarios]);
     }
 
     public function store(Request $request)
-    {   
-    
+    {
+
         // dump($request->all());
         $request->validate([
             'anacod' => 'required|string|max:255',
@@ -47,6 +48,11 @@ class EmpleadoController extends Controller
             'anaext' => 'required|string|max:255',
             'horario_id' => 'required|string|max:255',
         ]);
+
+
+        // Instanciar el modelo
+        $hiring = new Hiring();
+        $hiring->newHiring($request);
 
         //Empleado::store($request);
         // return Redirect::route('empleados.index');
