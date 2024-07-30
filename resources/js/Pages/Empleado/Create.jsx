@@ -50,7 +50,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
     const { generatePassword, makeAnacod } = CrearEmpleado();
 
     const fileTypes = ["JPG", "PNG", "GIF", "JPEG"];
-
+    /*
     const handleChangeFile = (file, document) => {
         const customFile={document, file}
         console.log(customFile);
@@ -65,12 +65,32 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
 
         console.log(data.files);
     }
+*/
 
+    const handleChangeFile = (file, document) => {
+        const selectedFile = file;
+        if (selectedFile) {
+            // Leer el archivo usando FileReader
+            const reader = new FileReader();
 
-    /*const handleChangeFile = (file, document) => {
+            reader.onload = (e) => {
+                const fileContent = e.target.result;
+                const originalFileName = selectedFile.name;
+                const fileExtension = originalFileName.split(".").pop();
+                // Crear un nuevo archivo con el nuevo nombre
+                const newFileName = `${document}.${fileExtension}`; // Cambia esto al nombre que desees
+                const newFile = new File([fileContent], newFileName, {
+                    type: selectedFile.type,
+                });
+                // Enviar el archivo renombrado
+                uploadFile(newFile);
+            };
 
+            reader.readAsArrayBuffer(selectedFile)
+        }
+    };
 
-        file.document = document;
+    const uploadFile = (file) => {
         console.log(file);
         console.log(data.files.length);
         if (data.files.length) {
@@ -79,13 +99,18 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                 return acc;
             }, new Map());
 
-            map_old_files.set(document, file)
+            map_old_files.set(document, file);
 
-            setData({ ...data, files: [...Array.from(map_old_files.values())] });
+            setData({
+                ...data,
+                files: [...Array.from(map_old_files.values())],
+            });
         } else {
             setData({ ...data, files: [...data.files, file] });
         }
-    };*/
+    };
+
+
 
     useEffect(() => {
         console.log(data.files);
@@ -111,11 +136,19 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         try {
             let anastasio = makeAnacod({ ...data, anacods: anacods });
             let amamai = anastasio.toLowerCase() + "@red.com.sv";
-            let usuario_mensajeria = anastasio.toLowerCase() + "@mensajeria.red";
-            let usuario_red_control = anastasio.toLowerCase() + "@redcontrol.com.sv";
-            setData({ ...data, anacod: anastasio, anamai: amamai, usuario_mensajeria, usuario_red_control });
-        } catch (e) { }
-        setData({ ...data, ananam: data.nombres + ' ' + data.apellidos });
+            let usuario_mensajeria =
+                anastasio.toLowerCase() + "@mensajeria.red";
+            let usuario_red_control =
+                anastasio.toLowerCase() + "@redcontrol.com.sv";
+            setData({
+                ...data,
+                anacod: anastasio,
+                anamai: amamai,
+                usuario_mensajeria,
+                usuario_red_control,
+            });
+        } catch (e) {}
+        setData({ ...data, ananam: data.nombres + " " + data.apellidos });
     }, [data.nombres, data.apellidos]);
 
     useEffect(() => {
@@ -151,7 +184,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                             e.target.value.toUpperCase()
                                         )
                                     }
-                                // onBlur={makeAnacod({ ...data, anacods: anacods, setData: setData, data })}
+                                    // onBlur={makeAnacod({ ...data, anacods: anacods, setData: setData, data })}
                                 ></TextInput>
 
                                 <TextInput
@@ -167,7 +200,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                             e.target.value.toUpperCase()
                                         )
                                     }
-                                // onBlur={makeAnacod({ ...data, anacods: anacods, setData: setData, data })}
+                                    // onBlur={makeAnacod({ ...data, anacods: anacods, setData: setData, data })}
                                 ></TextInput>
 
                                 <TextInput
@@ -529,7 +562,10 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                     placeholder="77778888"
                                     value={data.anatel_real}
                                     onChange={(e) =>
-                                        setData("anatel_real", e.target.value.trim())
+                                        setData(
+                                            "anatel_real",
+                                            e.target.value.trim()
+                                        )
                                     }
                                 ></TextInput>
 
