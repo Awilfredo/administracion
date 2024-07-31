@@ -91,17 +91,19 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         }
     };
 
+
+
     const uploadFile = (file) => {
         console.log(file);
         console.log(data.files.length);
         if (data.files.length) {
             console.log(`data.files.length`);
             let map_old_files = data.files.reduce((acc, item) => {
-                acc.set(item.document, item);
+                acc.set(item.name, item);
                 return acc;
             }, new Map());
 
-            map_old_files.set(document, file);
+            map_old_files.set(file.name, file);
 
             setData({
                 ...data,
