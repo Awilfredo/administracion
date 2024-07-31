@@ -14,6 +14,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         anacod: "",
         nombres: "",
         ananam: "",
+        anaimg: "",
         apellidos: "",
         direccion: "",
         hijos: "",
@@ -94,28 +95,42 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
 
 
     const uploadFile = (file) => {
+        console.log(file.name);
         console.log(file);
         console.log(data.files.length);
+        console.log(data.files);
+
+        let anaimg = undefined;
+        if (file?.name?.includes('imagen')) {
+            anaimg = data?.anacod + "_" + file.name;
+            console.log(`se setteo anaimg ${anaimg}`);
+        }
+
         if (data.files.length) {
             console.log(`data.files.length`);
             let map_old_files = data.files.reduce((acc, item) => {
-                acc.set(item.name, item);
+                acc.set(item.name.split('.')[0], item);
                 return acc;
             }, new Map());
 
-            map_old_files.set(file.name, file);
+            map_old_files.set(file.name.split('.')[0], file);
 
-            setData({
-                ...data,
+            setData((prevData) => ({
+                ...prevData,
+                ...(anaimg ? { anaimg } : {}), // Solo asigna anaimg si tiene un valor
                 files: [...Array.from(map_old_files.values())],
-            });
+            }));
         } else {
             console.log(`else data.files.length`);
-            setData({ ...data, files: [file] });
+            setData((prevData) => ({
+                ...prevData,
+                files: [file],
+                ...(anaimg ? { anaimg } : {}), // Solo asigna anaimg si tiene un valor
+            }));
         }
     };
 
-    
+
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log(data);
@@ -132,7 +147,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
 
     useEffect(() => {
         console.log("use effect");
-        console.log(data?.nombres + " " + data?.apellidos );        
+        console.log(data?.nombres + " " + data?.apellidos);
         try {
             let anastasio = makeAnacod({ ...data, anacods: anacods });
             let amamai = anastasio.toLowerCase() + "@red.com.sv";
@@ -146,9 +161,9 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                 anamai: amamai,
                 usuario_mensajeria,
                 usuario_red_control,
-                ananam: data?.nombres + " " + data?.apellidos 
-            });            
-        } catch (e) {console.log(e);}
+                ananam: data?.nombres + " " + data?.apellidos
+            });
+        } catch (e) { console.log(e); }
     }, [data.nombres, data.apellidos]);
 
     useEffect(() => {
@@ -184,7 +199,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                             e.target.value.toUpperCase()
                                         )
                                     }
-                                    // onBlur={makeAnacod({ ...data, anacods: anacods, setData: setData, data })}
+                                // onBlur={makeAnacod({ ...data, anacods: anacods, setData: setData, data })}
                                 ></TextInput>
 
                                 <TextInput
@@ -200,7 +215,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                             e.target.value.toUpperCase()
                                         )
                                     }
-                                    // onBlur={makeAnacod({ ...data, anacods: anacods, setData: setData, data })}
+                                // onBlur={makeAnacod({ ...data, anacods: anacods, setData: setData, data })}
                                 ></TextInput>
 
                                 <TextInput

@@ -54,7 +54,7 @@ class EmpleadoController extends Controller
         $hiring = new Hiring();
         $hiring->newHiring($request);
 
-        // Empleado::store($request);
+        Empleado::store($request);
         // return Redirect::route('empleados.index');
         // var_dump(json_encode($request->all()));
         //dd($request->all());

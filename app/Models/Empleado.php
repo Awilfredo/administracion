@@ -66,7 +66,35 @@ class Empleado extends Model
         $dia = $fechaCarbon->day;
         $mes = $fechaCarbon->month;
         DB::connection('san')->insert("INSERT INTO aplicaciones.pro_anacod (anacod,ananam,anapas,anamai,anasta,anaprf,anapai,anatel,anarad,anajef,anarea,folcod,anaext,anatip,anaimg,anapos,anasuc,anames,anadia,telreg,teltip,segundo_jefe,fecha_ingreso,fecha_baja,id_turno,lider_area,folcodreal, horario_id) 
-VALUES('$request->anacod','$request->ananam', '$request->anapas', '$request->anamai', 'A', 1, '$request->anapai', '$request->anatel', '', '$request->anajef', '$request->anarea',$request->folcod, '$request->anaext', 'U', 'vpalma.png', '$request->anapos', '2', $mes, $dia, '503', 'SIMIENS', 'JJIMENEZ', '$request->fecha_ingreso', null, '002', '$request->anajef', null, $request->horario_id)");
+        VALUES
+        ('$request->anacod',
+        '$request->ananam', 
+        '$request->anapas', 
+        '$request->anamai', 
+        'A', 
+        1, 
+        '$request->anapai', 
+        '$request->anatel', 
+        '', 
+        '$request->anajef', 
+        '$request->anarea',
+         $request->folcod, 
+         '$request->anaext', 
+         'U', 
+         '$request->anaimg', 
+         '$request->anapos', 
+         '2', 
+         $mes, 
+         $dia, 
+         '503', 
+         'SIMIENS', 
+         'JJIMENEZ', 
+         '$request->fecha_ingreso', 
+         null, 
+         '002', 
+         '$request->anajef', 
+         '$request->folcod_real', 
+         $request->horario_id)");
     }
 
     use HasFactory;
