@@ -75,18 +75,26 @@ export const ManejoFechas = () => {
             // Si es lunes a jueves (de 1 a 4) se cuentan 9 horas
             if (diaSemana >= 1 && diaSemana <= 4) {
                 diasLaborales += 1;
-                horasLaborales += 9;
+
+                horasLaborales += isAsueto(mes, diaSemana) ? 0 : 9;
             }
             // Si es viernes (5) se cuentan 8 horas
             else if (diaSemana === 5) {
                 diasLaborales += 1;
-                horasLaborales += 8;
+                horasLaborales += isAsueto(mes, diaSemana) ? 0 : 8;
             }
             // Otros días (sábados y domingos) no se cuentan como laborales
         }
 
         return { horasLaborales, diasLaborales };
     };
+
+    const isAsueto = (mes, dia)=>{
+        console.log(dia, mes)
+        let asueto = true;
+        let obj = diasAsueto.filter(obj => (obj.dia == dia && obj.mes ==mes))
+        console.log('DIA ASUETO', obj[0]);
+    }
 
     function getTimezoneOffset(date) {
         // Función auxiliar para obtener el offset de la zona horaria en formato "-ZZ"
@@ -188,6 +196,18 @@ export const ManejoFechas = () => {
         { name: "Diciembre", value: 12 },
     ];
 
+    const diasAsueto= [
+        { "mes": 1,  "dia": 1 },   // 1 de enero
+        { "mes": 5,  "dia": 1 },   // 1 de mayo
+        { "mes": 5,  "dia": 10 },  // 10 de mayo
+        { "mes": 6,  "dia": 17 },  // 17 de junio
+        { "mes": 8,  "dia": 5 }, 
+        { "mes": 8,  "dia": 6 },   // 6 de agosto
+        { "mes": 9,  "dia": 15 },  // 15 de septiembre
+        { "mes": 11, "dia": 2 },   // 2 de noviembre
+        { "mes": 12, "dia": 25 }   // 25 de diciembre
+      ]
+
     function convertirHorasAFloat(time) {
         // Separar minutos y segundos usando ':' como delimitador
         const [horas, minutos] = time.split(':').map(Number);
@@ -217,6 +237,7 @@ export const ManejoFechas = () => {
         obtenerTimestampsMes,
         fechaActual,
         meses,
+        diasAsueto,
         mesActual,
         anioActual,
         obtenerHoraDesdeTimestamp,

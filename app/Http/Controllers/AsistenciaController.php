@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\UserRegistrationConfirmation;
 use App\Models\Asistencia;
 use App\Models\Empleado;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 
@@ -119,6 +121,10 @@ class AsistenciaController extends Controller
             $resumenEventos = Asistencia::resumenAsistenciaContador(date('m'));
             $llegadas_Tarde = Asistencia::tarde();
             $ausencias = Asistencia::ausencia();
+            $recipients = ['dbolaines@red.com.sv', 'awcruz@red.com.sv'];
+            //Mail::to($recipients)->send(new UserRegistrationConfirmation());
+
+            
             return Inertia::render('Resumen', ['llegadas_tarde' => $llegadas_Tarde, 'ausencias' => $ausencias, 'eventos' => $resumenEventos]);
         }
 
