@@ -138,6 +138,10 @@ function Estadisticas({ datos, auth, empleados }) {
             selector: (row) => row.horas,
             sortable: true,
         },
+
+        {name:"Porcentaje NFC",
+            selector: (row)=> (((1-parseFloat(((horasLaborales- convertirHorasAFloat(row.horas))/horasLaborales)))*100).toFixed(2)  + ' %') 
+        }
     ];
 
     return (
