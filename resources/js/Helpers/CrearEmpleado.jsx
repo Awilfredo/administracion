@@ -2,7 +2,7 @@ import generator from "generate-password-browser";
 export const CrearEmpleado = (e) => {
     const generatePassword = () => {
         const password = generator.generate({
-            length: 8,
+            length: 6,
             numbers: true,
             symbols: false,
             uppercase: true,

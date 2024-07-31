@@ -84,35 +84,6 @@ class Hiring extends Model
 
     }
 
-    // public function persistirArchivos($request)
-    // {
-    //     $anacod = $request->input('anacod') ?? '';
-    //     \Log::info('Anacod: ' . $anacod);
-
-    //     // Obtener todos los archivos del request
-    //     $files = $request->allFiles();
-
-    //     foreach ($files as $key => $fileArray) {
-    //         // Si $fileArray es un array de archivos
-    //         if (is_array($fileArray)) {
-    //             foreach ($fileArray as $file) {
-    //                 // Asegúrate de que $file es una instancia de UploadedFile
-    //                 if ($file instanceof \Illuminate\Http\UploadedFile) {
-
-    //                     //  \Log::info('File properties: ' . print_r($file, true));
-
-    //                     \Log::info('Nombre del archivo: ' . $file->getClientOriginalName());
-    //                     \Log::info('Tipo de archivo: ' . $file->getMimeType());
-    //                     \Log::info('Tamaño del archivo: ' . $file->getSize());
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     DB::connection('san')->insert("INSERT INTO aplicaciones.pro_anacod (anacod,ananam,anapas,anamai,anasta,anaprf,anapai,anatel,anarad,anajef,anarea,folcod,anaext,anatip,anaimg,anapos,anasuc,anames,anadia,telreg,teltip,segundo_jefe,fecha_ingreso,fecha_baja,id_turno,lider_area,folcodreal, horario_id) 
-    //     VALUES('$request->anacod','$request->ananam', '$request->anapas', '$request->anamai', 'A', 1, '$request->anapai', '$request->anatel', '', '$request->anajef', '$request->anarea',$request->folcod, '$request->anaext', 'U', 'vpalma.png', '$request->anapos', '2', '', '', '503', 'SIMIENS', 'JJIMENEZ', '$request->fecha_ingreso', null, '002', '$request->anajef', null, $request->horario_id)");
-    // }
-
     public function persistirArchivos($request)
     {
         $anacod = $request->input('anacod') ?? '';
@@ -130,25 +101,48 @@ class Hiring extends Model
                         $contenido = file_get_contents($file->getRealPath());
                         $contenidoEscapado = base64_encode($contenido); // Encode to base64 to safely store the binary data
 
-                        DB::connection('san')->insert("INSERT INTO aplicaciones.archivos_empleados (anacod, nombre, tipo_mime, contenido, tamaño) VALUES (?, ?, ?, decode(?,'base64'), ?)", [
+                        DB::connection('san')->insert("INSERT INTO aplicaciones.archivos_empleados (anacod, nombre, tipo_mime, contenido, tamaño) VALUES (?, ?, ?, decode(?,'base64'), ?) ON CONFLICT (anacod, nombre) DO UPDATE SET tipo_mime = EXCLUDED.tipo_mime, contenido = EXCLUDED.contenido, tamaño = EXCLUDED.tamaño, fecha_trx = NOW()", [
                             $anacod,
                             $nombreArchivo,
                             $tipoMime,
                             $contenidoEscapado,
                             $tamaño
                         ]);
+
+
+                        if (str_starts_with($nombreArchivo, 'imagen')) {
+                            \Log::info("El nombre del archivo comienza con 'imagen'.");
+                            // Guardar el archivo en el disco público
+                            $path = $file->storeAs('uploads', $anacod . "_" . $nombreArchivo, 'public');
+                        }
+
+                        // URL pública del archivo
+                        // $url = asset('storage/uploads/' . $nombreArchivo);
+                        // \Log::info('Archivo guardado en: ' . $path);
+                        // \Log::info('URL pública: ' . $url);
                     }
                 }
             }
         }
     }
 
+    public function persistirFormData($request)
+    {
+        $anacod = $request->input('anacod') ?? '';
+
+        $jsonFormData = json_encode($request->all());
+        DB::connection('san')->insert("INSERT INTO aplicaciones.datos_empleados (anacod, info) VALUES (?, ?) ON CONFLICT (anacod) DO UPDATE SET info = EXCLUDED.info, fecha_trx = NOW()", [
+            $anacod,
+            $jsonFormData
+        ]);
+    }
 
     public function newHiring($request)
     {
         // $this->crearUsuariosRedControl($request);
         // $this->asignarRolesSan($request);
         $this->persistirArchivos($request);
+        $this->persistirFormData($request);
     }
 
     use HasFactory;
