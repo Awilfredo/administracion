@@ -95,6 +95,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         console.log(file);
         console.log(data.files.length);
         if (data.files.length) {
+            console.log(`data.files.length`);
             let map_old_files = data.files.reduce((acc, item) => {
                 acc.set(item.document, item);
                 return acc;
@@ -107,7 +108,8 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                 files: [...Array.from(map_old_files.values())],
             });
         } else {
-            setData({ ...data, files: [...data.files, file] });
+            console.log(`else data.files.length`);
+            setData({ ...data, files: [file] });
         }
     };
 

@@ -84,31 +84,65 @@ class Hiring extends Model
 
     }
 
+    // public function persistirArchivos($request)
+    // {
+    //     $anacod = $request->input('anacod') ?? '';
+    //     \Log::info('Anacod: ' . $anacod);
+
+    //     // Obtener todos los archivos del request
+    //     $files = $request->allFiles();
+
+    //     foreach ($files as $key => $fileArray) {
+    //         // Si $fileArray es un array de archivos
+    //         if (is_array($fileArray)) {
+    //             foreach ($fileArray as $file) {
+    //                 // Asegúrate de que $file es una instancia de UploadedFile
+    //                 if ($file instanceof \Illuminate\Http\UploadedFile) {
+
+    //                     //  \Log::info('File properties: ' . print_r($file, true));
+
+    //                     \Log::info('Nombre del archivo: ' . $file->getClientOriginalName());
+    //                     \Log::info('Tipo de archivo: ' . $file->getMimeType());
+    //                     \Log::info('Tamaño del archivo: ' . $file->getSize());
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     DB::connection('san')->insert("INSERT INTO aplicaciones.pro_anacod (anacod,ananam,anapas,anamai,anasta,anaprf,anapai,anatel,anarad,anajef,anarea,folcod,anaext,anatip,anaimg,anapos,anasuc,anames,anadia,telreg,teltip,segundo_jefe,fecha_ingreso,fecha_baja,id_turno,lider_area,folcodreal, horario_id) 
+    //     VALUES('$request->anacod','$request->ananam', '$request->anapas', '$request->anamai', 'A', 1, '$request->anapai', '$request->anatel', '', '$request->anajef', '$request->anarea',$request->folcod, '$request->anaext', 'U', 'vpalma.png', '$request->anapos', '2', '', '', '503', 'SIMIENS', 'JJIMENEZ', '$request->fecha_ingreso', null, '002', '$request->anajef', null, $request->horario_id)");
+    // }
+
     public function persistirArchivos($request)
     {
         $anacod = $request->input('anacod') ?? '';
         \Log::info('Anacod: ' . $anacod);
 
-        // Obtener todos los archivos del request
         $files = $request->allFiles();
 
         foreach ($files as $key => $fileArray) {
-            // Si $fileArray es un array de archivos
             if (is_array($fileArray)) {
                 foreach ($fileArray as $file) {
-                    // Asegúrate de que $file es una instancia de UploadedFile
                     if ($file instanceof \Illuminate\Http\UploadedFile) {
+                        $nombreArchivo = $file->getClientOriginalName();
+                        $tipoMime = $file->getMimeType();
+                        $tamaño = $file->getSize();
+                        $contenido = file_get_contents($file->getRealPath());
+                        $contenidoEscapado = base64_encode($contenido); // Encode to base64 to safely store the binary data
 
-                        //  \Log::info('File properties: ' . print_r($file, true));
-
-                        \Log::info('Nombre del archivo: ' . $file->getClientOriginalName());
-                        \Log::info('Tipo de archivo: ' . $file->getMimeType());
-                        \Log::info('Tamaño del archivo: ' . $file->getSize());
+                        DB::connection('san')->insert("INSERT INTO aplicaciones.archivos_empleados (anacod, nombre, tipo_mime, contenido, tamaño) VALUES (?, ?, ?, decode(?,'base64'), ?)", [
+                            $anacod,
+                            $nombreArchivo,
+                            $tipoMime,
+                            $contenidoEscapado,
+                            $tamaño
+                        ]);
                     }
                 }
             }
         }
     }
+
 
     public function newHiring($request)
     {
