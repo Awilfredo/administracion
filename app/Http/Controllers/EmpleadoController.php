@@ -51,34 +51,8 @@ class EmpleadoController extends Controller
 
 
         // Instanciar el modelo
-        // $hiring = new Hiring();
-        // $hiring->newHiring($request);
-
-        // Obtener todos los archivos del request
-        $files = $request->allFiles();
-
-         foreach ($files as $key => $fileArray) {
-             // Si $fileArray es un array de archivos
-             if (is_array($fileArray)) {
-                 foreach ($fileArray as $file) {
-                     // Asegúrate de que $file es una instancia de UploadedFile
-                     if ($file instanceof \Illuminate\Http\UploadedFile) {
-
-                         \Log::info('File properties: ' . print_r($file, true));
-
-                         // Obtener el campo 'document' asociado a este archivo
-                         $document = $request->input("files.{$key}.document");
-
-                         \Log::info('Nombre del archivo: ' . $file->getClientOriginalName());
-                         // \Log::info('Tipo de archivo: ' . $file->getMimeType());
-                         // \Log::info('Tamaño del archivo: ' . $file->getSize());
-                         // \Log::info('Documento: ' . $document); // Log el valor de document                        
-                     }
-                 }
-             }
-         }
-
-        
+        $hiring = new Hiring();
+        $hiring->newHiring($request);
 
         // Empleado::store($request);
         // return Redirect::route('empleados.index');

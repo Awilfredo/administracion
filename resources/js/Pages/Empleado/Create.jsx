@@ -13,6 +13,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
     const { data, setData, post, processing } = useForm({
         anacod: "",
         nombres: "",
+        ananam: "",
         apellidos: "",
         direccion: "",
         hijos: "",
@@ -133,6 +134,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
 
     useEffect(() => {
         console.log("use effect");
+        setData({ ...data, ananam: data?.nombres + " " + data?.apellidos });
         try {
             let anastasio = makeAnacod({ ...data, anacods: anacods });
             let amamai = anastasio.toLowerCase() + "@red.com.sv";
@@ -146,9 +148,8 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                 anamai: amamai,
                 usuario_mensajeria,
                 usuario_red_control,
-            });
-        } catch (e) {}
-        setData({ ...data, ananam: data.nombres + " " + data.apellidos });
+            });            
+        } catch (e) {console.log(e);}
     }, [data.nombres, data.apellidos]);
 
     useEffect(() => {
