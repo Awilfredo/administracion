@@ -17,11 +17,6 @@ function Empleados({ empleados, auth }) {
             sortable: true,
         },
         {
-            name: "Pass",
-            selector: (row) => row.anapas,
-            sortable: true,
-        },
-        {
             name: "Nombre",
             selector: (row) => row.ananam,
             sortable: true,

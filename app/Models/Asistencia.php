@@ -83,25 +83,77 @@ return $registros;
 
     public static function horasNFCMes($anio, $mes)
     {
-        /*
-        $registros = DB::connection('san')->select("SELECT u.uid, u.anacod, a.mac, a.fecha_registro AS hora, a.evento 
-FROM aplicaciones.log_accesos_sitios a 
-LEFT JOIN aplicaciones.pro_anatags u ON u.uid = a.uid 
-WHERE EXTRACT(YEAR FROM a.fecha_registro) = 2024 
-  AND EXTRACT(MONTH FROM a.fecha_registro) = 6
-  AND u.anacod in(SELECT anacod FROM aplicaciones.pro_anacod WHERE anasta = 'A' AND anatip='U')
-  ORDER BY u.anacod, hora ASC");
 
-$registros = DB::connection('san')->select("SELECT u.uid, u.anacod, a.mac, a.fecha_registro AS hora, a.evento 
-FROM aplicaciones.log_accesos_sitios a 
-LEFT JOIN aplicaciones.pro_anatags u ON u.uid = a.uid 
-WHERE EXTRACT(YEAR FROM a.fecha_registro) = 2024 
-  AND EXTRACT(MONTH FROM a.fecha_registro) = 6
+$registros = DB::connection('san')->select("WITH calendario_mes AS (
+    SELECT 
+        generate_series(
+            DATE_TRUNC('MONTH', DATE '$anio-$mes-01')::DATE,  -- Primer día del mes deseado
+            DATE_TRUNC('MONTH', DATE '$anio-$mes-01')::DATE + INTERVAL '1 MONTH - 1 day',  -- Último día del mes deseado
+            INTERVAL '1 day'
+        ) AS fecha
+),
+marcas_numeradas AS (
+    SELECT 
+        u.anacod,
+        u.ananam,
+        h.id AS horario_id, 
+        h.nombre AS horario,
+        hd.numero_dia AS dia,
+        h.dia_libre1, 
+        h.dia_libre2, 
+        hd.entrada, 
+        hd.salida_almuerzo, 
+        hd.entrada_almuerzo, 
+        hd.salida,
+        cm.fecha AS fecha_dia,
+        m.fecha AS fecha_marcacion,
+        ROW_NUMBER() OVER (PARTITION BY u.anacod, cm.fecha ORDER BY m.fecha) AS numero_marca
+    FROM 
+        aplicaciones.pro_horarios AS h
+    JOIN 
+        aplicaciones.pro_horario_dias AS hd ON h.id = hd.horario_id 
+    JOIN 
+        aplicaciones.pro_anacod AS u ON u.horario_id::INT = h.id::INT
+    LEFT JOIN 
+        aplicaciones.pro_marcaciones AS m ON m.anacod = u.anacod
+    JOIN 
+        calendario_mes AS cm ON DATE_TRUNC('DAY', m.fecha) = cm.fecha
+    WHERE 
+        hd.numero_dia = EXTRACT(DOW FROM m.fecha) 
+        AND u.anasta = 'A' 
+        AND DATE_TRUNC('MONTH', m.fecha) = DATE '$anio-$mes-01'
+),
 
-  AND u.anacod in('CAMEJIA')
-  ORDER BY u.anacod, hora ASC");
-*/
-        $registros = DB::connection('san')->select("WITH EventosOrdenados AS (
+marcas_sin_nfc AS (
+    SELECT 
+        huella.anacod, 
+        huella.ananam, 
+        huella.horario_id, 
+        huella.horario, 
+        huella.dia,
+        huella.dia_libre1,
+        huella.dia_libre2,
+        huella.entrada,
+        huella.salida_almuerzo,
+        huella.entrada_almuerzo,
+        huella.salida,
+        huella.fecha_dia AS fecha,
+        MAX(CASE WHEN numero_marca = 1 THEN fecha_marcacion ELSE NULL END) AS huella_1,
+        MAX(CASE WHEN numero_marca = 2 THEN fecha_marcacion ELSE NULL END) AS huella_2,
+        MAX(CASE WHEN numero_marca = 3 THEN fecha_marcacion ELSE NULL END) AS huella_3,
+        MAX(CASE WHEN numero_marca = 4 THEN fecha_marcacion ELSE NULL END) AS huella_4,
+        MAX(CASE WHEN numero_marca = 5 THEN fecha_marcacion ELSE NULL END) AS huella_5,
+        MAX(CASE WHEN numero_marca = 6 THEN fecha_marcacion ELSE NULL END) AS huella_6
+    FROM 
+        marcas_numeradas huella
+    GROUP BY 
+        huella.anacod, huella.ananam, huella.horario_id, huella.horario, 
+        huella.dia, huella.dia_libre1, huella.dia_libre2, huella.entrada, 
+        huella.salida_almuerzo, huella.entrada_almuerzo, huella.salida, huella.fecha_dia
+    ORDER BY 
+        huella.anacod, huella.fecha_dia
+),
+EventosOrdenados AS (
     SELECT
         u.uid,
         u.anacod,
@@ -114,7 +166,7 @@ WHERE EXTRACT(YEAR FROM a.fecha_registro) = 2024
         LEAD(a.evento) OVER (PARTITION BY u.uid, u.anacod ORDER BY a.fecha_registro) AS evento_siguiente
     FROM aplicaciones.log_accesos_sitios a 
     LEFT JOIN aplicaciones.pro_anatags u ON u.uid = a.uid 
-    WHERE EXTRACT(YEAR FROM a.fecha_registro) = $anio 
+    WHERE EXTRACT(YEAR FROM a.fecha_registro) = $anio
       AND EXTRACT(MONTH FROM a.fecha_registro) = $mes
      AND u.anacod IN (SELECT anacod FROM aplicaciones.pro_anacod WHERE anasta = 'A' AND anatip='U')
 ),
@@ -142,13 +194,63 @@ SELECT
     JOIN datos n2 ON n1.row_num = n2.row_num - 1
 ),
 resultados AS(select anacod, hora1 AS hora_entrada, hora2 AS hora_salida,segundos1, segundos2, segundos2 - segundos1 AS segundos from paired_rows where evento1='ENTRADA'),
-anacod AS (SELECT * FROM aplicaciones.pro_anacod WHERE anasta='A' AND anatip='U')
-
+anacod AS (SELECT * FROM aplicaciones.pro_anacod WHERE anasta='A' AND anatip='U'),
+tiempo_nfc as (
 SELECT r.anacod, a.ananam as nombre, DATE(r.hora_entrada) AS fecha, SUM(r.segundos) FROM resultados r
 INNER JOIN anacod a ON a.anacod = r.anacod
-GROUP BY fecha, r.anacod, a.ananam ORDER BY r.anacod, fecha
-");
+GROUP BY fecha, r.anacod, a.ananam ORDER BY r.anacod, fecha),
+no_sum_huella AS (
+SELECT a.anacod, a.ananam AS nombre, a.horario_id, a.horario, a.dia, 
+    a.dia_libre1, a.dia_libre2, a.entrada, a.salida_almuerzo, a.entrada_almuerzo, 
+    a.salida,  DATE(a.fecha) AS fecha, 
+         COALESCE(
+            (SELECT huella FROM unnest(ARRAY[a.huella_1, a.huella_2, a.huella_3, a.huella_4, a.huella_5, a.huella_6]) huella
+             WHERE huella IS NOT NULL
+             ORDER BY huella ASC
+             LIMIT 1), 
+            '1900-01-01 00:00:00'::timestamp
+        ) AS primera_huella,
+     COALESCE(
+            (SELECT huella FROM unnest(ARRAY[a.huella_1, a.huella_2, a.huella_3, a.huella_4, a.huella_5, a.huella_6]) huella
+             WHERE huella IS NOT NULL
+             ORDER BY huella DESC
+             LIMIT 1), 
+            '1900-01-01 00:00:00'::timestamp
+        ) AS ultima_huella,
+    COALESCE(t.sum, 0) AS sum, DATE(a.fecha)
+    
+FROM marcas_sin_nfc a 
+LEFT JOIN tiempo_nfc t ON a.anacod= t.anacod AND a.fecha = t.fecha
 
+ORDER BY 
+    a.anacod, a.fecha)
+SELECT 
+    anacod, 
+    nombre, 
+    horario_id, 
+    horario, 
+    dia, 
+    dia_libre1, 
+    dia_libre2, 
+    entrada, 
+    salida_almuerzo, 
+    entrada_almuerzo, 
+    salida,  
+    fecha, 
+    sum,  
+    fecha,
+    EXTRACT(EPOCH FROM (entrada_almuerzo - DATE_TRUNC('day', entrada_almuerzo))) AS entrada_almuerzo_t,
+    EXTRACT(EPOCH FROM (primera_huella - DATE_TRUNC('day', primera_huella))) AS primera_huella_t,
+    EXTRACT(EPOCH FROM (ultima_huella - DATE_TRUNC('day', ultima_huella))) AS ultimahuella_t,
+    EXTRACT(EPOCH FROM (ultima_huella - DATE_TRUNC('day', ultima_huella))) - 
+    EXTRACT(EPOCH FROM (primera_huella - DATE_TRUNC('day', primera_huella))) -
+        CASE 
+        WHEN EXTRACT(EPOCH FROM (ultima_huella - DATE_TRUNC('day', ultima_huella))) > EXTRACT(EPOCH FROM (entrada_almuerzo - DATE_TRUNC('day', entrada_almuerzo))) AND EXTRACT(EPOCH FROM (primera_huella - DATE_TRUNC('day', ultima_huella))) < EXTRACT(EPOCH FROM (entrada_almuerzo - DATE_TRUNC('day', entrada_almuerzo)))THEN 3600  -- 3600 segundos = 1 hora
+        ELSE 0
+    END  AS sum_huella
+    
+FROM no_sum_huella ORDER BY  anacod, fecha;
+");
 
         return $registros;
     }

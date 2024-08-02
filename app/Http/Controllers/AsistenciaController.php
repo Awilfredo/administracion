@@ -163,7 +163,7 @@ class AsistenciaController extends Controller
 
     public function estadisticas()
     {
-        $empleados = Empleado::where('anatip', 'U')->where('anasta', 'A')->where('anapai', 'SV')->get();
+        $empleados = Empleado::where('anatip', 'U')->where('anasta', 'A')->where('anapai', 'SV')->orderBy('anacod')->get();
         if(isset($_GET['mes']) && isset($_GET['mes'])){
             $datos = Asistencia::horasNFCMes($_GET['anio'], $_GET['mes']);
             return json_encode($datos);

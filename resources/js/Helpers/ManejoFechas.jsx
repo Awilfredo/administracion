@@ -10,9 +10,9 @@ export const ManejoFechas = () => {
 
     const convertirTimestampADate = (timestamp) => {
         //recibe un timestam y retorna la fecha en string
-        const partes = timestamp.split(" ");
-        const fecha = partes[0];
-        return partes[0];
+        const partes = timestamp.split(" ") ? timestamp.split(" ") :[];
+        const fecha = partes[0] ? partes[0] : timestamp;
+        return fecha;
     };
 
     function obtenerHoraDesdeFecha(fechaStr) {
@@ -54,7 +54,6 @@ export const ManejoFechas = () => {
         }
         // Concatenar horas y minutos en formato hh:mm
         const horaFormateada = `${horas}:${minutos}`;
-        console.log(horaFormateada);
         return horaFormateada;
     };
 
@@ -89,12 +88,14 @@ export const ManejoFechas = () => {
         return { horasLaborales, diasLaborales };
     };
 
-    const isAsueto = (mes, dia)=>{
-        console.log(dia, mes)
-        let asueto = true;
-        let obj = diasAsueto.filter(obj => (obj.dia == dia && obj.mes ==mes))
-        console.log('DIA ASUETO', obj[0]);
-    }
+    const isAsueto = (mes, dia) => {
+        let obj = diasAsueto.filter((obj) => obj.dia == dia && obj.mes == mes);
+        if (obj.length) {
+            return true;
+        } else {
+            return false;
+        }
+    };
 
     function getTimezoneOffset(date) {
         // Función auxiliar para obtener el offset de la zona horaria en formato "-ZZ"
@@ -125,7 +126,7 @@ export const ManejoFechas = () => {
 
     function obtenerTimestampsMes(anio, mes) {
         let year = parseInt(anio);
-        let month= parseInt(mes)-1;
+        let month = parseInt(mes) - 1;
         //recibe el año y el mes y retorna un array con las fechas de los dias en formato timestamp
 
         // Crear un array para almacenar los timestamps formateados
@@ -196,32 +197,52 @@ export const ManejoFechas = () => {
         { name: "Diciembre", value: 12 },
     ];
 
-    const diasAsueto= [
-        { "mes": 1,  "dia": 1 },   // 1 de enero
-        { "mes": 5,  "dia": 1 },   // 1 de mayo
-        { "mes": 5,  "dia": 10 },  // 10 de mayo
-        { "mes": 6,  "dia": 17 },  // 17 de junio
-        { "mes": 8,  "dia": 5 }, 
-        { "mes": 8,  "dia": 6 },   // 6 de agosto
-        { "mes": 9,  "dia": 15 },  // 15 de septiembre
-        { "mes": 11, "dia": 2 },   // 2 de noviembre
-        { "mes": 12, "dia": 25 }   // 25 de diciembre
-      ]
+    const diasAsueto = [
+        { mes: 1, dia: 1 }, // 1 de enero
+        { mes: 5, dia: 1 }, // 1 de mayo
+        { mes: 5, dia: 10 }, // 10 de mayo
+        { mes: 6, dia: 17 }, // 17 de junio
+        { mes: 8, dia: 5 },
+        { mes: 8, dia: 6 }, // 6 de agosto
+        { mes: 9, dia: 15 }, // 15 de septiembre
+        { mes: 11, dia: 2 }, // 2 de noviembre
+        { mes: 12, dia: 25 }, // 25 de diciembre
+    ];
 
     function convertirHorasAFloat(time) {
         // Separar minutos y segundos usando ':' como delimitador
-        const [horas, minutos] = time.split(':').map(Number);
-        
+        const [horas, minutos] = time.split(":").map(Number);
+
         // Convertir minutos a horas
         const hoursFromMinutes = minutos / 60;
-        
+
         // Convertir segundos a horas
 
-        
         // Sumar las horas obtenidas
         const totalHours = horas + hoursFromMinutes;
-        
+
         return parseFloat(totalHours.toFixed(2));
+    }
+
+    function fechasDelMes(year, month) {
+        // Crear un array para almacenar las fechas
+        const dates = [];
+    
+        // El mes es 0-indexado, por lo que para enero sería 0, febrero 1, etc.
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 0);
+    
+        // Iterar desde el primer día del mes hasta el último
+        for (let day = 1; day <= endDate.getDate(); day++) {
+            // Crear una nueva fecha para cada día
+            const date = new Date(year, month - 1, day);
+            // Formatear la fecha como YYYY-MM-DD
+            const formattedDate = date.toISOString().split('T')[0];
+            // Agregar la fecha al array
+            dates.push(formattedDate);
+        }
+    
+        return dates;
     }
     
 
@@ -242,6 +263,7 @@ export const ManejoFechas = () => {
         anioActual,
         obtenerHoraDesdeTimestamp,
         obtenerHoraDesdeFecha,
-        convertirHorasAFloat
+        convertirHorasAFloat,
+        fechasDelMes
     };
 };
