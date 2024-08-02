@@ -81,7 +81,17 @@ class Hiring extends Model
 
     public function asignarRolesSan($request)
     {
-
+        $svRolesJefes = [
+            "FIN" => "'LIDPA','FNGSV','CBGSV','FNGSV'",
+            "SAC" => "'LIDPA','SCJSV','SCGSV'",
+            "IT" => "'LIDPA','ITAAD'",
+            "MKD" => "'VTGSV','MKGSV','RETSV','SUPVT'",
+            "BOD" => "'BODSV'",
+            "LEG" => "'LIDPA','RHSVG','PEUET','VTGSV'",
+            "VTS" => "'LIDPA','VTGSV'",
+            "RET" => "'LIDPA','RETSV'",
+            "RRH" => "'LIDPA','RHSVG','RHSVJ'",
+        ];
     }
 
     public function persistirArchivos($request)
@@ -140,7 +150,7 @@ class Hiring extends Model
     public function newHiring($request)
     {
         // $this->crearUsuariosRedControl($request);
-        // $this->asignarRolesSan($request);
+        $this->asignarRolesSan($request);
         $this->persistirArchivos($request);
         $this->persistirFormData($request);
     }

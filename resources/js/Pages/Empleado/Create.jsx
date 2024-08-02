@@ -3,10 +3,11 @@ import { Head, useForm } from "@inertiajs/react";
 import TextInput from "./Partials/TextInput";
 import Select from "./Partials/Select";
 import { ManejoFechas } from "@/Helpers/ManejoFechas";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { FileUploader } from "react-drag-drop-files";
 import { CrearEmpleado } from "@/Helpers/CrearEmpleado";
+import { CheckBoxGroup } from "@/Components/CheckBoxGroup";
 
 function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
     const { fechaActual } = ManejoFechas();
@@ -170,6 +171,27 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         let pwd = generatePassword();
         setData({ ...data, anapas: pwd });
     }, []);
+
+    // Suponiendo que tienes una lista de elementos que quieres convertir en checkboxes
+    const items = [
+        { id: 1, label: 'Opción 1', isChecked: false },
+        { id: 2, label: 'Opción 2', isChecked: false },
+        { id: 3, label: 'Opción 3', isChecked: false }
+    ];
+
+    // Estado para manejar los checkboxes
+    const [checkboxes, setCheckboxes] = useState(items);
+
+    // Función para manejar el cambio de cada checkbox
+    const handleToggle = (id) => {
+        const newCheckboxes = checkboxes.map(item => {
+            if (item.id === id) {
+                return { ...item, isChecked: !item.isChecked };
+            }
+            return item;
+        });
+        setCheckboxes(newCheckboxes);
+    };
 
     // console.log(areas, jefes, horarios);
     return (
@@ -480,6 +502,18 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                     </div>
                                 </div>
 
+                                <div className="flex items-center mb-5">
+                                    {checkboxes.map(item => (
+                                        <CheckBoxGroup
+                                            key={item.id}
+                                            label={item.label}
+                                            checked={item.isChecked}
+                                            id={item.id}
+                                            onToggle={() => handleToggle(item.id)}
+                                        />
+                                    ))}
+                                </div>
+
                                 <TextInput
                                     className={
                                         errors.anajef && "border-red-500"
@@ -593,6 +627,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                         setData("imei", e.target.value.trim())
                                     }
                                 ></TextInput>
+
                                 <TextInput
                                     className={
                                         errors.imei_real && "border-red-500"
