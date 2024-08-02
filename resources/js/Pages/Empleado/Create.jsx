@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { FileUploader } from "react-drag-drop-files";
 import { CrearEmpleado } from "@/Helpers/CrearEmpleado";
 import { CheckBoxGroup } from "@/Components/CheckBoxGroup";
+import Checkbox from "@/Components/Checkbox";
 
 function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
     const { fechaActual } = ManejoFechas();
@@ -47,6 +48,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         imei_real: "",
         anaext: "",
         horario_id: 1,
+        jefaturas: [],
         files: [],
     });
 
@@ -89,11 +91,9 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                 uploadFile(newFile);
             };
 
-            reader.readAsArrayBuffer(selectedFile)
+            reader.readAsArrayBuffer(selectedFile);
         }
     };
-
-
 
     const uploadFile = (file) => {
         console.log(file.name);
@@ -102,7 +102,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         console.log(data.files);
 
         let anaimg = undefined;
-        if (file?.name?.includes('imagen')) {
+        if (file?.name?.includes("imagen")) {
             anaimg = data?.anacod + "_" + file.name;
             console.log(`se setteo anaimg ${anaimg}`);
         }
@@ -110,11 +110,11 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         if (data.files.length) {
             console.log(`data.files.length`);
             let map_old_files = data.files.reduce((acc, item) => {
-                acc.set(item.name.split('.')[0], item);
+                acc.set(item.name.split(".")[0], item);
                 return acc;
             }, new Map());
 
-            map_old_files.set(file.name.split('.')[0], file);
+            map_old_files.set(file.name.split(".")[0], file);
 
             setData((prevData) => ({
                 ...prevData,
@@ -131,11 +131,31 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         }
     };
 
-
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log(data);
         post(route("empleados.store"));
+    };
+
+    const handleJefaturas = (e) => {
+        if (data.jefaturas.length) {
+            let jefaturas = [...data.jefaturas];
+            if (jefaturas.includes(e.target.value)) {
+                let exist = jefaturas.filter(
+                    (jefatura) => jefatura != e.target.value
+                );
+                jefaturas = exist;
+            } else {
+                jefaturas.push(e.target.value);
+            }
+            setData("jefaturas", jefaturas);
+        } else {
+            setData("jefaturas", [e.target.value]);
+        }
+    };
+
+    const handleBoss = (value) => {
+        setData({...data,  isBoss:value, jefaturas:[]});
     };
 
     function estaVacio() {
@@ -162,9 +182,11 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                 anamai: amamai,
                 usuario_mensajeria,
                 usuario_red_control,
-                ananam: data?.nombres + " " + data?.apellidos
+                ananam: data?.nombres + " " + data?.apellidos,
             });
-        } catch (e) { console.log(e); }
+        } catch (e) {
+            console.log(e);
+        }
     }, [data.nombres, data.apellidos]);
 
     useEffect(() => {
@@ -172,28 +194,6 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         setData({ ...data, anapas: pwd });
     }, []);
 
-    // Suponiendo que tienes una lista de elementos que quieres convertir en checkboxes
-    const items = [
-        { id: 1, label: 'Opción 1', isChecked: false },
-        { id: 2, label: 'Opción 2', isChecked: false },
-        { id: 3, label: 'Opción 3', isChecked: false }
-    ];
-
-    // Estado para manejar los checkboxes
-    const [checkboxes, setCheckboxes] = useState(items);
-
-    // Función para manejar el cambio de cada checkbox
-    const handleToggle = (id) => {
-        const newCheckboxes = checkboxes.map(item => {
-            if (item.id === id) {
-                return { ...item, isChecked: !item.isChecked };
-            }
-            return item;
-        });
-        setCheckboxes(newCheckboxes);
-    };
-
-    // console.log(areas, jefes, horarios);
     return (
         <AuthenticatedLayout user={auth.user} header={<p>Alta de empleado</p>}>
             <Head title="Alta" />
@@ -221,7 +221,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                             e.target.value.toUpperCase()
                                         )
                                     }
-                                // onBlur={makeAnacod({ ...data, anacods: anacods, setData: setData, data })}
+                                    // onBlur={makeAnacod({ ...data, anacods: anacods, setData: setData, data })}
                                 ></TextInput>
 
                                 <TextInput
@@ -237,7 +237,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                             e.target.value.toUpperCase()
                                         )
                                     }
-                                // onBlur={makeAnacod({ ...data, anacods: anacods, setData: setData, data })}
+                                    // onBlur={makeAnacod({ ...data, anacods: anacods, setData: setData, data })}
                                 ></TextInput>
 
                                 <TextInput
@@ -481,9 +481,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                             name="isBoss"
                                             id="jefe"
                                             className="mx-2"
-                                            onChange={(e) =>
-                                                setData("isBoss", true)
-                                            }
+                                            onChange={()=>handleBoss(true)}
                                             checked={data.isBoss}
                                         />
                                     </div>
@@ -494,26 +492,32 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                             name="isBoss"
                                             id="noJefe"
                                             className="mx-2"
-                                            onChange={(e) =>
-                                                setData("isBoss", false)
-                                            }
+                                            onChange={()=>handleBoss(false)}
                                             checked={!data.isBoss}
                                         />
                                     </div>
                                 </div>
 
-                                <div className="flex items-center mb-5">
-                                    {checkboxes.map(item => (
-                                        <CheckBoxGroup
-                                            key={item.id}
-                                            label={item.label}
-                                            checked={item.isChecked}
-                                            id={item.id}
-                                            onToggle={() => handleToggle(item.id)}
-                                        />
-                                    ))}
-                                </div>
-
+                                {data.isBoss && (
+                                    <div className="mt-5">
+                                        <p className="text-gray-800">
+                                            Selecciona las jefaturas a asignar:
+                                        </p>
+                                        <div className="flex flex-wrap justify-between items-center mb-5">
+                                            {areas.map((item) => (
+                                                <div className="mx-5 mb-2">
+                                                    <CheckBoxGroup
+                                                        label={item.anarea}
+                                                        value={item.anarea}
+                                                        onChange={
+                                                            handleJefaturas
+                                                        }
+                                                    ></CheckBoxGroup>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                                 <TextInput
                                     className={
                                         errors.anajef && "border-red-500"

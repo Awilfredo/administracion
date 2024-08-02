@@ -34,13 +34,15 @@ class Asistencia extends Model
 
     public static function resumenAsistenciaContador($month)
     {
-        $resumenContador = DB::connection('san')->select("SELECT a.anacod, b.ananam,
-        COUNT(CASE WHEN a.evento = 'Tarde' THEN 1 END) AS veces_tarde, 
-        COUNT(CASE WHEN a.evento='Ausencia' THEN 1 END) AS veces_ausente
-        FROM aplicaciones.pro_eventos_asistencia a
-        INNER JOIN aplicaciones.pro_anacod b ON a.anacod = b.anacod
-        WHERE EXTRACT(MONTH FROM DATE(fecha))=$month
-        GROUP BY a.anacod, b.ananam");
+        $resumenContador = DB::connection('san')->select("WITH resumen_eventos AS (
+SELECT a.anacod, b.ananam,
+    COUNT(CASE WHEN a.evento = 'Tarde' AND a.accion_personal IS NULL THEN 1 END) AS veces_tarde, 
+    COUNT(CASE WHEN a.evento = 'Ausencia' AND a.accion_personal IS NULL THEN 1 END) AS veces_ausente
+FROM aplicaciones.pro_eventos_asistencia a
+INNER JOIN aplicaciones.pro_anacod b ON a.anacod = b.anacod
+WHERE EXTRACT(MONTH FROM DATE(fecha)) = $month
+GROUP BY a.anacod, b.ananam)
+SELECT * FROM resumen_eventos WHERE veces_tarde > 0 OR veces_ausente > 0");
         return $resumenContador;
     }
 
