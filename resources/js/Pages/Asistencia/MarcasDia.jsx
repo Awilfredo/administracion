@@ -6,7 +6,7 @@ import { ExportCSV } from "@/Helpers/ExportCSV";
 import { ManejoFechas } from "@/Helpers/ManejoFechas";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head } from "@inertiajs/react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
 function Marcaciones({ auth, marcas }) {
     const keys = ["anacod", "ananam"];
@@ -110,32 +110,62 @@ function Marcaciones({ auth, marcas }) {
             });
     }
 
+
+    const handleExport = useCallback(() => {
+        downloadCSV(
+            resultados,
+            [
+                "anacod",
+                "ananam",
+                "fecha",
+                "nfc_entrada",
+                "nfc_salida",
+                "huella_1",
+                "huella_2",
+                "huella_3",
+                "huella_4",
+                "huella_5",
+                "huella_6",
+            ],
+            `Marcas ${fecha}`
+        );
+    }, [resultados, fecha]);
+
+    // Memoriza el componente Export para que solo se actualice cuando handleExport cambie
     const descargar = useMemo(
         () => (
-            <Export
-                onExport={() =>
-                    downloadCSV(
-                        marcas_completas,
-                        [
-                            "anacod",
-                            "ananam",
-                            "fecha",
-                            "nfc_entrada",
-                            "nfc_salida",
-                            "huella_1",
-                            "huella_2",
-                            "huella_3",
-                            "huella_4",
-                            "huella_5",
-                            "huella_6",
-                        ],
-                        `Marcas ${fecha}`
-                    )
-                }
-            />
+            <Export onExport={handleExport} />
         ),
-        []
+        [handleExport]
     );
+
+
+    // const descargar = useMemo(
+    //     () => (
+    //         <Export
+    //             onExport={() =>
+    //                 downloadCSV(
+    //                     resultados,
+    //                     [
+    //                         "anacod",
+    //                         "ananam",
+    //                         "fecha",
+    //                         "nfc_entrada",
+    //                         "nfc_salida",
+    //                         "huella_1",
+    //                         "huella_2",
+    //                         "huella_3",
+    //                         "huella_4",
+    //                         "huella_5",
+    //                         "huella_6",
+    //                     ],
+    //                     `Marcas ${fecha}`
+    //                 )
+    //             }
+    //         />
+    //     ),
+    //     []
+    // );
 
     return (
         <AuthenticatedLayout
