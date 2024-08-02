@@ -15,6 +15,11 @@ use Inertia\Inertia;
 
 class AsistenciaController extends Controller
 {
+    public function dashboard()
+    {
+        $data = Asistencia::dashboard();
+        return Inertia::render('Dashboard', ['data' => $data]);
+    }
     public function index()
     {
         $asistencias = Asistencia::whereDate("fecha", Date::today())->orderBy('id')->get();
@@ -115,10 +120,10 @@ class AsistenciaController extends Controller
         if (isset($_GET['mes'])) {
             $mes = $_GET['mes'];
             $anio = $_GET['anio'];
-            $resumenEventos = Asistencia::resumenMes($anio, $mes);
+            $resumenEventos = Asistencia::resumenAsistenciaContador($mes, $anio);
             return json_encode($resumenEventos);
         } else {
-            $resumenEventos = Asistencia::resumenAsistenciaContador(date('m'));
+            $resumenEventos = Asistencia::resumenAsistenciaContador(date('m'), date('Y'));
             $llegadas_Tarde = Asistencia::tarde();
             $ausencias = Asistencia::ausencia();
             $recipients = ['dbolaines@red.com.sv', 'awcruz@red.com.sv'];

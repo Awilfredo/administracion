@@ -14,6 +14,42 @@ class Asistencia extends Model
     protected $table = 'aplicaciones.pro_eventos_asistencia';
     protected $fillable = ['accion_personal'];
 
+    public static function dashboard()
+    {
+        $data = DB::connection('san')->select("WITH 
+empleados AS (
+    SELECT COUNT(*) AS empleados_activos 
+    FROM aplicaciones.pro_anacod 
+    WHERE anasta = 'A' AND anatip = 'U' AND anapai = 'SV'
+),
+eventos AS (
+    SELECT b.anacod, b.ananam,
+        COUNT(CASE WHEN a.evento = 'Tarde' AND a.accion_personal IS NULL THEN 1 END) AS veces_tarde, 
+        COUNT(CASE WHEN a.evento = 'Ausencia' AND a.accion_personal IS NULL THEN 1 END) AS veces_ausente
+    FROM aplicaciones.pro_anacod b 
+    INNER JOIN aplicaciones.pro_eventos_asistencia a ON a.anacod = b.anacod
+    WHERE DATE(a.fecha) = CURRENT_DATE
+    GROUP BY b.anacod, b.ananam
+),
+resumen_eventos AS (
+    SELECT 
+        COUNT(*) AS total_eventos, 
+        SUM(veces_tarde) AS empleados_tarde, 
+        SUM(veces_ausente) AS empleados_ausente
+    FROM eventos 
+    WHERE veces_tarde > 0 OR veces_ausente > 0
+), registros_nfc AS (SELECT COUNT(*) AS registros_nfc FROM aplicaciones.log_accesos_sitios WHERE DATE(fecha_registro)=CURRENT_DATE)
+SELECT 
+    e.empleados_activos,
+    COALESCE(r.empleados_tarde, 0) AS empleados_tarde,
+    COALESCE(r.empleados_ausente, 0) AS empleados_ausente,
+    COALESCE(n.registros_nfc, 0) AS registros_nfc
+FROM empleados e
+LEFT JOIN resumen_eventos r ON true
+LEFT JOIN registros_nfc n ON true
+");
+        return $data;
+    }
     public static function eventosToday()
     {
         $asistencias = DB::connection('san')->select("SELECT * FROM aplicaciones.pro_eventos_asistencia WHERE DATE(fecha) = CURRENT_DATE");
@@ -32,7 +68,7 @@ class Asistencia extends Model
         return $resumen;
     }
 
-    public static function resumenAsistenciaContador($month)
+    public static function resumenAsistenciaContador($month, $year)
     {
         $resumenContador = DB::connection('san')->select("WITH resumen_eventos AS (
 SELECT a.anacod, b.ananam,
@@ -40,7 +76,9 @@ SELECT a.anacod, b.ananam,
     COUNT(CASE WHEN a.evento = 'Ausencia' AND a.accion_personal IS NULL THEN 1 END) AS veces_ausente
 FROM aplicaciones.pro_eventos_asistencia a
 INNER JOIN aplicaciones.pro_anacod b ON a.anacod = b.anacod
-WHERE EXTRACT(MONTH FROM DATE(fecha)) = $month
+WHERE EXTRACT(MONTH FROM DATE(fecha)) = $month 
+AND EXTRACT(YEAR FROM DATE(fecha)) = $year
+AND b.anasta='A'
 GROUP BY a.anacod, b.ananam)
 SELECT * FROM resumen_eventos WHERE veces_tarde > 0 OR veces_ausente > 0");
         return $resumenContador;
@@ -51,9 +89,9 @@ SELECT * FROM resumen_eventos WHERE veces_tarde > 0 OR veces_ausente > 0");
         $resumenContador = DB::connection('san')->select("SELECT a.anacod, b.ananam,
         COUNT(CASE WHEN a.evento = 'Tarde' THEN 1 END) AS veces_tarde, 
         COUNT(CASE WHEN a.evento='Ausencia' THEN 1 END) AS veces_ausente
-        FROM aplicaciones.pro_eventos_asistencia a
-        INNER JOIN aplicaciones.pro_anacod b ON a.anacod = b.anacod
-        WHERE EXTRACT(MONTH FROM DATE(fecha))=$mes AND  EXTRACT(YEAR FROM DATE(fecha))=$anio
+        FROM aplicaciones.pro_anacod b 
+        INNER JOIN aplicaciones.pro_eventos_asistencia a ON  b.anacod = a.anacod
+        WHERE EXTRACT(MONTH FROM DATE(fecha))=$mes AND  EXTRACT(YEAR FROM DATE(fecha))=$anio AND b.anatip='U' AND b.anasta='U'
         GROUP BY a.anacod, b.ananam");
         return $resumenContador;
     }
@@ -80,13 +118,13 @@ AND EXTRACT(MONTH FROM a.fecha_registro) = $mes
 AND u.anacod IS NOT NULL
 ORDER BY anacod, hora");
 
-return $registros;
+        return $registros;
     }
 
     public static function horasNFCMes($anio, $mes)
     {
 
-$registros = DB::connection('san')->select("WITH calendario_mes AS (
+        $registros = DB::connection('san')->select("WITH calendario_mes AS (
     SELECT 
         generate_series(
             DATE_TRUNC('MONTH', DATE '$anio-$mes-01')::DATE,  -- Primer día del mes deseado

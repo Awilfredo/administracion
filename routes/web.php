@@ -19,10 +19,7 @@ use function Pest\Laravel\patch;
 Route::get('/asistencia', function(){
     return json_encode(Asistencia::all());
 */
-Route::get('/dashboard', function () {
-
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard',[AsistenciaController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
 
 
 
