@@ -22,10 +22,11 @@ function Resumen({ auth, ausencias, llegadas_tarde, eventos }) {
 
     }, [])
     useEffect(() => {
-        const datosCircular=[{name:'Llegadas tarde',  value:0}, {name:'Ausencias', value:0,}]
+        const datosCircular=[{name:'Llegadas tarde',  value:0}, {name:'Ausencias', value:0,},{name:'Salidas Antes', value:0,}]
         data.map((element)=>{
             datosCircular[1].value+= element.veces_ausente;
             datosCircular[0].value+= element.veces_tarde;
+            datosCircular[2].value+= element.veces_salidas_antes;
         })
 
         setCircular(datosCircular);
@@ -67,6 +68,16 @@ function Resumen({ auth, ausencias, llegadas_tarde, eventos }) {
         {
             name: "VECES AUSENTE",
             selector: (row) => row.veces_ausente,
+            sortable: true,
+        },
+        {
+            name: "VECES SALIDAS ANTES",
+            selector: (row) => row.veces_salidas_antes,
+            sortable: true,
+        },
+        {
+            name: "VECES SIN NFC",
+            selector: (row) => row.veces_sin_nfc,
             sortable: true,
         },
     ];
@@ -139,6 +150,8 @@ function Resumen({ auth, ausencias, llegadas_tarde, eventos }) {
                         "ananam",
                         "veces_tarde",
                         "veces_ausente",
+                        "veces_sin_nfc", 
+                        "veces_salidas_antes"
                     ])
                 }
             />

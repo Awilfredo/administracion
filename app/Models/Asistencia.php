@@ -73,14 +73,16 @@ LEFT JOIN registros_nfc n ON true
         $resumenContador = DB::connection('san')->select("WITH resumen_eventos AS (
 SELECT a.anacod, b.ananam,
     COUNT(CASE WHEN a.evento = 'Tarde' AND a.accion_personal IS NULL THEN 1 END) AS veces_tarde, 
-    COUNT(CASE WHEN a.evento = 'Ausencia' AND a.accion_personal IS NULL THEN 1 END) AS veces_ausente
+    COUNT(CASE WHEN a.evento = 'Ausencia' AND a.accion_personal IS NULL THEN 1 END) AS veces_ausente,
+    COUNT(CASE WHEN a.evento = 'Sin nfc' AND a.accion_personal IS NULL THEN 1 END) AS veces_sin_nfc,
+    COUNT(CASE WHEN a.evento = 'Salida antes' AND a.accion_personal IS NULL THEN 1 END) AS veces_salidas_antes
 FROM aplicaciones.pro_eventos_asistencia a
 INNER JOIN aplicaciones.pro_anacod b ON a.anacod = b.anacod
 WHERE EXTRACT(MONTH FROM DATE(fecha)) = $month 
 AND EXTRACT(YEAR FROM DATE(fecha)) = $year
 AND b.anasta='A'
 GROUP BY a.anacod, b.ananam)
-SELECT * FROM resumen_eventos WHERE veces_tarde > 0 OR veces_ausente > 0");
+SELECT * FROM resumen_eventos WHERE veces_tarde > 0 OR veces_ausente > 0 OR veces_sin_nfc > 0 OR veces_salidas_antes > 0");
         return $resumenContador;
     }
 
