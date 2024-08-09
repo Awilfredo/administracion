@@ -41,7 +41,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         anatel_real: "",
         anajef: "",
         folcod: "",
-        folcod_real: "",
+        folcod_real: null,
         sim: "",
         imei: "",
         sim_real: "",
@@ -588,10 +588,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
                                     placeholder="342587"
                                     value={data.folcod_real}
                                     onChange={(e) =>
-                                        setData(
-                                            "folcod_real",
-                                            e.target.value.trim()
-                                        )
+                                        setData({...data, folcod_real: e.target.value.trim()=='' ? null : e.target.value.trim()})
                                     }
                                 ></TextInput>
 
