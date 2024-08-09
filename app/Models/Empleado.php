@@ -94,7 +94,7 @@ class Empleado extends Model
          null, 
          '002', 
          '$request->anajef', 
-         $folcod_real, 
+         null, 
          $request->horario_id)");
     }
 
