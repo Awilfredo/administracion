@@ -65,6 +65,7 @@ class Empleado extends Model
         $fechaCarbon = Carbon::createFromFormat('Y-m-d', $request->fecha_nacimiento);
         $dia = $fechaCarbon->day;
         $mes = $fechaCarbon->month;
+        $folcod_real = $request->folcod_real ? $request->folcod_real : null;
         DB::connection('san')->insert("INSERT INTO aplicaciones.pro_anacod (anacod,ananam,anapas,anamai,anasta,anaprf,anapai,anatel,anarad,anajef,anarea,folcod,anaext,anatip,anaimg,anapos,anasuc,anames,anadia,telreg,teltip,segundo_jefe,fecha_ingreso,fecha_baja,id_turno,lider_area,folcodreal, horario_id) 
         VALUES
         ('$request->anacod',
@@ -93,7 +94,7 @@ class Empleado extends Model
          null, 
          '002', 
          '$request->anajef', 
-         $request->folcod_real, 
+         $folcod_real, 
          $request->horario_id)");
     }
 
