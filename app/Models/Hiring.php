@@ -233,12 +233,10 @@ class Hiring extends Model
 
     public function newHiring($request)
     {
-
-
-        // $this->crearUsuariosRedControl($request);
+        $this->crearUsuariosRedControl($request);
         $this->asignarRolesSan($request);
-        // $this->persistirArchivos($request);
-        // $this->persistirFormData($request);
+        $this->persistirArchivos($request);
+        $this->persistirFormData($request);
     }
 
     use HasFactory;
