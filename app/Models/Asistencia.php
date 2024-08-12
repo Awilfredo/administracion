@@ -25,17 +25,19 @@ empleados AS (
 eventos AS (
     SELECT b.anacod, b.ananam,
         COUNT(CASE WHEN a.evento = 'Tarde' AND a.accion_personal IS NULL THEN 1 END) AS veces_tarde, 
-        COUNT(CASE WHEN a.evento = 'Ausencia' AND a.accion_personal IS NULL THEN 1 END) AS veces_ausente
+        COUNT(CASE WHEN a.evento = 'Ausencia' AND a.accion_personal IS NULL THEN 1 END) AS veces_ausente,
+        COUNT(CASE WHEN a.evento = 'Salida antes' AND a.accion_personal IS NULL THEN 1 END) AS salidas_antes
     FROM aplicaciones.pro_anacod b 
     INNER JOIN aplicaciones.pro_eventos_asistencia a ON a.anacod = b.anacod
-    WHERE DATE(a.fecha) = CURRENT_DATE
+    WHERE EXTRACT(MONTH FROM DATE(a.fecha)) = EXTRACT(MONTH FROM CURRENT_DATE)
     GROUP BY b.anacod, b.ananam
 ),
 resumen_eventos AS (
     SELECT 
         COUNT(*) AS total_eventos, 
         SUM(veces_tarde) AS empleados_tarde, 
-        SUM(veces_ausente) AS empleados_ausente
+        SUM(veces_ausente) AS empleados_ausente,
+        SUM(salidas_antes) AS salidas_antes
     FROM eventos 
     WHERE veces_tarde > 0 OR veces_ausente > 0
 ), registros_nfc AS (SELECT COUNT(*) AS registros_nfc FROM aplicaciones.log_accesos_sitios WHERE DATE(fecha_registro)=CURRENT_DATE)
@@ -43,7 +45,8 @@ SELECT
     e.empleados_activos,
     COALESCE(r.empleados_tarde, 0) AS empleados_tarde,
     COALESCE(r.empleados_ausente, 0) AS empleados_ausente,
-    COALESCE(n.registros_nfc, 0) AS registros_nfc
+    COALESCE(n.registros_nfc, 0) AS registros_nfc, 
+    COALESCE(r.salidas_antes, 0) AS salidas_antes
 FROM empleados e
 LEFT JOIN resumen_eventos r ON true
 LEFT JOIN registros_nfc n ON true

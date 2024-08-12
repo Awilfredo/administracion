@@ -4,11 +4,11 @@ import TextInput from "./Partials/TextInput";
 import Select from "./Partials/Select";
 import { ManejoFechas } from "@/Helpers/ManejoFechas";
 import { useEffect, useState } from "react";
-
+import Compressor from 'compressorjs';
 import { FileUploader } from "react-drag-drop-files";
 import { CrearEmpleado } from "@/Helpers/CrearEmpleado";
 import { CheckBoxGroup } from "@/Components/CheckBoxGroup";
-import Checkbox from "@/Components/Checkbox";
+import { ComprimirImagen } from "@/Helpers/ComprimirImagen";
 
 function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
     const { fechaActual } = ManejoFechas();
@@ -72,7 +72,16 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
     }
 */
 
-    const handleChangeFile = (file, document) => {
+const { comprimir } = ComprimirImagen();
+    const handleChangeFile = async (archivo, document) => {
+        let file;
+        if(archivo.type.startsWith('image/')){
+            console.log('es una imagen')
+           file =  await comprimir(archivo);
+        }else{
+            file=archivo;
+        }
+
         const selectedFile = file;
         if (selectedFile) {
             // Leer el archivo usando FileReader
@@ -100,6 +109,8 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         console.log(file);
         console.log(data.files.length);
         console.log(data.files);
+
+
 
         let anaimg = undefined;
         if (file?.name?.includes("imagen")) {
@@ -193,6 +204,8 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         let pwd = generatePassword();
         setData({ ...data, anapas: pwd });
     }, []);
+
+
 
     return (
         <AuthenticatedLayout user={auth.user} header={<p>Alta de empleado</p>}>
