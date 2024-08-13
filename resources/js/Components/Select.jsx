@@ -10,7 +10,7 @@ export const Select = ({ options, label, onChange }) => {
             >
                 {label}
             </label>
-            <select id={id} className="form-control" onChange={onChange}>
+            <select id={id} name={id} className="form-control" onChange={onChange}>
                 {options.map((option, index) => (
                     <option key={index} value={option.value}>
                         {option.name}

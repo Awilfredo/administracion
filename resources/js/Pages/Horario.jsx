@@ -2,36 +2,34 @@ import CardAdd from "@/Components/CardAdd";
 import DangerButton from "@/Components/DangerButton";
 import { DeleteIcon } from "@/Components/DeleteIcon";
 import EditIcon from "@/Components/EditIcon";
-import GenericTable from "@/Components/GenericTable";
+import InputError from "@/Components/InputError";
 import Modal from "@/Components/Modal";
-import PrimaryButton from "@/Components/PrimaryButton";
+import PrimaryButtonBlue from "@/Components/PrimaryButtonBlue";
 import SecondaryButton from "@/Components/SecondaryButton";
+import { Select } from "@/Components/Select";
+import TextInput from "@/Components/TextInput";
+import { ManejoFechas } from "@/Helpers/ManejoFechas";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head } from "@inertiajs/react";
-import { useState } from "react";
+import { Head, router, useForm } from "@inertiajs/react";
+import { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
 function Horario({ auth, horarios }) {
-    console.log(horarios);
     const [confirmingDeletion, setConfirmingDeletion] = useState(false);
+    const [confirmCreate, setConfirmCreate] = useState(false);
     const [horarioSeleccionado, sethorarioSeleccionado] = useState({
         nombre: "",
         id: null,
     });
 
-    const headers = [
-        "Dia",
-        "Hora entrada",
-        "Hora salida receso",
-        "Hora entrada receso",
-        "hora salida",
-    ];
-    const keys = [
-        "numero_dia",
-        "entrada",
-        "salida_almuerzo",
-        "entrada_almuerzo",
-        "salida",
-    ];
+    const { data, setData, post, reset, errors } = useForm({
+        nombre: "",
+        dia_libre1: null,
+        dia_libre2: null,
+    });
+
+    useEffect(() => {
+        console.log(data);
+    }, [data]);
 
     const columns = [
         {
@@ -61,6 +59,24 @@ function Horario({ auth, horarios }) {
         { name: "Salida", selector: (row) => row.salida, sortable: true },
     ];
 
+    const handleCreate = (e) => {
+        e.preventDefault();
+        post(route("horario.store"), {
+            preserveScroll: true,
+            onSuccess: () => {
+                reset();
+                setConfirmingDeletion(false);
+            },
+            onError: (errors) => {},
+        });
+    };
+
+    const closeModalCreate = (e) => {
+        setConfirmCreate(false);
+        reset();
+    };
+
+    const { diasDeLaSemana } = ManejoFechas();
     const closeModal = () => {
         setConfirmingDeletion(false);
         //reset();
@@ -70,6 +86,13 @@ function Horario({ auth, horarios }) {
         sethorarioSeleccionado({ nombre: nombre, id: id });
         console.log(horarioSeleccionado);
         setConfirmingDeletion(true);
+    };
+
+    const submitDeleteHorario = (e) => {
+        e.preventDefault();     
+        router.post(route('horario.destroy'), horarioSeleccionado , {
+            preserveScroll: (page) => page.props.someProp === 'value',
+          })
     };
 
     return (
@@ -85,6 +108,11 @@ function Horario({ auth, horarios }) {
 
             <div className="flex justify-center w-full">
                 <div className="w-full max-w-5xl">
+                    <CardAdd onClick={(e) => setConfirmCreate(true)}>
+                        <p className="mt-2 text-gray-800">
+                            Crear nuevo horario
+                        </p>
+                    </CardAdd>
                     {horarios.map((element) => (
                         <div className="mt-7">
                             {/*
@@ -133,7 +161,7 @@ function Horario({ auth, horarios }) {
 
                     {horarioSeleccionado.nombre ? (
                         <Modal show={confirmingDeletion} onClose={closeModal}>
-                            <form onSubmit={true} className="p-6">
+                            <form onSubmit={submitDeleteHorario} className="p-6">
                                 <h2 className="text-lg font-medium text-gray-900">
                                     Estas seguro que desea eliminar el horario{" "}
                                     {horarioSeleccionado.nombre}
@@ -162,16 +190,111 @@ function Horario({ auth, horarios }) {
                     ) : (
                         ""
                     )}
-                    <CardAdd></CardAdd>
-                    <Modal show>
-                        <div className="p-5 flex justify-end">
-                            <SecondaryButton onClick={closeModal}>
-                                Cancelar
-                            </SecondaryButton>
 
-                            <PrimaryButton className="ms-3 bg-blue-500">
-                                Crear Horario
-                            </PrimaryButton>
+                    <Modal show={confirmCreate} onClose={closeModalCreate}>
+                        <div>
+                            <form onSubmit={handleCreate} className="p-6">
+                                <h2 className="text-lg font-medium text-gray-900">
+                                    Crear nuevo horario
+                                </h2>
+
+                                <div className="my-6  grid grid-cols-1 gap-4">
+                                    <div className="">
+                                        <div className="mb-2">
+                                            <label>
+                                                <span className="text-red-500">
+                                                    *
+                                                </span>
+                                                Nombre del horario
+                                            </label>
+                                        </div>
+                                        <TextInput
+                                            value={data.nombre}
+                                            onChange={(e) =>
+                                                setData(
+                                                    "nombre",
+                                                    e.target.value.toUpperCase()
+                                                )
+                                            }
+                                            className="w-full"
+                                            placeholder="HORARIO DE MENSAJERIA"
+                                        ></TextInput>
+                                        <InputError
+                                            className="mt-2"
+                                            message={errors.nombre}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-2">
+                                    <div className="">
+                                        <div className="mb-2">
+                                            <label>Dia libre 1</label>
+                                        </div>
+                                        <Select
+                                            value={data.dia_libre1}
+                                            onChange={(e) =>
+                                                setData({
+                                                    ...data,
+                                                    dia_libre1:
+                                                        e.target.value != 0
+                                                            ? e.target.value
+                                                            : null,
+                                                })
+                                            }
+                                            options={[
+                                                {
+                                                    name: "Selecciona un dia",
+                                                    value: 0,
+                                                },
+                                                ...diasDeLaSemana,
+                                            ]}
+                                        ></Select>
+                                    </div>
+
+                                    <div className="">
+                                        <div className="mb-2">
+                                            <label>Dia libre 2</label>
+                                        </div>
+                                        <Select
+                                            value={data.dia_libre2}
+                                            onChange={(e) =>
+                                                setData({
+                                                    ...data,
+                                                    dia_libre2:
+                                                        e.target.value != 0
+                                                            ? e.target.value
+                                                            : null,
+                                                })
+                                            }
+                                            options={[
+                                                {
+                                                    name: "Selecciona un dia",
+                                                    value: 0,
+                                                },
+                                                ...diasDeLaSemana,
+                                            ]}
+                                        ></Select>
+                                        <InputError
+                                            className="mt-2"
+                                            message={errors.dia_libre2}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end mt-10">
+                                    <DangerButton
+                                        type="button"
+                                        onClick={closeModalCreate}
+                                    >
+                                        Cancelar
+                                    </DangerButton>
+
+                                    <PrimaryButtonBlue className="ms-3">
+                                        Crear Horario
+                                    </PrimaryButtonBlue>
+                                </div>
+                            </form>
                         </div>
                     </Modal>
                 </div>

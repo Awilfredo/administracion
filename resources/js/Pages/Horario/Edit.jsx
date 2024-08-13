@@ -42,7 +42,7 @@ function Edit({ auth, horario }) {
                 ))}
 
                 {dias.length < 7 ? (
-                    <CardAdd onClick={handleAddDay}></CardAdd>
+                    <CardAdd onClick={handleAddDay}><p className="mt-5">Agregar nuevo dia al horario</p></CardAdd>
                 ) : (
                     ""
                 )}

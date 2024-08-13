@@ -267,6 +267,16 @@ export const ManejoFechas = () => {
         return nombresDias[numeroDia - 1]; // Restamos 1 porque los arreglos están basados en 0
     }
 
+    const diasDeLaSemana = [
+        { name: "Lunes", value: 1 },
+        { name: "Martes", value: 2 },
+        { name: "Miércoles", value: 3 },
+        { name: "Jueves", value: 4 },
+        { name: "Viernes", value: 5 },
+        { name: "Sábado", value: 6 },
+        { name: "Domingo", value: 7 },
+    ];
+
     return {
         compararDias,
         convertirTimestampADate,
@@ -286,6 +296,7 @@ export const ManejoFechas = () => {
         obtenerHoraDesdeFecha,
         convertirHorasAFloat,
         fechasDelMes, 
-        obtenerNombreDia
+        obtenerNombreDia,
+        diasDeLaSemana
     };
 };

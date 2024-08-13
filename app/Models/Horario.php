@@ -9,6 +9,8 @@ class Horario extends Model
 {
     protected $connection = 'san';
     protected $table = 'aplicaciones.pro_horarios';
+    public $timestamps = false;
+    protected $fillable = ['nombre', 'dia_libre1', 'dia_libre2'];
     use HasFactory;
 
     public function dias()
