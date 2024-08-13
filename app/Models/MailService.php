@@ -33,22 +33,29 @@ class MailService extends Model
         $this->mail->Port = 587;
     }
 
-    public function sendEmail($to, $toName, $subject, $body, $altBody)
-    {
-        try {
-            $this->mail->setFrom("no-reply@red.com.sv", 'HirginBot');
-            $this->mail->addAddress($to, $toName);
-            $this->mail->isHTML(true);
-            $this->mail->Subject = $subject;
-            $this->mail->Body = $body;
-            $this->mail->AltBody = $altBody;
-
-            $this->mail->send();
-            return 'El mensaje ha sido enviado';
-        } catch (Exception $e) {
-            return "El mensaje no pudo ser enviado. Error de PHPMailer: {$this->mail->ErrorInfo}";
+    public function sendEmail($to, $toName, $subject, $body, $altBody, $bcc = [])
+{
+    try {
+        $this->mail->setFrom("no-reply@red.com.sv", 'HirginBot');
+        $this->mail->addAddress($to, $toName);
+        
+        // Agregar destinatarios BCC
+        foreach ($bcc as $bccEmail => $bccName) {
+            $this->mail->addBCC($bccEmail, $bccName);
         }
+
+        $this->mail->isHTML(true);
+        $this->mail->Subject = $subject;
+        $this->mail->Body = $body;
+        $this->mail->AltBody = $altBody;
+
+        $this->mail->send();
+        return 'El mensaje ha sido enviado';
+    } catch (Exception $e) {
+        return "El mensaje no pudo ser enviado. Error de PHPMailer: {$this->mail->ErrorInfo}";
     }
+}
+
 
     public function addBase64Attachment($base64Content, $name, $type)
     {

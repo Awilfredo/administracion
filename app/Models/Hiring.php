@@ -255,12 +255,12 @@ class Hiring extends Model
 
         $name_flow = 'office365';
         $result = DB::connection('san')->select("
-            INSERT INTO aplicaciones.hiring_flow (anacod, name_flow, status, fecha_update)
-            VALUES (?, ?, DEFAULT, NOW())
+            INSERT INTO aplicaciones.hiring_flow (anacod, name_flow, status, trx_user, fecha_update)
+            VALUES (?, ?, DEFAULT, ?, NOW())
             ON CONFLICT (anacod, name_flow)
             DO UPDATE SET fecha_update = NOW()
             RETURNING id_trx
-        ", [$anacod, $name_flow]);
+        ", [$anacod, $name_flow, 'WLARA']);
 
         // Si se espera solo un resultado, puedes acceder al id_trx así
         $idTrx = $result[0]->id_trx ?? null;
@@ -268,11 +268,12 @@ class Hiring extends Model
 
 
         $ms365 = new MailService();
-        $to = "dbolaines@red.com.sv";
+        $to = "wlara@red.com.sv";
+        $bcc = ["awcruz@red.com.sv" => "", "dbolaines@red.com.sv" => ""];
         $subject = "Asignacion de tarea: Crear correo 365 para $nombre";
 
         // Contenido HTML del correo, incluye imagen si está presente
-        $button = '<a href="http://127.0.0.1:8000/hiring/status-office365?id=' . $idTrx . '" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 5px;">Finalizado</a>';
+        $button = '<a href="http://administracion.red.com.sv/hiring/status-office365?id=' . $idTrx . '" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 5px;">Finalizado</a>';
         $body = "
         <div>
             <h1>Se brindan los datos para la creacion del correo office 365</h1>
@@ -297,7 +298,7 @@ class Hiring extends Model
             $ms365->addBase64Attachment($imagenAnacod['contenidoEscpado'], $imagenAnacod['nombreArchivo'], $imagenAnacod['tipoMime']);
         }
 
-        $ms365->sendEmail($to, "", $subject, $body, "");
+        $ms365->sendEmail($to, "", $subject, $body, "", $bcc);
     }
 
     public function sendInfoSap($request)
@@ -308,21 +309,22 @@ class Hiring extends Model
 
         $name_flow = 'makeSap';
         $result = DB::connection('san')->select("
-            INSERT INTO aplicaciones.hiring_flow (anacod, name_flow, status, fecha_update)
-            VALUES (?, ?, DEFAULT, NOW())
+            INSERT INTO aplicaciones.hiring_flow (anacod, name_flow, status, trx_user, fecha_update)
+            VALUES (?, ?, DEFAULT, ?, NOW())
             ON CONFLICT (anacod, name_flow)
             DO UPDATE SET fecha_update = NOW()
             RETURNING id_trx
-        ", [$anacod, $name_flow]);
+        ", [$anacod, $name_flow, 'CSANTOS']);
 
         // Si se espera solo un resultado, puedes acceder al id_trx así
         $idTrx = $result[0]->id_trx ?? null;
 
         $ms365 = new MailService();
-        $to = "dbolaines@red.com.sv";
+        $to = "csantos@red.com.sv";
+        $bcc = ["dbolaines@red.com.sv" => ""];
         $subject = "Asignacion de tarea: Crear usuario nuevo $nombre";
 
-        $button = '<a href="http://127.0.0.1:8000/hiring/status-sap?id=' . $idTrx . '" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 5px;">Finalizado</a>';
+        $button = '<a href="http://administracion.red.com.sv/hiring/status-sap?id=' . $idTrx . '" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 5px;">Finalizado</a>';
         // Contenido HTML del correo, incluye imagen si está presente
         $body = "
         <div>
@@ -335,7 +337,7 @@ class Hiring extends Model
         </div>
     ";
 
-        $ms365->sendEmail($to, "", $subject, $body, "");
+        $ms365->sendEmail($to, "", $subject, $body, "", $bcc);
     }
 
     public function newHiring($request)

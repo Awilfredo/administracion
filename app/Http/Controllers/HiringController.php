@@ -17,7 +17,8 @@ class HiringController extends Controller
     public function sendAccesosNewHiring($anamai, $userAgenda, $userMensajeria, $pwd, $ananam, $anacod)
     {
         $ms365 = new MailService();
-        $to = "dbolaines@red.com.sv";
+        $to = $anamai;
+        $bcc = ["awcruz@red.com.sv" => "", "dbolaines@red.com.sv" => ""];
         $subject = "Credenciales de acceso";
         $ananam = strtolower($ananam);
         $nombreCapitalizado = ucwords($ananam);
@@ -32,7 +33,7 @@ class HiringController extends Controller
                 <li><strong>SAN: </strong> $anacod</li>
                 <li><strong>Agenda: </strong> $userAgenda</li>
                 <li><strong>Mensajeria: </strong> $userMensajeria</li>
-                <li><strong>Password para todos los anteriores: </strong> pwd </li>                
+                <li><strong>Password para todos los anteriores: </strong> $pwd </li>                
             </ul>            
 
             <p>Enlaces</p>
@@ -43,7 +44,7 @@ class HiringController extends Controller
      ";
 
 
-        $ms365->sendEmail($to, "", $subject, $body, "");
+        $ms365->sendEmail($to, "", $subject, $body, "", $bcc);
     }
 
     public function statusOffice365Step(Request $request)
