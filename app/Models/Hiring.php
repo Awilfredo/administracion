@@ -272,7 +272,7 @@ class Hiring extends Model
         $subject = "Asignacion de tarea: Crear correo 365 para $nombre";
 
         // Contenido HTML del correo, incluye imagen si está presente
-        $button = '<a href="http://127.0.0.1:8000/hiring/status-office365?id=' . $idTrx . '" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 5px;">Haz clic aqui</a>';
+        $button = '<a href="http://127.0.0.1:8000/hiring/status-office365?id=' . $idTrx . '" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 5px;">Finalizado</a>';
         $body = "
         <div>
             <h1>Se brindan los datos para la creacion del correo office 365</h1>
@@ -302,20 +302,36 @@ class Hiring extends Model
 
     public function sendInfoSap($request)
     {
-        $nombre = $request->input('nombres') ?? '' . $request->input('apellidos') ?? '';
-        // $allJson = $request->all();
+        $nombre = $request->input('nombres') ?? '' . $request->input('apellidos') ?? '';        
         $allJson = json_encode($request->all(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $anacod = $request->anacod;
+
+        $name_flow = 'makeSap';
+        $result = DB::connection('san')->select("
+            INSERT INTO aplicaciones.hiring_flow (anacod, name_flow, status, fecha_update)
+            VALUES (?, ?, DEFAULT, NOW())
+            ON CONFLICT (anacod, name_flow)
+            DO UPDATE SET fecha_update = NOW()
+            RETURNING id_trx
+        ", [$anacod, $name_flow]);
+
+        // Si se espera solo un resultado, puedes acceder al id_trx así
+        $idTrx = $result[0]->id_trx ?? null;
 
         $ms365 = new MailService();
         $to = "dbolaines@red.com.sv";
         $subject = "Asignacion de tarea: Crear usuario nuevo $nombre";
 
+        $button = '<a href="http://127.0.0.1:8000/hiring/status-sap?id=' . $idTrx . '" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 5px;">Finalizado</a>';
         // Contenido HTML del correo, incluye imagen si está presente
         $body = "
         <div>
             <h1>Se brindan los datos para la creacion del usuario en SAP</h1>
             <li><strong>Nombre: </strong> $nombre</li>
             <pre>$allJson</pre>
+
+            <h2>Confirmar tarea finalizada</h2>
+            $button
         </div>
     ";
 

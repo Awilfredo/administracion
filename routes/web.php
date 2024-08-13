@@ -30,6 +30,7 @@ Route::get('/test', [TestController::class, 'ping'])->name("test.ping");
 //Rutas para formulario de contratacion
 Route::prefix('hiring')->group(function () {
     Route::get('/status-office365', [HiringController::class, 'statusOffice365Step'])->name('office365.status');
+    Route::get('/status-sap', [HiringController::class, 'statusSapStep'])->name('sap.status');
     // Aquí puedes agregar más rutas que comiencen con /hiring
 });
 
