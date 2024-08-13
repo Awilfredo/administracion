@@ -126,8 +126,9 @@ class AsistenciaController extends Controller
             $resumenEventos = Asistencia::resumenAsistenciaContador(date('m'), date('Y'));
             $llegadas_Tarde = Asistencia::tarde();
             $ausencias = Asistencia::ausencia();
+            
             $recipients = ['dbolaines@red.com.sv', 'awcruz@red.com.sv'];
-            //Mail::to($recipients)->send(new UserRegistrationConfirmation());
+            Mail::to($recipients)->send(new UserRegistrationConfirmation());
 
             
             return Inertia::render('Resumen', ['llegadas_tarde' => $llegadas_Tarde, 'ausencias' => $ausencias, 'eventos' => $resumenEventos]);

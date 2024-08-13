@@ -49,7 +49,6 @@ class EmpleadoController extends Controller
              'horario_id' => 'required|string|max:255',
          ]);*/
 
-
         // Instanciar el modelo
         Empleado::store($request);
         $hiring = new Hiring();

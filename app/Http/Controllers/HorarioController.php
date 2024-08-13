@@ -18,6 +18,7 @@ class HorarioController extends Controller
         //return json_encode($horarios);
     }
 
+
     /**
      * Show the form for creating a new resource.
      */
@@ -45,9 +46,11 @@ class HorarioController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Horario $horario)
+    public function edit($horario)
     {
-        //
+        $horario = Horario::where('id', $horario)->with('dias')->get();
+        //return json_encode($horario);
+        return Inertia::render('Horario/Edit', ['horario' => $horario[0]]);
     }
 
     /**

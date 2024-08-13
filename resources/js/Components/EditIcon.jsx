@@ -1,9 +1,9 @@
-function EditIcon({ fill='currentColor'}) {
+function EditIcon({ fill='currentColor', width='2em', height='2em'}) {
     return (
             <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="2em"
-                height="2em"
+                width={width}
+                height={height}
                 viewBox="0 0 32 32"
             >
                 <path

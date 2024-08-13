@@ -246,6 +246,27 @@ export const ManejoFechas = () => {
     }
     
 
+    function obtenerNombreDia(numeroDia) {
+        // Arreglo con los nombres de los días de la semana
+        const nombresDias = [
+            'Lunes',    // Día 1
+            'Martes',   // Día 2
+            'Miércoles', // Día 3
+            'Jueves',   // Día 4
+            'Viernes',  // Día 5
+            'Sábado',   // Día 6
+            'Domingo'   // Día 7
+        ];
+    
+        // Validar que el número de día esté en el rango correcto
+        if (numeroDia < 1 || numeroDia > 7) {
+            return 'Número de día inválido'; // Mensaje de error si el número no está en el rango 1-7
+        }
+    
+        // Retorna el nombre del día correspondiente al número de día
+        return nombresDias[numeroDia - 1]; // Restamos 1 porque los arreglos están basados en 0
+    }
+
     return {
         compararDias,
         convertirTimestampADate,
@@ -264,6 +285,7 @@ export const ManejoFechas = () => {
         obtenerHoraDesdeTimestamp,
         obtenerHoraDesdeFecha,
         convertirHorasAFloat,
-        fechasDelMes
+        fechasDelMes, 
+        obtenerNombreDia
     };
 };
