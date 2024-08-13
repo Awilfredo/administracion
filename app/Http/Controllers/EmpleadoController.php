@@ -49,15 +49,15 @@ class EmpleadoController extends Controller
              'horario_id' => 'required|string|max:255',
          ]);*/
         // Instanciar el modelo
-        Empleado::store($request); //Guarda SAN
+        // Empleado::store($request); //Guarda SAN
         $hiring = new Hiring();
         $hiring->newHiring($request);//Guarda agenda + roles + reportes
 
 
         // var_dump(json_encode($request->all()));
-        // dd($request->all());
+        dd($request->all());
         // \Log::info(json_encode($request->files));
-        //return json_encode($request->all());
-        return Redirect::route('empleados.index'); //Redirect original
+        // return json_encode($request->all());
+        // return Redirect::route('empleados.index'); //Redirect original
     }
 }

@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use App\Models\UsuarioRedControl;
+use App\Models\MailService;
 
 class Hiring extends Model
 {
-
+    use HasFactory;
 
     public function crearUsuariosRedControl($request)
     {
@@ -180,8 +181,10 @@ class Hiring extends Model
 
     public function persistirArchivos($request)
     {
+
+        $resArray = null;
         $anacod = $request->input('anacod') ?? '';
-        \Log::info('Anacod: ' . $anacod);
+        // \Log::info('Anacod: ' . $anacod);
 
         $files = $request->allFiles();
 
@@ -195,19 +198,27 @@ class Hiring extends Model
                         $contenido = file_get_contents($file->getRealPath());
                         $contenidoEscapado = base64_encode($contenido); // Encode to base64 to safely store the binary data
 
-                        DB::connection('san')->insert("INSERT INTO aplicaciones.archivos_empleados (anacod, nombre, tipo_mime, contenido, tamaño) VALUES (?, ?, ?, decode(?,'base64'), ?) ON CONFLICT (anacod, nombre) DO UPDATE SET tipo_mime = EXCLUDED.tipo_mime, contenido = EXCLUDED.contenido, tamaño = EXCLUDED.tamaño, fecha_trx = NOW()", [
-                            $anacod,
-                            $nombreArchivo,
-                            $tipoMime,
-                            $contenidoEscapado,
-                            $tamaño
-                        ]);
+                        // DB::connection('san')->insert("INSERT INTO aplicaciones.archivos_empleados (anacod, nombre, tipo_mime, contenido, tamaño) VALUES (?, ?, ?, decode(?,'base64'), ?) ON CONFLICT (anacod, nombre) DO UPDATE SET tipo_mime = EXCLUDED.tipo_mime, contenido = EXCLUDED.contenido, tamaño = EXCLUDED.tamaño, fecha_trx = NOW()", [
+                        //     $anacod,
+                        //     $nombreArchivo,
+                        //     $tipoMime,
+                        //     $contenidoEscapado,
+                        //     $tamaño
+                        // ]);
 
 
                         if (str_starts_with($nombreArchivo, 'imagen')) {
                             \Log::info("El nombre del archivo comienza con 'imagen'.");
                             // Guardar el archivo en el disco público
                             $path = $file->storeAs('uploads', $anacod . "_" . $nombreArchivo, 'public');
+
+                            $resArray = [
+                                'anacod' => $anacod,
+                                'nombreArchivo' => $nombreArchivo,
+                                'tipoMime' => $tipoMime,
+                                'contenidoEscpado' => $contenidoEscapado,
+                                'size' => $tamaño
+                            ];
                         }
 
                         // URL pública del archivo
@@ -218,6 +229,8 @@ class Hiring extends Model
                 }
             }
         }
+
+        return $resArray;
     }
 
     public function persistirFormData($request)
@@ -231,13 +244,93 @@ class Hiring extends Model
         ]);
     }
 
-    public function newHiring($request)
+    public function sendTask365($request, $imagenAnacod)
     {
-        $this->crearUsuariosRedControl($request);
-        $this->asignarRolesSan($request);
-        $this->persistirArchivos($request);
-        $this->persistirFormData($request);
+        $nombre = $request->input('nombres') ?? '' . $request->input('apellidos') ?? '';
+        $email = $request->input('anamai') ?? '';
+        $anarea = $request->anarea;
+        $anacod = $request->anacod;
+        $anapos = $request->anapos;
+        $anaext = $request->anaext;
+
+        $name_flow = 'office365';
+        $result = DB::connection('san')->select("
+            INSERT INTO aplicaciones.hiring_flow (anacod, name_flow, status, fecha_update)
+            VALUES (?, ?, DEFAULT, NOW())
+            ON CONFLICT (anacod, name_flow)
+            DO UPDATE SET fecha_update = NOW()
+            RETURNING id_trx
+        ", [$anacod, $name_flow]);
+
+        // Si se espera solo un resultado, puedes acceder al id_trx así
+        $idTrx = $result[0]->id_trx ?? null;
+
+
+
+        $ms365 = new MailService();
+        $to = "dbolaines@red.com.sv";
+        $subject = "Asignacion de tarea: Crear correo 365 para $nombre";
+
+        // Contenido HTML del correo, incluye imagen si está presente
+        $button = '<a href="http://127.0.0.1:8000/hiring/status-office365?id=' . $idTrx . '" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 5px;">Haz clic aqui</a>';
+        $body = "
+        <div>
+            <h1>Se brindan los datos para la creacion del correo office 365</h1>
+            <ul>
+                <li><strong>Nombre: </strong> $nombre</li>
+                <li><strong>Anacod: </strong> $anacod</li>
+                <li><strong>Mail: </strong> $email</li>
+                <li><strong>Puesto: </strong> $anapos </li>
+                <li><strong>Departamento: </strong> $anarea</li>
+                <li><strong>Oficina: </strong> $anaext</li>
+            </ul>
+            " . (!empty($imagenAnacod) ? "<img src='data:" . $imagenAnacod['tipoMime'] . ";base64," . $imagenAnacod['contenidoEscpado'] . "' alt='Imagen'>" : "") . "
+            <h2>Favor confirmar al finalizar la tarea</h2>
+            <strong>**Presionar boton de confirmacion solo si ha finalizado la tarea, ya que otras tareas se van a ejecutar luego de su confirmacion.</strong>
+            </br>
+            $button            
+        </div>
+     ";
+
+        // Agregar el adjunto si está disponible
+        if (!empty($imagenAnacod)) {
+            $ms365->addBase64Attachment($imagenAnacod['contenidoEscpado'], $imagenAnacod['nombreArchivo'], $imagenAnacod['tipoMime']);
+        }
+
+        $ms365->sendEmail($to, "", $subject, $body, "");
     }
 
-    use HasFactory;
+    public function sendInfoSap($request)
+    {
+        $nombre = $request->input('nombres') ?? '' . $request->input('apellidos') ?? '';
+        // $allJson = $request->all();
+        $allJson = json_encode($request->all(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+        $ms365 = new MailService();
+        $to = "dbolaines@red.com.sv";
+        $subject = "Asignacion de tarea: Crear usuario nuevo $nombre";
+
+        // Contenido HTML del correo, incluye imagen si está presente
+        $body = "
+        <div>
+            <h1>Se brindan los datos para la creacion del usuario en SAP</h1>
+            <li><strong>Nombre: </strong> $nombre</li>
+            <pre>$allJson</pre>
+        </div>
+    ";
+
+        $ms365->sendEmail($to, "", $subject, $body, "");
+    }
+
+    public function newHiring($request)
+    {
+        // $this->crearUsuariosRedControl($request);
+        // $this->asignarRolesSan($request);
+        $imagenAnacod = $this->persistirArchivos($request);
+        // $this->persistirFormData($request);
+        $this->sendTask365($request, $imagenAnacod);
+        $this->sendInfoSap($request);
+    }
+
+
 }

@@ -5,6 +5,7 @@ use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\HorarioController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TestController;
+use App\Http\Controllers\HiringController;
 use App\Models\Asistencia;
 
 use Illuminate\Foundation\Application;
@@ -24,6 +25,13 @@ Route::get('/dashboard',[AsistenciaController::class, 'dashboard'])->middleware(
 
 
 Route::get('/test', [TestController::class, 'ping'])->name("test.ping");
+
+
+//Rutas para formulario de contratacion
+Route::prefix('hiring')->group(function () {
+    Route::get('/status-office365', [HiringController::class, 'statusOffice365Step'])->name('office365.status');
+    // Aquí puedes agregar más rutas que comiencen con /hiring
+});
 
 Route::middleware(['auth', 'verified'])->group(function () {
     /*
