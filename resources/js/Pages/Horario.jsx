@@ -89,10 +89,11 @@ function Horario({ auth, horarios }) {
     };
 
     const submitDeleteHorario = (e) => {
-        e.preventDefault();     
-        router.post(route('horario.destroy'), horarioSeleccionado , {
-            preserveScroll: (page) => page.props.someProp === 'value',
-          })
+        e.preventDefault();
+        router.delete(
+            route("horario.destroy", { horario: horarioSeleccionado.id }),
+            { only: ["horarios"], onFinish: () => {setConfirmingDeletion(false);}, preserveScroll:true }
+        );
     };
 
     return (
@@ -129,7 +130,7 @@ function Horario({ auth, horarios }) {
                                     <div>
                                         <button
                                             className="text-blue-500 hover:text-blue-700"
-                                            onClick={() => alert()}
+                                            onClick={() => router.visit(route('horario.edit', {horario:element.id}))}
                                         >
                                             <EditIcon
                                                 height="32px"
@@ -161,7 +162,10 @@ function Horario({ auth, horarios }) {
 
                     {horarioSeleccionado.nombre ? (
                         <Modal show={confirmingDeletion} onClose={closeModal}>
-                            <form onSubmit={submitDeleteHorario} className="p-6">
+                            <form
+                                onSubmit={submitDeleteHorario}
+                                className="p-6"
+                            >
                                 <h2 className="text-lg font-medium text-gray-900">
                                     Estas seguro que desea eliminar el horario{" "}
                                     {horarioSeleccionado.nombre}

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Horario;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 
 class HorarioController extends Controller
@@ -78,9 +80,9 @@ class HorarioController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request)
+    public function destroy(Horario $horario): RedirectResponse
     {
-        $horario = Horario::find($request->id);
-        return json_encode($horario);
+        $horario->delete();
+        return Redirect::to('/horarios');
     }
 }

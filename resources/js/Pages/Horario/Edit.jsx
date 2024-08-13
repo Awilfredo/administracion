@@ -5,6 +5,8 @@ import { useState } from "react";
 import AddIcon from "@/Components/Icons/AddIcon";
 import CardAdd from "@/Components/CardAdd";
 import Modal from "@/Components/Modal";
+import PrimaryButtonBlue from "@/Components/PrimaryButtonBlue";
+import Matrix from "@/Components/Matrix";
 function Edit({ auth, horario }) {
     const [dias, setdias] = useState([...horario.dias]);
     const [showSelectDay, setshowSelectDay] = useState(false);
@@ -25,6 +27,9 @@ function Edit({ auth, horario }) {
             },
         ]);
     };
+
+
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -51,9 +56,13 @@ function Edit({ auth, horario }) {
             <Modal show={showSelectDay} closeable={true}>
                 <div className="p-5">
                     <strong>Selecciona un dia:</strong>
-                    <div className="flex"></div>
+                    <div className="flex">
+                        <PrimaryButtonBlue>{}</PrimaryButtonBlue>
+                    </div>
                 </div>
             </Modal>
+
+            <Matrix></Matrix>
 
         </AuthenticatedLayout>
     );
