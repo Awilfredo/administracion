@@ -24,10 +24,6 @@ function Edit({ auth, horario }) {
 
     const handleAddDay = () => {
         setshowSelectDay(true);
-        // if(dias.length<6){
-        //     setshowSelectDay(true);
-
-        // }
     };
 
     const handleCreateDay = (dia) => {
