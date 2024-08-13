@@ -126,7 +126,7 @@ class AsistenciaController extends Controller
             $resumenEventos = Asistencia::resumenAsistenciaContador(date('m'), date('Y'));
             $llegadas_Tarde = Asistencia::tarde();
             $ausencias = Asistencia::ausencia();
-            
+
             $recipients = ['dbolaines@red.com.sv', 'awcruz@red.com.sv'];
             Mail::to($recipients)->send(new UserRegistrationConfirmation());
 
@@ -151,9 +151,9 @@ class AsistenciaController extends Controller
         return json_encode($resumen);
     }
 
-    public function EventrosResumenContador($month)
+    public function EventrosResumenContador($month, $year)
     {
-        $eventosResumen = Asistencia::resumenAsistenciaContador($month);
+        $eventosResumen = Asistencia::resumenAsistenciaContador($month, $year);
         return json_encode($eventosResumen);
     }
 

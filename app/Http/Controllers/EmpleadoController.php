@@ -48,11 +48,6 @@ class EmpleadoController extends Controller
              'anaext' => 'required|string|max:255',
              'horario_id' => 'required|string|max:255',
          ]);*/
-<<<<<<< HEAD
-=======
-        
->>>>>>> f64f0cc85c1e7704a0a24e6560e10d08db9ef6c5
-
         // Instanciar el modelo
         Empleado::store($request); //Guarda SAN
         $hiring = new Hiring();
