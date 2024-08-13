@@ -2,9 +2,29 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head } from "@inertiajs/react";
 import EditDay from "./Partials/EditDay";
 import { useState } from "react";
+import AddIcon from "@/Components/Icons/AddIcon";
+import CardAdd from "@/Components/CardAdd";
+import Modal from "@/Components/Modal";
 function Edit({ auth, horario }) {
     const [dias, setdias] = useState([...horario.dias]);
+    const [showSelectDay, setshowSelectDay] = useState(false);
     console.log(dias);
+    const handleAddDay = () => {
+        if(dias.length<6){
+            setshowSelectDay(true);
+
+        }
+        setdias([
+            ...dias,
+            {
+                numero_dia: dias.length + 1,
+                entrada: "",
+                salida: "",
+                entrada_almuerzo: "",
+                salida_almuerzo: "",
+            },
+        ]);
+    };
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -16,11 +36,25 @@ function Edit({ auth, horario }) {
         >
             <Head title="Editar horario" />
 
-            {dias.map((element, index) => (
-                <div className="w-full sm:px-2 md:px-10 justify-center">
+            <div className="w-full sm:px-2 md:px-10 justify-center pb-10">
+                {dias.map((element, index) => (
                     <EditDay dia={element}></EditDay>
+                ))}
+
+                {dias.length < 7 ? (
+                    <CardAdd onClick={handleAddDay}></CardAdd>
+                ) : (
+                    ""
+                )}
+            </div>
+
+            <Modal show={showSelectDay} closeable={true}>
+                <div className="p-5">
+                    <strong>Selecciona un dia:</strong>
+                    <div className="flex"></div>
                 </div>
-            ))}
+            </Modal>
+
         </AuthenticatedLayout>
     );
 }

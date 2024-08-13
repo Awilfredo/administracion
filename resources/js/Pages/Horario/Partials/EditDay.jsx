@@ -8,7 +8,7 @@ function EditDay({ dia }) {
     const { obtenerNombreDia } = ManejoFechas();
 
     return (
-        <div className="bg-white sm:100 lg:w-11/12  mt-5 p-5 rounded-xl">
+        <div className="bg-white sm:100  mt-5 p-5 rounded-xl">
             <div className="relative w-100">
                 <button className="absolute right-0 text-red-500 hover:text-red-700">
                     <DeleteIcon width="32px" height="32px" className=''></DeleteIcon>

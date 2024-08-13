@@ -32,7 +32,21 @@ class HorarioController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'nombre' => 'required|string|max:255',
+            'dia_libre1'=> 'nullable|integer',
+            'dia_libre2' => 'nullable|integer',
+        ]);
+        $horario = new Horario();
+        /*
+        $horario = Horario::create([
+            'nombre' => $request->nombre,
+            'dia_libre1' => $request->dia_libre1,
+            'dia_libre2' => $request->dia_libre1
+        ]);
+*/
+        //return redirect(route('horario.edit',['horario'=>$horario->id]));
+        return json_encode($horario);
     }
 
     /**

@@ -1,8 +1,10 @@
+import CardAdd from "@/Components/CardAdd";
 import DangerButton from "@/Components/DangerButton";
 import { DeleteIcon } from "@/Components/DeleteIcon";
 import EditIcon from "@/Components/EditIcon";
 import GenericTable from "@/Components/GenericTable";
 import Modal from "@/Components/Modal";
+import PrimaryButton from "@/Components/PrimaryButton";
 import SecondaryButton from "@/Components/SecondaryButton";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head } from "@inertiajs/react";
@@ -11,7 +13,10 @@ import DataTable from "react-data-table-component";
 function Horario({ auth, horarios }) {
     console.log(horarios);
     const [confirmingDeletion, setConfirmingDeletion] = useState(false);
-    const [horarioSeleccionado, sethorarioSeleccionado] = useState({nombre:'', id:null});
+    const [horarioSeleccionado, sethorarioSeleccionado] = useState({
+        nombre: "",
+        id: null,
+    });
 
     const headers = [
         "Dia",
@@ -62,8 +67,8 @@ function Horario({ auth, horarios }) {
     };
 
     const handleDeleteHorario = (nombre, id) => {
-        sethorarioSeleccionado({nombre:nombre, id:id});
-        console.log(horarioSeleccionado)
+        sethorarioSeleccionado({ nombre: nombre, id: id });
+        console.log(horarioSeleccionado);
         setConfirmingDeletion(true);
     };
 
@@ -106,7 +111,10 @@ function Horario({ auth, horarios }) {
                                         <button
                                             className="text-red-500 hover:text-red-700"
                                             onClick={() =>
-                                                handleDeleteHorario(element.nombre, element.id)
+                                                handleDeleteHorario(
+                                                    element.nombre,
+                                                    element.id
+                                                )
                                             }
                                         >
                                             <DeleteIcon
@@ -119,38 +127,53 @@ function Horario({ auth, horarios }) {
                                 title={element.nombre + element.id}
                                 columns={columns}
                                 data={element.dias}
-                                ></DataTable>
+                            ></DataTable>
                         </div>
                     ))}
 
-                    {horarioSeleccionado.nombre ? 
-                    <Modal show={confirmingDeletion} onClose={closeModal}>
-                        <form onSubmit={true} className="p-6">
-                            <h2 className="text-lg font-medium text-gray-900">
-                                Estas seguro que desea eliminar el horario {horarioSeleccionado.nombre}
- 
-                            </h2>
+                    {horarioSeleccionado.nombre ? (
+                        <Modal show={confirmingDeletion} onClose={closeModal}>
+                            <form onSubmit={true} className="p-6">
+                                <h2 className="text-lg font-medium text-gray-900">
+                                    Estas seguro que desea eliminar el horario{" "}
+                                    {horarioSeleccionado.nombre}
+                                </h2>
 
-                            <p className="mt-1 text-sm text-gray-600">
-                                Si continuas, los datos no se podran recuperar y
-                                se debera asignar manualmente un horario a todos
-                                los empleados que estaban vinculados a este
-                            </p>
+                                <p className="mt-1 text-sm text-gray-600">
+                                    Si continuas, los datos no se podran
+                                    recuperar y se debera asignar manualmente un
+                                    horario a todos los empleados que estaban
+                                    vinculados a este
+                                </p>
 
-                            <div className="mt-6"></div>
+                                <div className="mt-6"></div>
 
-                            <div className="mt-6 flex justify-end">
-                                <SecondaryButton onClick={closeModal}>
-                                    Cancelar
-                                </SecondaryButton>
+                                <div className="mt-6 flex justify-end">
+                                    <SecondaryButton onClick={closeModal}>
+                                        Cancelar
+                                    </SecondaryButton>
 
-                                <DangerButton className="ms-3">
-                                    Eliminar este horario
-                                </DangerButton>
-                            </div>
-                        </form>
+                                    <DangerButton className="ms-3">
+                                        Eliminar este horario
+                                    </DangerButton>
+                                </div>
+                            </form>
+                        </Modal>
+                    ) : (
+                        ""
+                    )}
+                    <CardAdd></CardAdd>
+                    <Modal show>
+                        <div className="p-5 flex justify-end">
+                            <SecondaryButton onClick={closeModal}>
+                                Cancelar
+                            </SecondaryButton>
+
+                            <PrimaryButton className="ms-3 bg-blue-500">
+                                Crear Horario
+                            </PrimaryButton>
+                        </div>
                     </Modal>
-            :''}
                 </div>
             </div>
         </AuthenticatedLayout>
