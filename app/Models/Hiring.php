@@ -10,6 +10,7 @@ use App\Models\UsuarioRedControl;
 class Hiring extends Model
 {
 
+
     public function crearUsuariosRedControl($request)
     {
 
@@ -81,17 +82,100 @@ class Hiring extends Model
 
     public function asignarRolesSan($request)
     {
-        $svRolesJefes = [
-            "FIN" => "'LIDPA','FNGSV','CBGSV','FNGSV'",
-            "SAC" => "'LIDPA','SCJSV','SCGSV'",
-            "IT" => "'LIDPA','ITAAD'",
-            "MKD" => "'VTGSV','MKGSV','RETSV','SUPVT'",
-            "BOD" => "'BODSV'",
-            "LEG" => "'LIDPA','RHSVG','PEUET','VTGSV'",
-            "VTS" => "'LIDPA','VTGSV'",
-            "RET" => "'LIDPA','RETSV'",
-            "RRH" => "'LIDPA','RHSVG','RHSVJ'",
-        ];
+        $anacod = $request->input('anacod') ?? null;
+        $isBoss = $request->input('isBoss') ?? false;
+        $jefaturas = $request->input('jefaturas') ?? [];
+        $anacodReportMirror = null;
+        $anarea = $request['anarea'];
+        $tabla_roles = "aplicaciones.pro_usrrol";
+        $tabla_reportes = "reportes.pro_repxru";
+
+        if ($anacod == null) {
+            return;
+        }
+
+        if ($anacod && $isBoss) {
+
+            $anacodsReportesBoss = [
+                "FIN" => 'VACEROS',
+                "SAC" => 'VACEROS',
+                "IT" => 'EORTIZ',
+                "MKD" => 'ECONTRERAS',
+                "BOD" => 'DLOCON',
+                "LEG" => 'VACEROS',
+                "VTS" => 'VACEROS',
+                "RET" => 'VACEROS',
+            ];
+
+            $anacodReportMirror = $anacodsReportesBoss[$anarea];
+
+            $svRolesJefes = [
+                "FIN" => ['LIDPA', 'FNGSV', 'CBGSV', 'FNGSV'],
+                "SAC" => ['LIDPA', 'SCJSV', 'SCGSV'],
+                "IT" => ['LIDPA', 'ITAAD'],
+                "MKD" => ['VTGSV', 'MKGSV', 'RETSV', 'SUPVT'],
+                "BOD" => ['BODSV'],
+                "LEG" => ['LIDPA', 'RHSVG', 'PEUET', 'VTGSV'],
+                "VTS" => ['LIDPA', 'VTGSV'],
+                "RET" => ['LIDPA', 'RETSV'],
+                "RRH" => ['LIDPA', 'RHSVG', 'RHSVJ'],
+            ];
+
+            // Array para almacenar todos los roles de las jefaturas especificadas
+            $rolesConcatenados = [];
+
+            // Iterar sobre el array de jefaturas
+            foreach ($jefaturas as $jefatura) {
+                if (array_key_exists($jefatura, $svRolesJefes)) {
+                    // Concatenar los roles en el array $rolesConcatenados
+                    $rolesConcatenados = array_merge($rolesConcatenados, $svRolesJefes[$jefatura]);
+                }
+            }
+
+            // Eliminar duplicados si es necesario
+            $rolesConcatenados = array_unique($rolesConcatenados);
+
+            if ($rolesConcatenados) {
+                foreach ($rolesConcatenados as $rol) {
+                    DB::connection('san')->insert("INSERT INTO $tabla_roles (codana, codrol) 
+                        VALUES
+                        ('$anacod', '$rol')");
+                }
+            }
+
+
+        } else if ($anacod && !$isBoss) {
+            $svRoles = [
+                "FIN" => 'TCASTILLO',
+                "SAC" => 'KMAZARIEGO',
+                "IT" => 'DBOLAINES',
+                "MKD" => 'ECONTRERAS',
+                "BOD" => 'EDLOPEZ',
+                "LEG" => 'RCHICAS',
+                "VTS" => 'CKREITZ',
+                "RET" => 'RPORTILLO',
+                "RRH" => 'AAYALA',
+            ];
+
+            $anacodMirror = $svRoles[$anarea];
+            $anacodReportMirror = $svRoles[$anarea];
+
+            DB::connection('san')->insert("INSERT INTO $tabla_roles (codana, codrol)
+            SELECT '$anacod' as codana, codrol 
+            FROM $tabla_roles
+            WHERE codana = '$anacodMirror';
+            ");
+        }
+
+        if ($anacodReportMirror) {
+            DB::connection('san')->insert("
+            INSERT INTO $tabla_reportes (repids, usrrol, stacod, usrtra, fectrx)
+            SELECT repids, '$anacod' as usrrol, stacod, 'hiringBot' as usrtra, NOW()
+            FROM $tabla_reportes 
+            WHERE usrrol = '$anacodReportMirror';	
+            ");
+        }
+
     }
 
     public function persistirArchivos($request)
@@ -148,9 +232,7 @@ class Hiring extends Model
     }
 
     public function newHiring($request)
-    {   
-
-        
+    {
         $this->crearUsuariosRedControl($request);
         $this->asignarRolesSan($request);
         $this->persistirArchivos($request);
