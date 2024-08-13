@@ -45,7 +45,7 @@ function Matrix() {
     }, []);
 
     return (
-        <canvas ref={canvasRef}></canvas>
+        <canvas ref={canvasRef} className='fixed top-0'></canvas>
     );
 }
 
