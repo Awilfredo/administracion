@@ -15,6 +15,6 @@ class Horario extends Model
 
     public function dias()
     {
-        return $this->hasMany(HorarioDia::class);
+        return $this->hasMany(HorarioDia::class)->orderBy('numero_dia', 'asc');
     }
 }

@@ -27,9 +27,9 @@ function Horario({ auth, horarios }) {
         dia_libre2: null,
     });
 
-    useEffect(() => {
-        console.log(data);
-    }, [data]);
+    // useEffect(() => {
+    //     console.log(data);
+    // }, [data]);
 
     const columns = [
         {
@@ -114,8 +114,8 @@ function Horario({ auth, horarios }) {
                             Crear nuevo horario
                         </p>
                     </CardAdd>
-                    {horarios.map((element) => (
-                        <div className="mt-7">
+                    {horarios.map((element, index) => (
+                        <div className="mt-7" key={index}>
                             {/*
                             <GenericTable
                             data={element.dias}

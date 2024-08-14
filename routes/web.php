@@ -66,8 +66,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/horarios', [HorarioController::class, 'index'])->name('horario.index');
     Route::post('/horarios', [HorarioController::class, 'store'])->name('horario.store');
     Route::get('/horarios/editar/{horario}', [HorarioController::class, 'edit'])->name('horario.edit');
+    Route::post('/horarios/editar/', [HorarioController::class, 'storeDay'])->name('horarioDia.store');
     Route::patch('/asistencia/actualizar/acciones', [AsistenciaController::class, 'accionesUpdate'])->name('acciones.update');
     Route::delete('/horarios/{horario}', [HorarioController::class, 'destroy'])->name('horario.destroy');
+    Route::delete('/horarios/editar/{dia}', [HorarioController::class, 'destroyDay'])->name('horarioDia.destroy');
+    Route::patch('/horarios/editar/update', [HorarioController::class, 'updateDay'])->name('horarioDia.update');
     Route::get('/empleados', [EmpleadoController::class, 'index'])->name('empleados.index');
     Route::get('/estadisticas', [AsistenciaController::class, 'estadisticas'])->name('estadisticas.index');
     Route::get('/empleados/nuevo', [EmpleadoController::class, 'create'])->name('empleados.create');
