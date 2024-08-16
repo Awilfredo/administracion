@@ -31,33 +31,35 @@ class EmpleadoController extends Controller
     {
 
         // dump($request->all());
-        /* $request->validate([
-             'anacod' => 'required|string|max:255',
-             'nombres' => 'required|string|max:255',
-             'apellidos' => 'required|string|max:255',
-             'anamai' => 'required|string|max:255',
-             'anapas' => 'required|string|max:255',
-             'fecha_nacimiento' => 'required|string|max:255',
-             'anapai' => 'required|string|max:255',
-             'fecha_ingreso' => 'required|string|max:255',
-             'anapos' => 'required|string|max:255',
-             'anarea' => 'required|string|max:255',
-             'anatel' => 'required|string|max:255',
-             'anajef' => 'required|string|max:255',
-             'folcod' => 'required|string|max:255',
-             'anaext' => 'required|string|max:255',
-             'horario_id' => 'required|string|max:255',
-         ]);*/
+        $request->validate([
+            'anacod' => 'required|string|max:255',
+            'nombres' => 'required|string|max:255',
+            'apellidos' => 'required|string|max:255',
+            'anamai' => 'required|string|max:255',
+            'anapas' => 'required|string|max:255',
+            'fecha_nacimiento' => 'required|string|max:255',
+            'anapai' => 'required|string|max:255',
+            'fecha_ingreso' => 'required|string|max:255',
+            'anapos' => 'required|string|max:255',
+            'anarea' => 'required|string|max:255',
+            'anatel' => 'required|string|max:255',
+            'anajef' => 'required|string|max:255',
+            'folcod' => 'required|string|max:255',
+            'anaext' => 'required|string|max:255',
+            'horario_id' => 'required|string|max:255',
+        ]);
+
+        
         // Instanciar el modelo
-        // Empleado::store($request); //Guarda SAN
+        Empleado::store($request); //Guarda SAN
         $hiring = new Hiring();
         $hiring->newHiring($request);//Guarda agenda + roles + reportes
 
 
         // var_dump(json_encode($request->all()));
-        dd($request->all());
+        // dd($request->all());
         // \Log::info(json_encode($request->files));
         // return json_encode($request->all());
-        // return Redirect::route('empleados.index'); //Redirect original
+        return Redirect::route('empleados.index'); //Redirect original
     }
 }
