@@ -9,12 +9,24 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 
 class AsistenciaController extends Controller
 {
+    public function formulario()
+    {
+        $anacod = isset($_GET['anacod']) ? $_GET['anacod'] : null;
+        return Inertia::render('Formulario', ['anacod' => $anacod]);
+    }
+
+    public function formularioStore(Request $request)
+    {
+         DB::connection('san')->insert("INSERT INTO aplicaciones.pro_usuarios_sistemas (anacod, posicion, modulos) VALUES ('$request->anacod', '$request->puesto', '$request->modulos')");
+    }
+
     public function dashboard()
     {
         $data = Asistencia::dashboard();
@@ -37,7 +49,7 @@ class AsistenciaController extends Controller
     public function nfcIndex()
     {
         $registros = Asistencia::registrosNFC(Carbon::now()->format('Y-m-d'));
-       // 
+        // 
 
         if (isset($_GET['fecha']) || isset($_GET['busqueda'])) {
             if (isset($_GET['busqueda']) && $_GET['busqueda'] == 'mes') {
@@ -130,7 +142,7 @@ class AsistenciaController extends Controller
             $recipients = ['dbolaines@red.com.sv', 'awcruz@red.com.sv'];
             Mail::to($recipients)->send(new UserRegistrationConfirmation());
 
-            
+
             return Inertia::render('Resumen', ['llegadas_tarde' => $llegadas_Tarde, 'ausencias' => $ausencias, 'eventos' => $resumenEventos]);
         }
 
@@ -170,11 +182,11 @@ class AsistenciaController extends Controller
     public function estadisticas()
     {
         $empleados = Empleado::where('anatip', 'U')->where('anasta', 'A')->where('anapai', 'SV')->orderBy('anacod')->get();
-        if(isset($_GET['mes']) && isset($_GET['mes'])){
+        if (isset($_GET['mes']) && isset($_GET['mes'])) {
             $datos = Asistencia::horasNFCMes($_GET['anio'], $_GET['mes']);
             return json_encode($datos);
-        }else{
-            $now= Carbon::now();
+        } else {
+            $now = Carbon::now();
             $data = Asistencia::horasNFCMes($now->format('Y'), $now->format('m'));
             return Inertia::render('Estadisticas', ['datos' => $data, 'empleados' => $empleados]);
         }

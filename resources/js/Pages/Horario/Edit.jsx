@@ -71,7 +71,9 @@ function Edit({ auth, horario }) {
     
 
     const handleSave = (dia)=>{
-        router.patch(route('horarioDia.update'), dia)        
+        router.patch(route('horarioDia.update'), dia, {
+            preserveScroll:true,
+        })        
     }
 
     return (

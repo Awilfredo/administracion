@@ -14,6 +14,7 @@ class Asistencia extends Model
     protected $table = 'aplicaciones.pro_eventos_asistencia';
     protected $fillable = ['accion_personal'];
 
+
     public static function dashboard()
     {
         $data = DB::connection('san')->select("WITH 

@@ -22,6 +22,8 @@ Route::get('/asistencia', function(){
 */
 Route::get('/dashboard',[AsistenciaController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
 
+Route::get('/aplicaciones/formulario',[AsistenciaController::class, 'formulario'])->name('formulario');
+Route::post('/aplicaciones/formulario', [AsistenciaController::class, 'formularioStore'])->name('formulario.store');
 
 
 Route::get('/test', [TestController::class, 'ping'])->name("test.ping");

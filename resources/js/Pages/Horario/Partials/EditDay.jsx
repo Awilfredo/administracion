@@ -15,6 +15,10 @@ function EditDay({ dia, handleDeleteDay, handleSave}) {
     const [showSave, setShowSave] = useState(false);
     const { areValuesEqual } = CompareObject();
 
+    useEffect(() => {
+        setData(dia);
+    }, [dia]);
+
     const handleDelete = (e) => {
         setShowModal(true);
     };
