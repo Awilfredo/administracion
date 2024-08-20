@@ -282,6 +282,12 @@ const Formulario = ({ anacod }) => {
                     <option value="especialista de plataformas">
                         Especialista de Plataformas
                     </option>
+                    <option value="supervisor de bodega y produccion refurbished">
+                    Supervisor de Bodega y Producción Refurbished
+                    </option>
+                    <option value="analista de creditos y activaciones">
+                    Analista de Créditos y Activaciones  - Activaciones
+                    </option>
                 </select>
             </div>
 
