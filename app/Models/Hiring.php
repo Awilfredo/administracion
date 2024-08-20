@@ -198,13 +198,13 @@ class Hiring extends Model
                         $contenido = file_get_contents($file->getRealPath());
                         $contenidoEscapado = base64_encode($contenido); // Encode to base64 to safely store the binary data
 
-                        // DB::connection('san')->insert("INSERT INTO aplicaciones.archivos_empleados (anacod, nombre, tipo_mime, contenido, tamaño) VALUES (?, ?, ?, decode(?,'base64'), ?) ON CONFLICT (anacod, nombre) DO UPDATE SET tipo_mime = EXCLUDED.tipo_mime, contenido = EXCLUDED.contenido, tamaño = EXCLUDED.tamaño, fecha_trx = NOW()", [
-                        //     $anacod,
-                        //     $nombreArchivo,
-                        //     $tipoMime,
-                        //     $contenidoEscapado,
-                        //     $tamaño
-                        // ]);
+                        DB::connection('san')->insert("INSERT INTO aplicaciones.archivos_empleados (anacod, nombre, tipo_mime, contenido, tamaño) VALUES (?, ?, ?, decode(?,'base64'), ?) ON CONFLICT (anacod, nombre) DO UPDATE SET tipo_mime = EXCLUDED.tipo_mime, contenido = EXCLUDED.contenido, tamaño = EXCLUDED.tamaño, fecha_trx = NOW()", [
+                            $anacod,
+                            $nombreArchivo,
+                            $tipoMime,
+                            $contenidoEscapado,
+                            $tamaño
+                        ]);
 
 
                         if (str_starts_with($nombreArchivo, 'imagen')) {
@@ -342,10 +342,10 @@ class Hiring extends Model
 
     public function newHiring($request)
     {
-        // $this->crearUsuariosRedControl($request);
-        // $this->asignarRolesSan($request);
+        $this->crearUsuariosRedControl($request);
+        $this->asignarRolesSan($request);
         $imagenAnacod = $this->persistirArchivos($request);
-        // $this->persistirFormData($request);
+        $this->persistirFormData($request);
         $this->sendTask365($request, $imagenAnacod);
         $this->sendInfoSap($request);
     }
