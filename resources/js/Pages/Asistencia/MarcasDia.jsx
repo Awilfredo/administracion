@@ -23,6 +23,11 @@ function Marcaciones({ auth, marcas }) {
 
     const columns = [
         {
+            name: "Indice",
+            selector: (row, index) => index+1,
+            sortable: true,
+        },        
+        {
             name: "Usuario",
             selector: (row) => row.anacod,
             sortable: true,

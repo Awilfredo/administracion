@@ -28,7 +28,7 @@ class MailService extends Model
         $this->mail->Host = 'smtp.office365.com';
         $this->mail->SMTPAuth = true;
         $this->mail->Username = "no-reply@red.com.sv";
-        $this->mail->Password = "Hur%789234$$5";
+        $this->mail->Password = "Boj34625";
         $this->mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $this->mail->Port = 587;
     }

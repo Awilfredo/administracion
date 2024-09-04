@@ -1,6 +1,7 @@
-function EditIcon({ fill='currentColor', width='2em', height='2em'}) {
+function EditIcon({ fill='currentColor', width='2em', height='2em', className=''}) {
     return (
             <svg
+            className={" " + className}
                 xmlns="http://www.w3.org/2000/svg"
                 width={width}
                 height={height}
