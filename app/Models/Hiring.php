@@ -304,7 +304,7 @@ class Hiring extends Model
 
     public function sendInfoSap($request)
     {
-        $nombre = $request->input('nombres') ?? '' . $request->input('apellidos') ?? '';        
+        $nombre = $request->input('nombres') ?? '' . $request->input('apellidos') ?? '';
         $allJson = json_encode($request->all(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $anacod = $request->anacod;
 
@@ -343,12 +343,50 @@ class Hiring extends Model
 
     public function newHiring($request)
     {
-        $this->crearUsuariosRedControl($request);
-        $this->asignarRolesSan($request);
-        $imagenAnacod = $this->persistirArchivos($request);
-        $this->persistirFormData($request);
-        $this->sendTask365($request, $imagenAnacod);
-        $this->sendInfoSap($request);
+        try {
+            $this->crearUsuariosRedControl($request);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+
+        try {
+            //code...
+            $this->asignarRolesSan($request);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+
+        $imagenAnacod = null;
+        try {
+            //code...
+            $imagenAnacod = $this->persistirArchivos($request);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+
+        try {
+            //code...
+            $this->persistirFormData($request);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+
+        try {
+            //code...
+            if ($imagenAnacod) {
+                $this->sendTask365($request, $imagenAnacod);
+                # code...
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+
+        try {
+            //code...
+            $this->sendInfoSap($request);
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
     }
 
 
