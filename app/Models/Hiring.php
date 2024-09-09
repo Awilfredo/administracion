@@ -106,6 +106,7 @@ class Hiring extends Model
                 "LEG" => 'VACEROS',
                 "VTS" => 'VACEROS',
                 "RET" => 'VACEROS',
+                "RRH" => 'AAYALA',
             ];
 
             $anacodReportMirror = $anacodsReportesBoss[$anarea];
