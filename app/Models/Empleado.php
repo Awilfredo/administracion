@@ -62,10 +62,17 @@ class Empleado extends Model
     }
     public static function store($request)
     {
+
+                             //'anatel' => 'required|string|max:255',
+                             //'folcod' => 'required|string|max:255',
+                             //'anaext' => 'required|string|max:255',
         $fechaCarbon = Carbon::createFromFormat('Y-m-d', $request->fecha_nacimiento);
         $dia = $fechaCarbon->day;
         $mes = $fechaCarbon->month;
         $folcod_real = $request->folcod_real ? $request->folcod_real : null;
+        $folcod = $request->folcod ? $request->folcod  : null;
+        $anatel = $request->anatel ? $request->anatel : null;
+        $anaext = $request->anaext ? $request->anatel : null;
         DB::connection('san')->insert("INSERT INTO aplicaciones.pro_anacod (anacod,ananam,anapas,anamai,anasta,anaprf,anapai,anatel,anarad,anajef,anarea,folcod,anaext,anatip,anaimg,anapos,anasuc,anames,anadia,telreg,teltip,segundo_jefe,fecha_ingreso,fecha_baja,id_turno,lider_area,folcodreal, horario_id) 
         VALUES
         ('$request->anacod',
@@ -75,12 +82,12 @@ class Empleado extends Model
         'A', 
         1, 
         '$request->anapai', 
-        '$request->anatel', 
+        '$anatel', 
         '', 
         '$request->anajef', 
         '$request->anarea',
-         $request->folcod, 
-         '$request->anaext', 
+         $folcod, 
+         '$anaext', 
          'U', 
          '$request->anaimg', 
          '$request->anapos', 
@@ -96,6 +103,7 @@ class Empleado extends Model
          '$request->anajef', 
          null, 
          $request->horario_id)");
+
     }
 
     use HasFactory;
