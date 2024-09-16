@@ -44,7 +44,7 @@ class EmpleadoController extends Controller
             'anarea' => 'required|string|max:255',
             //'anatel' => 'required|string|max:255',
             'anajef' => 'required|string|max:255',
-            '//folcod' => 'required|string|max:255',
+            //'folcod' => 'required|string|max:255',
             //'anaext' => 'required|string|max:255',
             'horario_id' => 'required|string|max:255',
         ]);
