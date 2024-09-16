@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use App\Models\UsuarioRedControl;
 use App\Models\MailService;
+use Exception;
 
 class Hiring extends Model
 {
@@ -266,7 +267,7 @@ class Hiring extends Model
         // Si se espera solo un resultado, puedes acceder al id_trx así
         $idTrx = $result[0]->id_trx ?? null;
 
-
+        $cssPersonalizado = 'style="width: 100%;"';
 
         $ms365 = new MailService();
         $to = "wlara@red.com.sv";
@@ -286,7 +287,7 @@ class Hiring extends Model
                 <li><strong>Departamento: </strong> $anarea</li>
                 <li><strong>Oficina: </strong> $anaext</li>
             </ul>
-            " . (!empty($imagenAnacod) ? "<img src='data:" . $imagenAnacod['tipoMime'] . ";base64," . $imagenAnacod['contenidoEscpado'] . "' alt='Imagen'>" : "") . "
+            " . (!empty($imagenAnacod) ? "<img src='data:" . $imagenAnacod['tipoMime'] . ";base64," . $imagenAnacod['contenidoEscpado'] . "' alt='Imagen' $cssPersonalizado >" : "") . "
             <h2>Favor confirmar al finalizar la tarea</h2>
             <strong>**Presionar boton de confirmacion solo si ha finalizado la tarea, ya que otras tareas se van a ejecutar luego de su confirmacion.</strong>
             </br>
@@ -304,7 +305,7 @@ class Hiring extends Model
 
     public function sendInfoSap($request)
     {
-        $nombre = $request->input('nombres') ?? '' . $request->input('apellidos') ?? '';        
+        $nombre = $request->input('nombres') ?? '' . $request->input('apellidos') ?? '';
         $allJson = json_encode($request->all(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $anacod = $request->anacod;
 
@@ -343,12 +344,50 @@ class Hiring extends Model
 
     public function newHiring($request)
     {
-        $this->crearUsuariosRedControl($request);
-        $this->asignarRolesSan($request);
-        $imagenAnacod = $this->persistirArchivos($request);
-        $this->persistirFormData($request);
-        $this->sendTask365($request, $imagenAnacod);
-        $this->sendInfoSap($request);
+        try {
+            $this->crearUsuariosRedControl($request);
+        } catch (Exception $e) {
+            //throw $th;
+        }
+
+        try {
+            //code...
+            $this->asignarRolesSan($request);
+        } catch (Exception $e) {
+            //throw $th;
+        }
+
+        $imagenAnacod = null;
+        try {
+            //code...
+            $imagenAnacod = $this->persistirArchivos($request);
+        } catch (Exception $e) {
+            //throw $th;
+        }
+
+        try {
+            //code...
+            $this->persistirFormData($request);
+        } catch (Exception $e) {
+            //throw $th;
+        }
+
+        try {
+            //code...
+            if ($imagenAnacod) {
+                $this->sendTask365($request, $imagenAnacod);
+                # code...
+            }
+        } catch (Exception $e) {
+            //throw $th;
+        }
+
+        try {
+            //code...
+            $this->sendInfoSap($request);
+        } catch (Exception $e) {
+            //throw $th;
+        }
     }
 
 
