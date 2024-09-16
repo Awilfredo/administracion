@@ -27,6 +27,8 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         anamai: "",
         hijos: "",        
         fecha_nacimiento: "",
+        redcontrol:false, 
+        mensajeria:false,
         anapai: "SV",
         fecha_ingreso: fechaActual(),
         anapos: "",
@@ -70,6 +72,13 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios, errors }) {
         console.log(data.files);
     }
 */
+
+
+useEffect(() => {
+    console.log('redcontrol', data.redcontrol);
+    console.log('mensajeria', data.mensajeria);
+    
+}, [data]);
 
 const { comprimir } = ComprimirImagen();
     const handleChangeFile = async (archivo, document) => {
@@ -703,6 +712,13 @@ const { comprimir } = ComprimirImagen();
                                         </option>
                                     ))}
                                 </Select>
+
+                                <div className="flex justify-between max-w-sm">
+                                < TextInput label={'Crear Red control'} className="w-1"
+                                type="checkbox" value={data.redcontrol} onChange={(e)=>setData({...data, redcontrol:e.target.checked})}></TextInput>
+                                <TextInput label={'Crear Mensajeria'} value={data.mensajeria} onChange={(e)=>setData({...data, mensajeria:e.target.checked})} type="checkbox" className="w-1"></TextInput>
+                                </div>
+
                                 <FileUploader
                                     label="Subir imagen de perfil"
                                     name="imagen"
