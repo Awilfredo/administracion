@@ -1,13 +1,15 @@
 import Search from "@/Components/Search";
+import { ExportCSV } from "@/Helpers/ExportCSV";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head } from "@inertiajs/react";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
 
 function Empleados({ empleados, auth }) {
     const headers = ["Usuario", "Nombre", "Estado", "Correo", "Telefono"];
     const keys = ["anacod", "ananam", "anasta", "anamai", "anatel"];
     const [resultados, setResultados] = useState([]);
+    const { downloadCSV, Export } = ExportCSV();
 
 
     const columns = [
@@ -22,11 +24,6 @@ function Empleados({ empleados, auth }) {
             sortable: true,
         },
         {
-            name: "Estado",
-            selector: (row) => row.anasta,
-            sortable: true,
-        },
-        {
             name: "Email",
             selector: (row) => row.anamai,
             sortable: true,
@@ -36,11 +33,36 @@ function Empleados({ empleados, auth }) {
             selector: (row) => row.anatel,
             sortable: true,
         },
+        {
+            name: "Horario",
+            selector: (row) => row.horario,
+            sortable: true,
+        },
     ];
 
     const handleRowClicked = (row) => {
         console.log(`${row.anacod} was clicked!`);
     };
+
+    const handleExport = useCallback(() => {
+        downloadCSV(
+            resultados,
+            [
+                "anacod",
+                "ananam",
+                'anaext',
+                'anatel', 
+                'horario',
+            ],
+            `Empleados`
+        );
+    }, [resultados]);
+
+    // Memoriza el componente Export para que solo se actualice cuando handleExport cambie
+    const descargar = useMemo(
+        () => <Export onExport={handleExport} />,
+        [handleExport]
+    );
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -81,6 +103,7 @@ function Empleados({ empleados, auth }) {
                     selectableRows
                     fixedHeader
                     onRowClicked={handleRowClicked}
+                    actions={descargar}
                 ></DataTable>
             </div>
         </AuthenticatedLayout>

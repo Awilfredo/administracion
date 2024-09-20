@@ -13,7 +13,7 @@ class EmpleadoController extends Controller
 {
     public function index()
     {
-        $empleados = Empleado::where('anatip', 'U')->where('anasta', 'A')->get();
+        $empleados = Empleado::empleados();
         return Inertia::render('Empleados', ['empleados' => $empleados]);
     }
 
