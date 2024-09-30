@@ -529,7 +529,7 @@ JOIN
 SELECT a.*, b.fecha, b.nfc_entrada, b.nfc_salida, b.huella_1, b.huella_2, b.huella_3, b.huella_4, b.huella_5, b.huella_6  
 FROM info_empleados a
 LEFT JOIN datos b  ON b.anacod = a.anacod
-WHERE EXTRACT(DOW FROM date'$fecha') + 1 = a.dia ORDER BY a.anacod
+WHERE EXTRACT(DOW FROM date'$fecha') = a.dia ORDER BY a.anacod
 ");
 
         return $marcas;
