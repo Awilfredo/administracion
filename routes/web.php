@@ -56,20 +56,25 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/asistencia/eventos/{fecha}', [AsistenciaController::class, 'fecha'])->name('asistencia.fecha');
     Route::get('/asistencia/eventos', [AsistenciaController::class, 'index'])->name('asistencia.eventos');
+    Route::get('/asistencia/getEventos', [AsistenciaController::class, 'getEventos'])->name('eventos');
     Route::get('/asistencia/nfc', [AsistenciaController::class, 'nfcIndex'])->name('asistencia.nfc');
+    Route::get('/asistencia/nfc/tags', [AsistenciaController::class, 'nfcCreate'])->name('tag.create');
+    Route::post('/asistencia/nfc/tags', [AsistenciaController::class, 'nfcStore'])->name('tag.store');
+    Route::delete('/asistencia/nfc/tags', [AsistenciaController::class, 'deleteTag'])->name('tag.delete');
+    
     Route::get('asistencia/resumen', [AsistenciaController::class, 'resumen'])->name('resumen');
     Route::patch('/asistencia/update', [AsistenciaController::class, 'update'])->name('asistencia.update');
     Route::patch('/asistencia/delete', [AsistenciaController::class, 'deleteAccion'])->name('asistencia.delete');
     Route::get('/asistencia/marcas', [AsistenciaController::class, 'marcasCompletasDia'])->name('asistencia.marcas');
-
+    
     //Route::get('/asistencia/marcasTest', [AsistenciaController::class, 'marcasCompletasDia'])->name('asistencia.marcasTest');
-
+    
+    Route::patch('/asistencia/actualizar/acciones', [AsistenciaController::class, 'accionesUpdate'])->name('acciones.update');
     Route::get('/asistencia/resumen/{anacod}/{evento}', [AsistenciaController::class, 'resumenUsuario'])->name('usuario.resumen');
     Route::get('/horarios', [HorarioController::class, 'index'])->name('horario.index');
     Route::post('/horarios', [HorarioController::class, 'store'])->name('horario.store');
     Route::get('/horarios/editar/{horario}', [HorarioController::class, 'edit'])->name('horario.edit');
     Route::post('/horarios/editar/', [HorarioController::class, 'storeDay'])->name('horarioDia.store');
-    Route::patch('/asistencia/actualizar/acciones', [AsistenciaController::class, 'accionesUpdate'])->name('acciones.update');
     Route::delete('/horarios/{horario}', [HorarioController::class, 'destroy'])->name('horario.destroy');
     Route::delete('/horarios/editar/{dia}', [HorarioController::class, 'destroyDay'])->name('horarioDia.destroy');
     Route::patch('/horarios/editar/update', [HorarioController::class, 'updateDay'])->name('horarioDia.update');

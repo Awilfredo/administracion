@@ -5,8 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Horario;
 use App\Models\HorarioDia;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class HorarioController extends Controller

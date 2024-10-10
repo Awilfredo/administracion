@@ -1,6 +1,7 @@
-function AddIcon({ width = "200", height = "200" }) {
+function AddIcon({ width = "200", height = "200", className='' }) {
     return (
         <svg
+            className={className}
             xmlns="http://www.w3.org/2000/svg"
             width={width}
             height={height}

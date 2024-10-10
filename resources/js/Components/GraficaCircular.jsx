@@ -2,7 +2,7 @@ import React, { PureComponent } from "react";
 import { PieChart, Pie, Sector, Cell, ResponsiveContainer } from "recharts";
 const RADIAN = Math.PI / 180;
 
-export default function GraficaCircular({ data, colors, title }) {
+export default function GraficaCircular({ data, colors, title, width=500 }) {
     /*data = [
         { name: 'Group A', value: 400 },
         { name: 'Group B', value: 300 },
@@ -38,18 +38,22 @@ export default function GraficaCircular({ data, colors, title }) {
         );
     };
 
+    const calculateWidht= ()=>{
+
+    }
+
     return (
-        <div className="">
+        <div className="mt-5">
             <p className="text-xl text-center mt-5">{title}</p>
-            <div className="flex items-center">
-                <PieChart width={500} height={400}>
+            <div className="flex items-center flex-wrap justify-center">
+                <PieChart width={(width > 400 ? 400 : width)} height={(width > 400 ? 400 : width)}>
                     <Pie
                         data={data}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
                         label={renderCustomizedLabel}
-                        outerRadius={150}
+                        outerRadius={(width > 300 ? 150 :100)}
                         fill="#8884d8"
                         dataKey="value"
                     >
@@ -61,7 +65,7 @@ export default function GraficaCircular({ data, colors, title }) {
                         ))}
                     </Pie>
                 </PieChart>
-                <div>
+                <div style={{width:300}}>
                     {data.map((element, index) => (
                         <div className="text-md flex py-1" key={index}>
                             <svg

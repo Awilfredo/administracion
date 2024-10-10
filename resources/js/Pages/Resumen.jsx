@@ -8,31 +8,38 @@ import { ManejoFechas } from "@/Helpers/ManejoFechas";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import React, { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
-function Resumen({ auth, ausencias, llegadas_tarde, eventos }) {
-    const [state, setstate] = useState();
+function Resumen({ auth, eventos }) {
     const [showModal, setShowModal] = useState(false);
     const [resumenUsuario, setResumenUsuario] = useState([]);
     const exportar = ExportCSV();
     const [data, setData] = useState([]);
-    const [datos , setDatos] = useState([]);
+    const [datos, setDatos] = useState([]);
     const [circular, setCircular] = useState([]);
-    useEffect(()=>{
+    const { meses, mesActual, anioActual } = ManejoFechas();
+    const [fechas, setFechas] = useState({
+        anio: anioActual(),
+        mes: mesActual(),
+    });
+
+    useEffect(() => {
         setDatos(eventos);
         setData(eventos);
-
-    }, [])
+    }, []);
     useEffect(() => {
-        const datosCircular=[{name:'Llegadas tarde',  value:0}, {name:'Ausencias', value:0,},{name:'Salidas Antes', value:0,}]
-        data.map((element)=>{
-            datosCircular[1].value+= element.veces_ausente;
-            datosCircular[0].value+= element.veces_tarde;
-            datosCircular[2].value+= element.veces_salidas_antes;
-        })
+        const datosCircular = [
+            { name: "Llegadas tarde", value: 0 },
+            { name: "Ausencias", value: 0 },
+            { name: "Salidas Antes", value: 0 },
+        ];
+        data.map((element) => {
+            datosCircular[1].value += element.veces_ausente;
+            datosCircular[0].value += element.veces_tarde;
+            datosCircular[2].value += element.veces_salidas_antes;
+        });
 
         setCircular(datosCircular);
 
-        console.log(datosCircular)
-
+        console.log(datosCircular);
     }, [data]);
 
     const closeModal = () => {
@@ -59,6 +66,14 @@ function Resumen({ auth, ausencias, llegadas_tarde, eventos }) {
             name: "NOMBRE",
             selector: (row) => row.ananam,
             sortable: true,
+            wrap: true,
+            minWidth: "200px",
+            maxWidth: "300px",
+        },
+        {
+            name: "JEFE",
+            selector: (row) => row.anajef,
+            sortable: true,
         },
         {
             name: "VECES TARDE",
@@ -84,7 +99,7 @@ function Resumen({ auth, ausencias, llegadas_tarde, eventos }) {
 
     const conditionalRowStyles = [
         {
-            when: (row) => row.veces_tarde > 2 ||  row.veces_ausente > 2,
+            when: (row) => row.veces_tarde > 2 || row.veces_ausente > 2,
             style: {
                 backgroundColor: "#d19191",
                 color: "white",
@@ -104,19 +119,13 @@ function Resumen({ auth, ausencias, llegadas_tarde, eventos }) {
                 },
             },
         },
-
-
     ];
 
-
-
     const filteredItems = eventos.filter(
-		item => item.name && item.name.toLowerCase().includes(filterText.toLowerCase()),
-	);
-
-    const { meses, mesActual, anioActual } = ManejoFechas();
-    const [mes, setMes] = useState(mesActual);
-    const [anio, setAnio] = useState(anioActual());
+        (item) =>
+            item.name &&
+            item.name.toLowerCase().includes(filterText.toLowerCase())
+    );
 
     const Export = ({ onExport }) => (
         <button
@@ -148,10 +157,11 @@ function Resumen({ auth, ausencias, llegadas_tarde, eventos }) {
                     exportar.downloadCSV(eventos, [
                         "anacod",
                         "ananam",
+                        "anajef",
                         "veces_tarde",
                         "veces_ausente",
-                        "veces_sin_nfc", 
-                        "veces_salidas_antes"
+                        "veces_sin_nfc",
+                        "veces_salidas_antes",
                     ])
                 }
             />
@@ -159,14 +169,15 @@ function Resumen({ auth, ausencias, llegadas_tarde, eventos }) {
         []
     );
 
-    const handleSubmit = (e) => {
-         e.preventDefault();
-         fetch(`/asistencia/resumen?anio=${anio}&mes=${mes}`).then(res => res.json()).then((response)=>{
-            console.log(response);
-            setData(response)
-            setDatos(response);
-         })
-    };
+    useEffect(() => {
+        fetch(`/asistencia/resumen?anio=${fechas.anio}&mes=${fechas.mes}`)
+            .then((res) => res.json())
+            .then((response) => {
+                console.log(response);
+                setData(response);
+                setDatos(response);
+            });
+    }, [fechas]);
 
     return (
         <AuthenticatedLayout
@@ -179,24 +190,54 @@ function Resumen({ auth, ausencias, llegadas_tarde, eventos }) {
         >
             <div className="">
                 <div className="flex justify-around mt-10 flex-wrap">
-                    <div className="sm:w-3/4">
-                    <form onSubmit={handleSubmit}>
-                        <select onChange={(e)=>setAnio(e.target.value)}>
-                            <option value="2024">2024</option>
-                            <option value="2025">2025</option>
-                            <option value="2026">2026</option>
-                            <option value="2027">2027</option>
-                            <option value="2028">2028</option>
-                        </select>
-                        <select onChange={(e)=>setMes(e.target.value)} value={mes}>
-                            {meses.map((mes, index)=>
-                            <option key={index} value={mes.value} selected={mes.value == mesActual() ? true : false}>{mes.name}</option>
-                            )}
-                        </select>
-                         <PrimaryButton>Buscar</PrimaryButton>
-                    </form>
+                    <div className="">
+                        <div>
+                            <select
+                                onChange={(e) =>
+                                    setFechas({
+                                        ...fechas,
+                                        anio: e.target.value,
+                                    })
+                                }
+                                value={fechas.anio}
+                            >
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026">2026</option>
+                                <option value="2027">2027</option>
+                                <option value="2028">2028</option>
+                            </select>
+                            <select
+                                onChange={(e) =>
+                                    setFechas({
+                                        ...fechas,
+                                        mes: e.target.value,
+                                    })
+                                }
+                                value={fechas.mes}
+                            >
+                                {meses.map((mes, index) => (
+                                    <option
+                                        key={index}
+                                        value={mes.value}
+                                        selected={
+                                            mes.value == mesActual()
+                                                ? true
+                                                : false
+                                        }
+                                    >
+                                        {mes.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
 
-                    <Search datos={datos} placeholder="Bucar" keys={['anacod', 'ananam']} setResultados={(e)=>setData(e)}/>
+                        <Search
+                            datos={datos}
+                            placeholder="Bucar"
+                            keys={["anacod", "ananam", "anajef"]}
+                            setResultados={(e) => setData(e)}
+                        />
                         <DataTable
                             columns={columns}
                             data={data}

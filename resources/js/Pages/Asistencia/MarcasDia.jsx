@@ -23,9 +23,10 @@ function Marcaciones({ auth, marcas }) {
 
     const columns = [
         {
-            name: "Indice",
+            name: "Index",
             selector: (row, index) => index+1,
             sortable: true,
+            maxWidth: '5px'
         },        
         {
             name: "Usuario",
@@ -37,7 +38,15 @@ function Marcaciones({ auth, marcas }) {
             name: "Nombre",
             selector: (row) => row.ananam || "Sin marca",
             sortable: true,
-            grow:3
+            wrap:true,
+            minWidth: '200px',
+            maxWidth:'300px'
+        },
+        {
+            name: "Jefe",
+            selector: (row) => row.anajef || "Sin marca",
+            sortable: true,
+            wrap:true,
         },
         {
             name: "Fecha",

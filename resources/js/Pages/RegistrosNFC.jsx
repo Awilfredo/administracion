@@ -1,51 +1,73 @@
-import BuscarFecha from "@/Components/BuscarFecha";
-import BuscarMes from "@/Components/BuscarMes";
+import moment from 'moment';
+import DiaRango from "@/Components/DiaRango";
+import LoadingF from "@/Components/LoadingF";
 import Search from "@/Components/Search";
-import SeleccionarMesODia from "@/Components/SeleccionarMesODia";
 import { ExportCSV } from "@/Helpers/ExportCSV";
 import { ManejoFechas } from "@/Helpers/ManejoFechas";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
 
-function RegistrosNFC({ registros, auth }) {
-    const [registrosNFC, setRegistrosNFC] = useState([]);
-    const [resultados, setResultados] = useState(registros);
-    const [busqueda, setBusqueda] = useState("dia");
-    const { fechaActual, anioActual, mesActual } = ManejoFechas();
-    const [fecha, setfecha] = useState(fechaActual());
-    const [anio, setAnio] = useState(anioActual());
-    const [mes, setMes] = useState(mesActual());
+function RegistrosNFC({  auth }) {
+    const [registros, setRegistros] = useState([]);
+    const [resultados, setResultados] = useState([]);
+    const { fechaActual} = ManejoFechas();
     const [loading, setLoading] = useState(false);
-    const { downloadCSV, Export } = ExportCSV();
-    console.log(resultados)
+    const [fechas, setFechas] = useState({
+        fecha: fechaActual(),
+        fecha_fin: null,
+    });
 
-    const filters = [
-        {
-            id: 1,
-            name: "Entrada",
-            key: "evento",
-            value: "ENTRADA",
-            checked: false,
-        },
-        {
-            id: 2,
-            name: "Salida",
-            key: "evento",
-            value: "SALIDA",
-            checked: false,
-        },
-    ];
+    const { downloadCSV, Export } = ExportCSV();
+
+    useEffect(() => {
+        setLoading(true);
+        let url = route("asistencia.nfc") + `?fecha=${fechas.fecha}`;
+        if (fechas.fecha != fechas.fecha_fin && fechas.fecha_fin) {
+            url =
+                route("asistencia.nfc") +
+                `?fecha=${fechas.fecha}` +
+                (fechas.fecha_fin ? `&fecha_fin=${fechas.fecha_fin}` : "");
+        }
+        fetch(url)
+            .then((res) => {
+                return res.json();
+            })
+            .then((response) => {
+                setRegistros(response);
+                setResultados(response);
+            })
+            .finally((e) => {
+                setLoading(false);
+            });
+    }, [fechas]);
 
     const columns = [
         {
             name: "Hora",
             selector: (row) => row.hora,
             sortable: true,
+            wrap: true,
+            minWidth: "110px",
+            maxWidth: "110px",
+            format: row => moment(row.hora).format('DD/MM/YYYY HH:MM a')
         },
         {
             name: "Usuario",
             selector: (row) => row.anacod,
+            sortable: true,
+        },
+        {
+            name: "Nombre",
+            selector: (row) => row.ananam,
+            sortable: true,
+            wrap: true,
+            minWidth: "200px",
+            maxWidth: "300px",
+        },
+        {
+            name: "Jefe",
+            selector: (row) => row.anajef,
             sortable: true,
         },
         {
@@ -55,82 +77,20 @@ function RegistrosNFC({ registros, auth }) {
         },
     ];
 
-    useEffect(() => {
-        const datos = [];
-        let registro = {};
-        registros.map((element) => {
-            registro = element;
-            const options = {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-            };
-
-            const fecha_hora = new Date(element.hora);
-            registro.hora = fecha_hora.toLocaleString("es-MX", options);
-            datos.push(registro);
-        });
-        setRegistrosNFC(datos);
-        setResultados(datos);
-    }, []);
-
-    const handleSearchMes = () => {
-        setLoading(true);
-        fetch(`/asistencia/nfc?busqueda=mes&anio=${anio}&mes=${mes}`)
-            .then((res) => {
-                //setloading(true);
-                return res.json();
-            })
-            .then((response) => {
-                console.log(response);
-                setRegistrosNFC(response);
-                setResultados(response);
-            })
-            .finally((e) => {
-                setLoading(false);
-                //setFechaVista(` del mes de ${mes} del ${anio}`);
-            });
-    };
-
-    const handleSearchDia = (e) => {
-        setLoading(true);
-        fetch(`/asistencia/nfc?fecha=${fecha}`)
-            .then((res) => {
-                //setloading(true);
-                return res.json();
-            })
-            .then((response) => {
-                console.log(response);
-                setRegistrosNFC(response);
-                setResultados(response);
-            })
-            .finally((e) => {
-                setLoading(false);
-                //setFechaVista(` del mes de ${mes} del ${anio}`);
-            });
-    };
 
     const handleExport = useCallback(() => {
         downloadCSV(
             resultados,
-            [
-                "anacod",
-                "evento",
-                'hora'
-            ],
-            `Registros NFC ${fecha}`
+            ["anacod", "ananam", "anajef", "evento", "hora"],
+            `Registros NFC ${fechas.fecha}`
         );
-    }, [resultados, fecha]);
+    }, [resultados, fechas.fecha]);
 
-    // Memoriza el componente Export para que solo se actualice cuando handleExport cambie
     const descargar = useMemo(
         () => <Export onExport={handleExport} />,
         [handleExport]
     );
-    const headers = ["hora", "anacod", "evento"];
+    const headers = ["hora", "anacod", "ananam", "anajef", "evento"];
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -141,31 +101,12 @@ function RegistrosNFC({ registros, auth }) {
             }
         >
             <div className="mx-10 mt-5">
-                <SeleccionarMesODia
-                    busqueda={busqueda}
-                    setBusqueda={setBusqueda}
-                ></SeleccionarMesODia>
-                {busqueda == "dia" ? (
-                    <BuscarFecha
-                        max={fechaActual()}
-                        onChange={(e) => setfecha(e.target.value)}
-                        value={fecha}
-                        onClick={handleSearchDia}
-                    ></BuscarFecha>
-                ) : (
-                    <BuscarMes
-                        anio={anio}
-                        setAnio={setAnio}
-                        mes={mes}
-                        setMes={setMes}
-                        onClick={handleSearchMes}
-                    ></BuscarMes>
-                )}
-
-                {registrosNFC.length && !loading ? (
+                
+                <DiaRango fechas={fechas} setFechas={setFechas}></DiaRango>
+                {registros.length ? (
                     <div>
                         <Search
-                            datos={registrosNFC}
+                            datos={registros}
                             setResultados={setResultados}
                             keys={headers}
                         ></Search>
@@ -180,6 +121,8 @@ function RegistrosNFC({ registros, auth }) {
                     ""
                 )}
             </div>
+
+            <LoadingF loading={loading}></LoadingF>
         </AuthenticatedLayout>
     );
 }

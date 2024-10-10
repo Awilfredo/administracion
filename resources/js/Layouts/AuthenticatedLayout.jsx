@@ -4,6 +4,7 @@ import Dropdown from "@/Components/Dropdown";
 import NavLink from "@/Components/NavLink";
 import ResponsiveNavLink from "@/Components/ResponsiveNavLink";
 import { Link } from "@inertiajs/react";
+import TagIcon from "@/Components/Icons/TagIcon";
 
 export default function Authenticated({ user, header, children }) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] =
@@ -116,6 +117,7 @@ export default function Authenticated({ user, header, children }) {
                                             }
                                         >
                                             <svg
+                                                className="group-hover:text-cyan-600"                                       
                                                 xmlns="http://www.w3.org/2000/svg"
                                                 width="20"
                                                 height="20"
@@ -133,6 +135,23 @@ export default function Authenticated({ user, header, children }) {
                                     </li>
                                     <li>
                                         <Link
+                                            href={route("tag.create")}
+                                            className={
+                                                route().current(
+                                                    "tag.create"
+                                                )
+                                                    ? navSelectedClass
+                                                    : navDefaultClass
+                                            }
+                                        >
+                                            <TagIcon width="20" height="20" className="group-hover:text-cyan-600"></TagIcon>
+                                            <span className="group-hover:text-gray-700">
+                                                Tags NFC
+                                            </span>
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link
                                             href={route("asistencia.nfc")}
                                             className={
                                                 route().current(
@@ -143,6 +162,7 @@ export default function Authenticated({ user, header, children }) {
                                             }
                                         >
                                             <svg
+                                                className="group-hover:text-cyan-600"
                                                 xmlns="http://www.w3.org/2000/svg"
                                                 width="20"
                                                 height="20"
@@ -375,10 +395,16 @@ export default function Authenticated({ user, header, children }) {
                     </div>
 
                     <div className="px-6 -mx-6 pt-4 flex justify-between items-center border-t">
-                        <button className="px-4 py- flex items-center space-x-4 rounded-md text-gray-600 group">
+                        <Link
+                            href={route("logout")}
+                            method="post"
+                            as="button"
+                            className="px-4 py- flex items-center space-x-4 rounded-md text-gray-600 group"
+                        >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                className="h-6 w-6"
+                                className="group-hover:text-cyan-600 h-6 w-6"
+                
                                 fill="none"
                                 viewBox="0 0 24 24"
                                 stroke="currentColor"
@@ -390,17 +416,8 @@ export default function Authenticated({ user, header, children }) {
                                     d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                                 />
                             </svg>
-                            <span>
-                                <Dropdown.Link
-                                    className="group-hover:text-gray-700"
-                                    href={route("logout")}
-                                    method="post"
-                                    as="button"
-                                >
-                                    Log Out
-                                </Dropdown.Link>
-                            </span>
-                        </button>
+                            <span>Log Out</span>
+                        </Link>
                     </div>
                 </aside>
 
