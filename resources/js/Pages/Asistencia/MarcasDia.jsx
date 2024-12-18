@@ -1,12 +1,13 @@
 import BuscarFecha from "@/Components/BuscarFecha";
 import BuscarMes from "@/Components/BuscarMes";
+import DiaRango from "@/Components/DiaRango";
 import Search from "@/Components/Search";
 import SeleccionarMesODia from "@/Components/SeleccionarMesODia";
 import { ExportCSV } from "@/Helpers/ExportCSV";
 import { ManejoFechas } from "@/Helpers/ManejoFechas";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head } from "@inertiajs/react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
 function Marcaciones({ auth, marcas }) {
     const keys = ["anacod", "ananam"];
@@ -20,6 +21,12 @@ function Marcaciones({ auth, marcas }) {
     const [mes, setMes] = useState(mesActual);
     const [busqueda, setBusqueda] = useState("dia");
     const [anio, setAnio] = useState(anioActual);
+
+    const [fechas, setFechas] = useState({fecha:fechaActual(), fecha_fin:null});
+
+    useEffect(() => {
+        console.log(fechas);
+    }, [fechas]);
 
     const columns = [
         {
@@ -153,34 +160,6 @@ function Marcaciones({ auth, marcas }) {
         [handleExport]
     );
 
-
-    // const descargar = useMemo(
-    //     () => (
-    //         <Export
-    //             onExport={() =>
-    //                 downloadCSV(
-    //                     resultados,
-    //                     [
-    //                         "anacod",
-    //                         "ananam",
-    //                         "fecha",
-    //                         "nfc_entrada",
-    //                         "nfc_salida",
-    //                         "huella_1",
-    //                         "huella_2",
-    //                         "huella_3",
-    //                         "huella_4",
-    //                         "huella_5",
-    //                         "huella_6",
-    //                     ],
-    //                     `Marcas ${fecha}`
-    //                 )
-    //             }
-    //         />
-    //     ),
-    //     []
-    // );
-
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -193,6 +172,7 @@ function Marcaciones({ auth, marcas }) {
             <Head title="Marcaciones" />
 
             <div className="m-10">
+                <DiaRango fechas={fechas} setFechas={setFechas}></DiaRango>
                 <SeleccionarMesODia busqueda={busqueda} setBusqueda={setBusqueda}></SeleccionarMesODia>
                 {busqueda == "dia" ? (
                     <BuscarFecha

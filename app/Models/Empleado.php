@@ -11,6 +11,8 @@ class Empleado extends Model {
     protected $connection = 'san';
     public $timestamps = false;
     public $id = false;
+    protected $primaryKey = 'anacod';
+    public $incrementing = false;
     protected $table = 'aplicaciones.pro_anacod';
     protected $fillable = [
         'anacod',

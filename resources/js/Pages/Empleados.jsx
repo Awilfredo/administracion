@@ -1,7 +1,7 @@
 import Search from "@/Components/Search";
 import { ExportCSV } from "@/Helpers/ExportCSV";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head } from "@inertiajs/react";
+import { Head, router } from "@inertiajs/react";
 import { useCallback, useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
 
@@ -10,7 +10,6 @@ function Empleados({ empleados, auth }) {
     const keys = ["anacod", "ananam", "anasta", "anamai", "anatel"];
     const [resultados, setResultados] = useState([]);
     const { downloadCSV, Export } = ExportCSV();
-
 
     const columns = [
         {
@@ -42,18 +41,13 @@ function Empleados({ empleados, auth }) {
 
     const handleRowClicked = (row) => {
         console.log(`${row.anacod} was clicked!`);
+        router.visit(route("empleados.show", { anacod: row.anacod }));
     };
 
     const handleExport = useCallback(() => {
         downloadCSV(
             resultados,
-            [
-                "anacod",
-                "ananam",
-                'anaext',
-                'anatel', 
-                'horario',
-            ],
+            ["anacod", "ananam", "anaext", "anatel", "horario"],
             `Empleados`
         );
     }, [resultados]);
@@ -75,7 +69,10 @@ function Empleados({ empleados, auth }) {
             <Head title="Marcaciones" />
 
             <div className="w-full flex flex-row-reverse px-10 pt-5">
-                <a className="text-blue-400 hover:text-blue-700" href={route('empleados.create')}>
+                <a
+                    className="text-blue-400 hover:text-blue-700"
+                    href={route("empleados.create")}
+                >
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="32"
@@ -98,6 +95,8 @@ function Empleados({ empleados, auth }) {
                 ></Search>
 
                 <DataTable
+                    striped
+                    pointerOnHover
                     columns={columns}
                     data={resultados}
                     selectableRows

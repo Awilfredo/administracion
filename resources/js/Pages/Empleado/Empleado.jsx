@@ -7,3 +7,4 @@ function Empleado({auth}) {
 }
 
 export default Empleado;
+

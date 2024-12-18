@@ -82,6 +82,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/estadisticas', [AsistenciaController::class, 'estadisticas'])->name('estadisticas.index');
     Route::get('/empleados/nuevo', [EmpleadoController::class, 'create'])->name('empleados.create');
     Route::post('/empleados/store', [EmpleadoController::class, 'store'])->name('empleados.store');
+    Route::patch('/empleados/{anacod}', [EmpleadoController::class, 'update'])->name('empleados.update');
+    Route::get('/empleados/{anacod}', [EmpleadoController::class, 'show'])->name('empleados.show');
+    Route::get('/empleados/{anacod}/baja', [EmpleadoController::class, 'baja'])->name('empleados.baja');
     Route::get('asistencia/resumen/{anio}/{mes}', [AsistenciaController::class, 'resumenFecha'])->name('resumen.fecha');
 });
 
