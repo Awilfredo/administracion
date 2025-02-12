@@ -45,6 +45,22 @@ function RegistrosNFC({ auth }) {
 
     const columns = [
         {
+            name: "Fecha",
+            //            selector: (row) => row.hora.toLocaleTimeString(),
+            selector: (row) => {
+                const date = new Date(row.hora);
+                return date.toLocaleDateString("es-ES", {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit"
+                });
+            },
+            sortable: true,
+            wrap: true,
+            minWidth: "110px",
+            maxWidth: "110px",
+        },
+        {
             name: "Hora",
             //            selector: (row) => row.hora.toLocaleTimeString(),
             selector: (row) => {
