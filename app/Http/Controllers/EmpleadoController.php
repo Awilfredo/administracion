@@ -169,4 +169,17 @@ class EmpleadoController extends Controller {
             'data' => $registro
         ], 201 );
     }
+
+    public function updateImage(Request $request) {
+        $validatedData = $request->validate( [
+            'anacod' => 'required|string|max:50',
+            'foto' => 'required|file|image|max:1024',
+        ] );
+        $empleado = Empleado::find( $request->anacod );
+        $imagen_name = mb_strtolower($empleado->anacod) . '.' . $request->foto->getClientOriginalExtension();
+        $request->foto->storeAs('uploads', $imagen_name , 'public');  
+        $empleado->anaimg = $imagen_name;
+        return json_encode($empleado);
+        // $empleado->anaimg = $request->foto->store( 'empleados', 'public' );              
+    }
 }

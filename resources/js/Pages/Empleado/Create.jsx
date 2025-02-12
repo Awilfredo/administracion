@@ -9,7 +9,6 @@ import SanForm from "./Partials/SanForm";
 function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
     const { fechaActual } = ManejoFechas();
     const [errors, setErrors] = useState({});
-
     const [data, setData] = useState({
         anacod: "", //
         nombres: "", //
@@ -27,14 +26,17 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
         anapos: "",
         anames: null, // Valor numérico
         anadia: null, // Valor numérico
-        fecha_ingreso:  fechaActual(), // Fechas como string
+        fecha_ingreso: fechaActual(), // Fechas como string
         lider_area: "",
         folcodreal: null, // Valor numérico
         horario_id: 2, // Valor numérico
     });
 
+    const [preview, setPreview] = useState(null);
+    const [foto, setFoto] = useState([]);
+    
     const { generatePassword, makeAnacod } = CrearEmpleado();
-
+    
     const fileTypes = ["JPG", "PNG", "GIF", "JPEG"];
     /*
     const handleChangeFile = (file, document) => {
@@ -54,6 +56,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
 */
 
     const { comprimir } = ComprimirImagen();
+
     const handleChangeFile = async (archivo, document) => {
         let file;
         if (archivo.type.startsWith("image/")) {
@@ -130,7 +133,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
                     : null, // Validación compuesta
             anapas: data.anapas ? data.anapas : null,
             anapai: data.anapai ? data.anapai : null,
-            anasta:'A',
+            anasta: "A",
             anamai: data.anamai ? data.anamai : null,
             anatel: data.anatel ? data.anatel : null,
             anarea: data.anarea ? data.anarea : null,
@@ -145,10 +148,8 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
             fecha_ingreso: data.fecha_ingreso ? data.fecha_ingreso : null,
             horario_id: data.horario_id ? data.horario_id : null,
             lider_area: data.lider_area ? data.lider_area : null,
-            anaimg: data.anacod
-                ? `${data.anacod.toLocaleLowerCase()}.jpg`
-                : null, // Validación con transformación
-        };
+            anaimg: null
+                };
         console.log(postData);
         router.visit(route("empleados.store"), {
             method: "post",
@@ -218,9 +219,22 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
         setData({ ...data, anapas: pwd });
     }, []);
 
+    const handleChangeImage = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreview(reader.result); // Guardar la URL generada en el estado
+            };
+            reader.readAsDataURL(file);
+            setFoto(file);
+        }
+    };
+
     return (
         <AuthenticatedLayout user={auth.user} header={<p>Alta de empleado</p>}>
             <Head title="Alta" />
+
             <SanForm
                 data={data}
                 setData={setData}
@@ -231,13 +245,33 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
                 jefes={jefes}
                 horarios={horarios}
             >
-                <div className="flex w-full justify-center">
-                    <button
-                        className="my-10 bg-blue-500 text-white px-5 py-4 hover:bg-blue-700 rounded-xl"
-                        onClick={handleSubmit}
-                    >
-                        Guardar
-                    </button>
+                <div>
+                    {/* <div className="bg-gray-200 rounded-xl mt-3 p-5">
+                        <p className="text-xl my-5">Subir imagen</p>
+                        <input
+                            type="file"
+                            name="image"
+                            id=""
+                            onChange={handleChangeImage}
+                        />
+                        <div className="w-full flex justify-center my-5"> 
+                            {preview && (
+                                <img
+                                    src={preview}
+                                    alt="Preview"
+                                    className="w-64 object-cover border border-gray-300 rounded-lg"
+                                />
+                            )}
+                        </div>
+                    </div> */}
+                    <div className="flex w-full justify-center">
+                        <button
+                            className="my-10 bg-blue-500 text-white px-5 py-4 hover:bg-blue-700 rounded-xl"
+                            onClick={handleSubmit}
+                        >
+                            Guardar
+                        </button>
+                    </div>
                 </div>
             </SanForm>
         </AuthenticatedLayout>

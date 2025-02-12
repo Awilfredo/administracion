@@ -86,6 +86,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/empleados/{anacod}', [EmpleadoController::class, 'show'])->name('empleados.show');
     Route::get('/empleados/{anacod}/baja', [EmpleadoController::class, 'baja'])->name('empleados.baja');
     Route::get('asistencia/resumen/{anio}/{mes}', [AsistenciaController::class, 'resumenFecha'])->name('resumen.fecha');
+    Route::post('empleados/update/image', [EmpleadoController::class, 'updateImage'])->name('empleados.update.image');
 });
 
 

@@ -1,4 +1,4 @@
-import moment from 'moment';
+import moment from "moment";
 import DiaRango from "@/Components/DiaRango";
 import LoadingF from "@/Components/LoadingF";
 import Search from "@/Components/Search";
@@ -8,10 +8,10 @@ import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
 
-function RegistrosNFC({  auth }) {
+function RegistrosNFC({ auth }) {
     const [registros, setRegistros] = useState([]);
     const [resultados, setResultados] = useState([]);
-    const { fechaActual} = ManejoFechas();
+    const { fechaActual } = ManejoFechas();
     const [loading, setLoading] = useState(false);
     const [fechas, setFechas] = useState({
         fecha: fechaActual(),
@@ -36,6 +36,7 @@ function RegistrosNFC({  auth }) {
             .then((response) => {
                 setRegistros(response);
                 setResultados(response);
+                console.log(response);
             })
             .finally((e) => {
                 setLoading(false);
@@ -45,12 +46,19 @@ function RegistrosNFC({  auth }) {
     const columns = [
         {
             name: "Hora",
-            selector: (row) => row.hora,
+            //            selector: (row) => row.hora.toLocaleTimeString(),
+            selector: (row) => {
+                const date = new Date(row.hora); // Convertir la cadena en un objeto Date
+                return date.toLocaleTimeString("es-ES", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                });
+            },
             sortable: true,
             wrap: true,
             minWidth: "110px",
             maxWidth: "110px",
-            format: row => moment(row.hora).format('DD/MM/YYYY HH:MM a')
         },
         {
             name: "Usuario",
@@ -77,7 +85,6 @@ function RegistrosNFC({  auth }) {
         },
     ];
 
-
     const handleExport = useCallback(() => {
         downloadCSV(
             resultados,
@@ -101,7 +108,6 @@ function RegistrosNFC({  auth }) {
             }
         >
             <div className="mx-10 mt-5">
-                
                 <DiaRango fechas={fechas} setFechas={setFechas}></DiaRango>
                 {registros.length ? (
                     <div>

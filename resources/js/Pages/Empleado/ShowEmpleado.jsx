@@ -5,6 +5,7 @@ import { useState } from "react";
 import SanForm from "./Partials/SanForm";
 import EditIcon from "@/Components/EditIcon";
 import { DeleteIcon } from "@/Components/DeleteIcon";
+import Modal from "@/Components/Modal";
 
 const ShowEmpleado = ({
     auth,
@@ -41,7 +42,8 @@ const ShowEmpleado = ({
     };
     const [data, setData] = useState(defaultData);
     const [errors, setErrors] = useState({});
-    console.log(data);
+    const [preview, setPreview] = useState(null);
+    const [foto, setFoto] = useState([]);
 
     // Función para manejar cambios en los inputs
     const handleInputChange = (e) => {
@@ -138,6 +140,46 @@ const ShowEmpleado = ({
         setData({ defaultData });
     };
 
+    const handleChangeImage = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreview(reader.result); // Guardar la URL generada en el estado
+            };
+            reader.readAsDataURL(file);
+            setFoto(file);
+        }
+    };
+
+    const handleSaveImagen = (e) => {
+        const formData = new FormData();
+        formData.append("foto", foto);
+        formData.append("anacod", empleado.anacod);
+        router.post(route("empleados.update.image"), formData, {
+            preserveState: false,
+            onError: (errors) => {
+                setErrors(errors);
+                console.log(errors);
+            },
+            onSuccess: () => {
+                setPreview(null);
+                setFoto([]);
+                Swal.fire({
+                    title: "¡Éxito!",
+                    text: "Se ha actualizado la foto de perfil con éxito",
+                    icon: "success",
+                    timmer: 2500,
+                });
+            },
+        });
+    };
+
+    const handleCancelSaveImagen = (e) => {
+        setPreview(null);
+        setFoto([]);
+    };
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -154,6 +196,38 @@ const ShowEmpleado = ({
                 </div>
             }
         >
+            <Modal show={preview ? true : false}>
+                <div className="m-5">
+                    <h1 className="text-xl text-wrap text-gray-900 mb-10">
+                        Quieres guardar esta imagen como foto de perfil para
+                        este usuario?
+                    </h1>
+                    <div className="w-full flex justify-center my-5">
+                        {preview && (
+                            <img
+                                src={preview}
+                                alt="Preview"
+                                className="w-64 object-cover border border-gray-300 rounded-lg"
+                            />
+                        )}
+                    </div>
+                    <div className="flex justify-end space-x-4 mt-5">
+                        <button
+                            onClick={handleSaveImagen}
+                            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+                        >
+                            Guardar
+                        </button>
+                        <button
+                            onClick={handleCancelSaveImagen}
+                            className="px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-500"
+                        >
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </Modal>
+
             <div className="max-w-7xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg">
                 <h1 className="text-2xl font-bold text-gray-800 mb-6">
                     Información del Empleado
@@ -161,11 +235,26 @@ const ShowEmpleado = ({
 
                 {/* Imagen del empleado */}
                 <div className="flex flex-wrap justify-between items-center space-x-4 mb-6 gap-4">
-                    <img
-                        src={`http://san.red.com.sv/img/user/${empleado.anaimg}`}
-                        alt={empleado.anacod.toLowerCase()}
-                        className="w-32 h-32 rounded-xl object-cover border-4 border-blue-500"
-                    />
+                    <div className="relative w-32 h-32">
+                        <img
+                            src={`http://san.red.com.sv/img/user/${empleado.anaimg}`}
+                            alt={empleado.anacod.toLowerCase()}
+                            className="w-32 h-32 rounded-xl object-cover border-4 border-blue-500"
+                        />
+                        <label
+                            className="absolute bottom-0 right-0 rounded-full bg-gray-200 p-2 hover:bg-gray-400"
+                            htmlFor="foto"
+                        >
+                            <EditIcon className="h-6 w-6"></EditIcon>
+                        </label>
+                        <input
+                            type="file"
+                            name="foto"
+                            id="foto"
+                            className="hidden"
+                            onChange={handleChangeImage}
+                        />
+                    </div>
                     <div>
                         <h2 className="text-xl font-semibold text-gray-700">
                             {data.ananam}
