@@ -1,12 +1,15 @@
 <?php
 
 namespace App\Http\Controllers;
+
+use App\Mail\UserRegistrationConfirmation;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Empleado;
 use App\Models\Horario;
 use App\Models\Hiring;
 use DateTime;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 
@@ -49,6 +52,7 @@ class EmpleadoController extends Controller {
             'anapas' => 'required|string|max:255',
             'anapai' => 'required|string|max:2',
             'anamai' => 'required|email|max:255',
+            'anasta' => 'nullable|string|max:1',
             'anatel' => 'nullable|string|max:20',
             'anarea' => 'required|string|max:50',
             'anarad' => 'nullable|string|max:50',
@@ -61,24 +65,22 @@ class EmpleadoController extends Controller {
             'anadia' => 'nullable|integer',
             'fecha_ingreso' => 'nullable|date',
             'horario_id' => 'required|integer',
+            'isBoss' => 'required|boolean',
             'lider_area' => 'required|string|max:50',
             'anaimg' => 'nullable|string|max:255',
         ] );
 
         // Crear un nuevo registro
         $empleado = Empleado::create( $validatedData );
+        $empleado->asignarRolesSan( $request );
+        $empleado->asignarReportes( $request );
+        $empleado->asignarSuplementarios($request);
 
-        // // Retornar una respuesta
-        // return response()->json( [
-        //     'success' => true,
-        //     'message' => 'Empleado creado con éxito',
-        //     'data' => $empleado
-        // ], 201 );
-
+        //Redirect user
+        $recipients = ['awcruz@red.com.sv' ];
+        Mail::to( $recipients )->send( new UserRegistrationConfirmation($empleado->ananam, $empleado->anacod, $empleado->anamai, $empleado->anapas) );
         return Redirect::route( 'empleados.show', [ $empleado->anacod ] );
-        //Redirect original
     }
-
     public function saveSan( $request, $empleado ) {
         $request->validate( [
             'anacod' => 'required|string|max:255',
@@ -146,7 +148,7 @@ class EmpleadoController extends Controller {
             'anaimg' => 'nullable|string|max:255',
         ] );
         $empleado = Empleado::find( $anacod );
-        $empleado->update($validatedData);
+        $empleado->update( $validatedData );
         return Redirect::route( 'empleados.show', [ $empleado->anacod ] );
     }
 
@@ -170,16 +172,18 @@ class EmpleadoController extends Controller {
         ], 201 );
     }
 
-    public function updateImage(Request $request) {
+    public function updateImage( Request $request ) {
         $validatedData = $request->validate( [
             'anacod' => 'required|string|max:50',
             'foto' => 'required|file|image|max:1024',
         ] );
         $empleado = Empleado::find( $request->anacod );
-        $imagen_name = mb_strtolower($empleado->anacod) . '.' . $request->foto->getClientOriginalExtension();
-        $request->foto->storeAs('uploads', $imagen_name , 'public');  
+        $imagen_name = mb_strtolower( $empleado->anacod ) . '.' . $request->foto->getClientOriginalExtension();
+        $request->foto->storeAs( 'uploads', $imagen_name, 'public' );
+
         $empleado->anaimg = $imagen_name;
-        return json_encode($empleado);
-        // $empleado->anaimg = $request->foto->store( 'empleados', 'public' );              
+        return json_encode( $empleado );
+        // $empleado->anaimg = $request->foto->store( 'empleados', 'public' );
+
     }
 }

@@ -12,13 +12,20 @@ use Illuminate\Queue\SerializesModels;
 class UserRegistrationConfirmation extends Mailable
 {
     use Queueable, SerializesModels;
+    public $name;
+    public $email;  
+    public $user;
+    public $password;
 
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct($name, $user, $email, $password)
     {
-        //
+        $this->name = $name;
+        $this->email = $email;
+        $this->user = $user;
+        $this->password = $password;
     }
 
     /**
@@ -37,8 +44,13 @@ class UserRegistrationConfirmation extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.registro',
-
+            view: 'emails.registro', 
+            with: [
+                'user' => $this->user,
+                'password' => $this->password,
+                'name' => $this->name,
+                'email' => $this->email,
+            ],
         );
     }
 

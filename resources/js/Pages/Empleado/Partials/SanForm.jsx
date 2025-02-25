@@ -1,5 +1,7 @@
 import TextInput from "./TextInput";
 import Select from "./Select";
+import { CheckBoxGroup } from "@/Components/CheckBoxGroup";
+import { useEffect, useState } from "react";
 
 function SanForm({
     data = {},
@@ -13,6 +15,35 @@ function SanForm({
     children,
     tipo = "crear",
 }) {
+
+    const [jefaturas, setJefaturas] = useState([]);
+    
+    const handleJefaturas = (e) => {
+        if (jefaturas.length > 0) {
+            let areas =[...jefaturas];
+            if (areas.includes(e.target.value)) {
+                let exist = areas.filter(
+                    (area) => area != e.target.value
+                );
+                areas = exist;
+            } else {
+                areas.push(e.target.value);
+            }
+            setJefaturas(areas);
+        } else {
+            setJefaturas([e.target.value]);
+        }
+        
+    };
+
+    useEffect(() => {
+        console.log(jefaturas);
+        setData({
+            ...data,
+            jefaturas: jefaturas,
+        });        
+    }, [jefaturas]);
+
     return (
         <div className="flex justify-center mt-5">
             <div className="sm:w-full lg:w-4/5">
@@ -23,7 +54,7 @@ function SanForm({
                             <hr className="h-1 my-5 bg-red-800" />
                         </div>
                         <div className="grid lg:grid-cols-2 sm:grid-cols-1 md:grid-cols-1 gap-4 mb-5">
-                            {(!disabled && tipo === "editar") &&
+                            {!disabled && tipo === "editar" && (
                                 <TextInput
                                     label={
                                         <div>
@@ -47,9 +78,9 @@ function SanForm({
                                     disabled={disabled}
                                     // onBlur={makeAnacod({ ...data, anacods: anacods, setData: setData, data })}
                                 ></TextInput>
-                            }
+                            )}
 
-                            {(!disabled && tipo === "crear") && (
+                            {!disabled && tipo === "crear" && (
                                 <TextInput
                                     label={
                                         <div>
@@ -216,7 +247,7 @@ function SanForm({
                             ) : (
                                 <div>
                                     <label htmlFor="">
-                                        Nacimiento {'(mes/dia)'}
+                                        Nacimiento {"(mes/dia)"}
                                     </label>{" "}
                                     <p>
                                         {data.anames} / {data.anadia}
@@ -349,6 +380,55 @@ function SanForm({
                                 }
                                 disabled={disabled}
                             ></TextInput>
+
+                            <div className="flex items-center mb-5">
+                                <p className="text-gray-800"></p>
+                                <div className="mx-5">
+                                    <label htmlFor="jefe">Jefe</label>
+                                    <input
+                                        type="radio"
+                                        name="isBoss"
+                                        id="jefe"
+                                        className="mx-2"
+                                        onChange={() =>
+                                            setData({ ...data, isBoss: true })
+                                        }
+                                        checked={data.isBoss}
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="noJefe">No jefe</label>
+                                    <input
+                                        type="radio"
+                                        name="isBoss"
+                                        id="noJefe"
+                                        className="mx-2"
+                                        onChange={() =>
+                                            setData({ ...data, isBoss: false })
+                                        }
+                                        checked={!data.isBoss}
+                                    />
+                                </div>
+                            </div>
+
+                            {data.isBoss && (
+                                <div className="mt-5">
+                                    <p className="text-gray-800">
+                                        Selecciona las jefaturas a asignar:
+                                    </p>
+                                    <div className="flex flex-wrap gap-5 items-center mb-5">
+                                        {areas.map((item) => (
+                                            <div className="mx-5 mb-2">
+                                                <CheckBoxGroup
+                                                    label={item.anarea}
+                                                    value={item.anarea}
+                                                    onChange={handleJefaturas}
+                                                ></CheckBoxGroup>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             <TextInput
                                 className={
@@ -546,55 +626,9 @@ function SanForm({
                             }
                             disabled={true}
                         ></TextInput>
+*/}
 
-                        <div className="flex items-center mb-5">
-                            <p className="text-gray-800"></p>
-                            <div className="mx-5">
-                                <label htmlFor="jefe">Jefe</label>
-                                <input
-                                    type="radio"
-                                    name="isBoss"
-                                    id="jefe"
-                                    className="mx-2"
-                                    onChange={() => handleBoss(true)}
-                                    checked={data.isBoss}
-                                />
-                            </div>
-                            <div>
-                                <label htmlFor="noJefe">No jefe</label>
-                                <input
-                                    type="radio"
-                                    name="isBoss"
-                                    id="noJefe"
-                                    className="mx-2"
-                                    onChange={() => handleBoss(false)}
-                                    checked={!data.isBoss}
-                                />
-                            </div>
-                        </div>
-
-                        {data.isBoss && (
-                            <div className="mt-5">
-                                <p className="text-gray-800">
-                                    Selecciona las jefaturas a asignar:
-                                </p>
-                                <div className="flex flex-wrap justify-between items-center mb-5">
-                                    {areas.map((item) => (
-                                        <div className="mx-5 mb-2">
-                                            <CheckBoxGroup
-                                                label={item.anarea}
-                                                value={item.anarea}
-                                                onChange={
-                                                    handleJefaturas
-                                                }
-                                            ></CheckBoxGroup>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-
+                    {/*}
                         <TextInput
                             className={
                                 errors.salario && "border-red-500"

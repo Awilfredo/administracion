@@ -7,6 +7,7 @@ import EditIcon from "@/Components/EditIcon";
 import { DeleteIcon } from "@/Components/DeleteIcon";
 import Modal from "@/Components/Modal";
 
+
 const ShowEmpleado = ({
     auth,
     empleado,
@@ -44,6 +45,8 @@ const ShowEmpleado = ({
     const [errors, setErrors] = useState({});
     const [preview, setPreview] = useState(null);
     const [foto, setFoto] = useState([]);
+    const [fotoPerfil, setFotoPerfil] = useState(`http://san.red.com.sv/img/user/${empleado.anaimg}`);
+    
 
     // Función para manejar cambios en los inputs
     const handleInputChange = (e) => {
@@ -137,7 +140,8 @@ const ShowEmpleado = ({
 
     const handleCancel = (e) => {
         setDisabled(true);
-        setData({ defaultData });
+        setData(empleado);
+        
     };
 
     const handleChangeImage = (e) => {
@@ -146,6 +150,7 @@ const ShowEmpleado = ({
             const reader = new FileReader();
             reader.onloadend = () => {
                 setPreview(reader.result); // Guardar la URL generada en el estado
+                setFotoPerfil(reader.result);
             };
             reader.readAsDataURL(file);
             setFoto(file);
@@ -154,30 +159,33 @@ const ShowEmpleado = ({
 
     const handleSaveImagen = (e) => {
         const formData = new FormData();
-        formData.append("foto", foto);
+        formData.append("image", foto);
         formData.append("anacod", empleado.anacod);
-        router.post(route("empleados.update.image"), formData, {
-            preserveState: false,
-            onError: (errors) => {
-                setErrors(errors);
-                console.log(errors);
-            },
-            onSuccess: () => {
-                setPreview(null);
-                setFoto([]);
-                Swal.fire({
-                    title: "¡Éxito!",
-                    text: "Se ha actualizado la foto de perfil con éxito",
-                    icon: "success",
-                    timmer: 2500,
-                });
-            },
+        fetch("http://san.red.com.sv/empleado/uploadImage", {
+            method: "POST",
+            body: formData,
+        }).then((response) => {
+            if (response.ok) {
+                return response.json();
+            }else{
+                catchError(response);
+            }
+        }).then((data) => {
+            console.log(data)
+            swal.fire({
+                title: "¡Éxito!",
+                text: "Se ha guardado la imagen con éxito",
+                icon: "success",
+                timer: 2500,
+            }); 
+            setPreview();
         });
     };
 
     const handleCancelSaveImagen = (e) => {
         setPreview(null);
         setFoto([]);
+        setFotoPerfil(`http://san.red.com.sv/img/user/${empleado.anaimg}`);
     };
 
     return (
@@ -237,7 +245,7 @@ const ShowEmpleado = ({
                 <div className="flex flex-wrap justify-between items-center space-x-4 mb-6 gap-4">
                     <div className="relative w-32 h-32">
                         <img
-                            src={`http://san.red.com.sv/img/user/${empleado.anaimg}`}
+                            src={fotoPerfil}
                             alt={empleado.anacod.toLowerCase()}
                             className="w-32 h-32 rounded-xl object-cover border-4 border-blue-500"
                         />

@@ -64,50 +64,73 @@ class Empleado extends Model {
         $posiciones = DB::connection( 'san' )->select( "SELECT DISTINCT anapos FROM aplicaciones.pro_anacod WHERE anasta='A' AND anatip='U'" );
         return $posiciones;
     }
-    public static function store( $request ) {
 
-        //'anatel' => 'required|string|max:255',
-        //'folcod' => 'required|string|max:255',
-        //'anaext' => 'required|string|max:255',
-        $fechaCarbon = Carbon::createFromFormat( 'Y-m-d', $request->fecha_nacimiento );
-        $dia = $fechaCarbon->day;
-        $mes = $fechaCarbon->month;
-        $ananam = $request->nombres . ' ' .  $request->apellidos;
-        $folcod_real = $request->folcod_real ? $request->folcod_real : null;
-        $folcod = $request->folcod ? $request->folcod  : null;
-        $anatel = $request->anatel ? $request->anatel : null;
-        $anaext = $request->anaext ? $request->anatel : null;
-        DB::connection( 'san' )->insert( "INSERT INTO aplicaciones.pro_anacod (anacod,ananam,anapas,anamai,anasta,anaprf,anapai,anatel,anarad,anajef,anarea,folcod,anaext,anatip,anaimg,anapos,anasuc,anames,anadia,telreg,teltip,segundo_jefe,fecha_ingreso,fecha_baja,id_turno,lider_area,folcodreal, horario_id) 
-        VALUES
-        ('$request->anacod',
-        '$ananam', 
-        '$request->anapas', 
-        '$request->anamai', 
-        'A', 
-        1, 
-        '$request->anapai', 
-        '$anatel', 
-        '', 
-        '$request->anajef', 
-        '$request->anarea',
-         $folcod, 
-         '$anaext', 
-         'U', 
-         '$request->anaimg', 
-         '$request->anapos', 
-         '2', 
-         $mes, 
-         $dia, 
-         '503', 
-         'SIMIENS', 
-         'JJIMENEZ', 
-         '$request->fecha_ingreso', 
-         null, 
-         '002', 
-         '$request->anajef', 
-         null, 
-         $request->horario_id)" );
+    public static function asignarRolesSan( $request ) {
+        $anacod = $request->input( 'anacod' ) ?? null;
+        $isBoss = $request->input( 'isBoss' ) ?? false;
+        $pais = $request->input( 'anapai' );
+        $jefaturas = $request->input( 'jefaturas' ) ?? [];
+        $anarea = $request[ 'anarea' ];
+        if ( $anacod == null ) {
+            return;
+        }
+        if ( $isBoss ) {
+            $palabrasConComillas = array_map( function( $p ) {
+                return "'" . $p . "'";
+            }
+            , $jefaturas );
+            // Unir los elementos con comas y espacios
+            $areas = implode( ', ', $palabrasConComillas );
+            $consulta = "INSERT INTO aplicaciones.pro_usrrol (codana, codrol) SELECT '$anacod', codrol FROM aplicaciones.pro_areas_roles WHERE anarea IN ($areas) AND jefe = true AND anapai ='$pais' GROUP BY codrol";
+        } else {
+            $consulta = "INSERT INTO aplicaciones.pro_usrrol (codana, codrol) SELECT '$anacod', codrol FROM aplicaciones.pro_areas_roles WHERE anarea IN ('$anarea') AND jefe = false AND anapai ='$pais' GROUP BY codrol";
+        }
+        return DB::connection( 'san' )->insert( $consulta );
+    }
 
+    public static function asignarSuplementarios( $request ) {
+        $anacod = $request->input( 'anacod' ) ?? null;
+        $isBoss = $request->input( 'isBoss' ) ?? false;
+        $jefaturas = $request->input( 'jefaturas' ) ?? [];
+        $anarea = $request[ 'anarea' ];
+        if ( $anacod == null ) {
+            return;
+        }
+        if ( $isBoss ) {
+            $palabrasConComillas = array_map( function( $p ) {
+                return "'" . $p . "'";
+            }
+            , $jefaturas );
+            // Unir los elementos con comas y espacios
+            $areas = implode( ', ', $palabrasConComillas );
+            $consulta = "INSERT INTO cliente.pro_supaut (supcod, anacod) SELECT suplementario_id, '$anacod' FROM cliente.pro_areas_suplementarios WHERE area IN ($areas) AND jefe= true GROUP BY suplementario_id;";
+        } else {
+            $consulta = "INSERT INTO cliente.pro_supaut (supcod, anacod) SELECT suplementario_id, '$anacod' FROM cliente.pro_areas_suplementarios WHERE area IN ('$anarea') AND jefe= false GROUP BY suplementario_id;";
+        }
+        return DB::connection( 'san' )->insert( $consulta );
+    }
+
+    public static function asignarReportes( $request ) {
+
+        $anacod = $request->input( 'anacod' ) ?? null;
+        $isBoss = $request->input( 'isBoss' ) ?? false;
+        $jefaturas = $request->input( 'jefaturas' ) ?? [];
+        $anarea = $request[ 'anarea' ];
+        if ( $anacod == null ) {
+            return;
+        }
+        if ( $isBoss ) {
+            $palabrasConComillas = array_map( function( $p ) {
+                return "'" . $p . "'";
+            }
+            , $jefaturas );
+            // Unir los elementos con comas y espacios
+            $areas = implode( ', ', $palabrasConComillas );
+            $consulta = "INSERT INTO reportes.pro_repxru (repids, usrrol, stacod, usrtra, fectrx) SELECT reporte_id, '$anacod', 'A', 'AWCRUZ', CURRENT_TIMESTAMP FROM reportes.pro_areas_reportes WHERE area IN ($areas) AND jefe= true GROUP BY reporte_id";
+        } else {
+            $consulta = "INSERT INTO reportes.pro_repxru (repids, usrrol, stacod, usrtra, fectrx) SELECT reporte_id, '$anacod', 'A', 'AWCRUZ', CURRENT_TIMESTAMP FROM reportes.pro_areas_reportes WHERE area IN ('$anarea') AND jefe= false GROUP BY reporte_id";
+        }
+        return DB::connection( 'san' )->insert( $consulta );
     }
 
     use HasFactory;

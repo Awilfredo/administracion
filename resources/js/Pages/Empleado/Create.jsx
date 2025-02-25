@@ -15,6 +15,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
         apellidos: "", //
         anapas: "", //
         anamai: "", //
+        anasta: "A",
         anapai: "SV", //
         anatel: "", //
         anarad: "",
@@ -30,6 +31,8 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
         lider_area: "",
         folcodreal: null, // Valor numérico
         horario_id: 2, // Valor numérico
+        isBoss: false,
+        jefaturas: [],
     });
 
     const [preview, setPreview] = useState(null);
@@ -125,35 +128,37 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
     };
 
     const handleSubmit = (e) => {
-        const postData = {
-            anacod: data.anacod ? data.anacod : null, // Validación
-            ananam:
-                data.nombres && data.apellidos
-                    ? `${data.nombres} ${data.apellidos}`
-                    : null, // Validación compuesta
-            anapas: data.anapas ? data.anapas : null,
-            anapai: data.anapai ? data.anapai : null,
-            anasta: "A",
-            anamai: data.anamai ? data.anamai : null,
-            anatel: data.anatel ? data.anatel : null,
-            anarea: data.anarea ? data.anarea : null,
-            anarad: data.anarad ? data.anarad : null,
-            anajef: data.anajef ? data.anajef : null,
-            folcod: data.folcod ? data.folcod : null,
-            folcodreal: data.folcodreal ? data.folcodreal : null,
-            anaext: data.anaext ? data.anaext : null,
-            anapos: data.anapos ? data.anapos : null,
-            anames: data.anames ? data.anames : null,
-            anadia: data.anadia ? data.anadia : null,
-            fecha_ingreso: data.fecha_ingreso ? data.fecha_ingreso : null,
-            horario_id: data.horario_id ? data.horario_id : null,
-            lider_area: data.lider_area ? data.lider_area : null,
-            anaimg: null
-                };
-        console.log(postData);
+        // const postData = {
+        //     anacod: data.anacod ? data.anacod : null, // Validación
+        //     ananam:
+        //         data.nombres && data.apellidos
+        //             ? `${data.nombres} ${data.apellidos}`
+        //             : null, // Validación compuesta
+        //     anapas: data.anapas ? data.anapas : null,
+        //     anapai: data.anapai ? data.anapai : null,
+        //     anasta: "A",
+        //     anamai: data.anamai ? data.anamai : null,
+        //     anatel: data.anatel ? data.anatel : null,
+        //     anarea: data.anarea ? data.anarea : null,
+        //     anarad: data.anarad ? data.anarad : null,
+        //     anajef: data.anajef ? data.anajef : null,
+        //     folcod: data.folcod ? data.folcod : null,
+        //     folcodreal: data.folcodreal ? data.folcodreal : null,
+        //     anaext: data.anaext ? data.anaext : null,
+        //     anapos: data.anapos ? data.anapos : null,
+        //     anames: data.anames ? data.anames : null,
+        //     anadia: data.anadia ? data.anadia : null,
+        //     fecha_ingreso: data.fecha_ingreso ? data.fecha_ingreso : null,
+        //     horario_id: data.horario_id ? data.horario_id : null,
+        //     lider_area: data.lider_area ? data.lider_area : null,
+        //     anaimg: null,
+        //     isBoss: data.isBoss ? data.isBoss : false,
+        //     jefaturas: data.jefaturas ? data.jefaturas : [],           
+        //      };
+        // console.log(postData);
         router.visit(route("empleados.store"), {
             method: "post",
-            data: postData,
+            data: data,
             preserveState: true,
             onError: (errors) => {
                 setErrors(errors);
@@ -161,6 +166,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
             },
         });
     };
+    
 
     const handleJefaturas = (e) => {
         if (data.jefaturas.length) {
@@ -218,6 +224,11 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
         let pwd = generatePassword();
         setData({ ...data, anapas: pwd });
     }, []);
+
+    useEffect(() => {
+        console.log(data);
+        
+    }, [data]);
 
     const handleChangeImage = (e) => {
         const file = e.target.files[0];
