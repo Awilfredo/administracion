@@ -12,6 +12,8 @@ use Exception;
 class Hiring extends Model {
     use HasFactory;
 
+    
+
     public function crearUsuariosRedControl( $request ) {
 
         $isRedControl = $request->input( 'redcontrol' ) ?? false;

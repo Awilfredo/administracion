@@ -1,12 +1,15 @@
-import BackIcon from "@/Components/Icons/BackIcon";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { router } from "@inertiajs/react";
 import { useState } from "react";
 import SanForm from "./Partials/SanForm";
 import EditIcon from "@/Components/EditIcon";
-import { DeleteIcon } from "@/Components/DeleteIcon";
 import Modal from "@/Components/Modal";
-
+import TextInput from "@/Components/TextInput";
+import { ManejoFechas } from "@/Helpers/ManejoFechas";
+import DangerButton from "@/Components/DangerButton";
+import SecondaryButton from "@/Components/SecondaryButton";
+import BackEmpleados from "./components/BackEmpleados";
+import PerfilAplicaciones from "@/Components/PerfilAplicaciones";
 
 const ShowEmpleado = ({
     auth,
@@ -16,6 +19,7 @@ const ShowEmpleado = ({
     areas,
     posiciones,
     horarios,
+    redControl, mensajeria
 }) => {
     const [disabled, setDisabled] = useState(true);
     const defaultData = {
@@ -45,7 +49,14 @@ const ShowEmpleado = ({
     const [errors, setErrors] = useState({});
     const [preview, setPreview] = useState(null);
     const [foto, setFoto] = useState([]);
-    const [fotoPerfil, setFotoPerfil] = useState(`http://san.red.com.sv/img/user/${empleado.anaimg}`);
+    const [fotoPerfil, setFotoPerfil] = useState(
+        `http://san.red.com.sv/img/user/${empleado.anaimg}`
+    );
+    const { fechaActual } = ManejoFechas();
+    const [fechaBaja, setFechaBaja] = useState(fechaActual());
+    const [showBaja, setShowBaja] = useState(false);
+    console.log(redControl);
+    console.log(mensajeria);
     
 
     // Función para manejar cambios en los inputs
@@ -103,10 +114,6 @@ const ShowEmpleado = ({
         );
     };
 
-    const handleBack = (e) => {
-        router.visit(route("empleados.index"));
-    };
-
     const handleClickBaja = (e) => {
         Swal.fire({
             title: `Estas seguro?`,
@@ -125,8 +132,11 @@ const ShowEmpleado = ({
             reverseButtons: true,
         }).then((result) => {
             if (result.isConfirmed) {
-                router.visit(
-                    route("empleados.baja", { anacod: empleado.anacod })
+                router.delete(
+                    route("empleados.baja", { anacod: empleado.anacod }),
+                    {
+                        data: { anacod: empleado.anacod, fechaBaja: fechaBaja },
+                    }
                 );
                 Swal.fire({
                     title: "Exito!",
@@ -141,7 +151,6 @@ const ShowEmpleado = ({
     const handleCancel = (e) => {
         setDisabled(true);
         setData(empleado);
-        
     };
 
     const handleChangeImage = (e) => {
@@ -164,22 +173,24 @@ const ShowEmpleado = ({
         fetch("http://san.red.com.sv/empleado/uploadImage", {
             method: "POST",
             body: formData,
-        }).then((response) => {
-            if (response.ok) {
-                return response.json();
-            }else{
-                catchError(response);
-            }
-        }).then((data) => {
-            console.log(data)
-            swal.fire({
-                title: "¡Éxito!",
-                text: "Se ha guardado la imagen con éxito",
-                icon: "success",
-                timer: 2500,
-            }); 
-            setPreview();
-        });
+        })
+            .then((response) => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    catchError(response);
+                }
+            })
+            .then((data) => {
+                console.log(data);
+                swal.fire({
+                    title: "¡Éxito!",
+                    text: "Se ha guardado la imagen con éxito",
+                    icon: "success",
+                    timer: 2500,
+                });
+                setPreview();
+            });
     };
 
     const handleCancelSaveImagen = (e) => {
@@ -188,18 +199,16 @@ const ShowEmpleado = ({
         setFotoPerfil(`http://san.red.com.sv/img/user/${empleado.anaimg}`);
     };
 
+    const handleCancelBaja = (e) => {
+        setShowBaja(false);
+    };
+
     return (
         <AuthenticatedLayout
             user={auth.user}
             header={
                 <div className="flex justify-between w-full">
-                    <button
-                        className="mx-5 text-gray-800 hover:text-blue-800"
-                        onClick={handleBack}
-                    >
-                        <BackIcon className="h-6 w-6"></BackIcon>{" "}
-                        <span>Volver</span>
-                    </button>
+                    <BackEmpleados></BackEmpleados>
                     <p>Alta de empleado</p>
                 </div>
             }
@@ -232,6 +241,34 @@ const ShowEmpleado = ({
                         >
                             Cancelar
                         </button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* modal de baja */}
+            <Modal show={showBaja}>
+                <div className="p-5">
+                    <div className="mb-10">
+                        <label htmlFor="fecha_baja" className="text-lg">
+                            Selecciona la fecha de baja del empleado
+                        </label>
+                        <div className="mt-5">
+                            <TextInput
+                                type="date"
+                                id="fecha_baja"
+                                value={fechaBaja}
+                                onChange={(e) => setFechaBaja(e.target.value)}
+                                max={fechaActual()}
+                            ></TextInput>
+                        </div>
+                    </div>
+                    <div className="flex justify-center w-full gap-4">
+                        <DangerButton onClick={handleClickBaja}>
+                            Dar de baja
+                        </DangerButton>
+                        <SecondaryButton onClick={handleCancelBaja}>
+                            Cancelar
+                        </SecondaryButton>
                     </div>
                 </div>
             </Modal>
@@ -280,14 +317,13 @@ const ShowEmpleado = ({
                                 <EditIcon></EditIcon>
                             </button>
                         )}
-                        <button
-                            onClick={handleClickBaja}
-                            className="text-red-500 hover:text-white hover:bg-red-500 rounded-full h-12 w-12 flex justify-center items-center"
-                        >
-                            <DeleteIcon></DeleteIcon>
-                        </button>
                     </div>
                 </div>
+                <div className="flex">
+                    <PerfilAplicaciones aplicacion={'Red Control'} usuario={redControl?.idusuario}></PerfilAplicaciones>
+                    <PerfilAplicaciones aplicacion={'Mensajeria'} usuario={mensajeria?.idusuario}></PerfilAplicaciones>
+                </div>
+
                 {data.anacod ? (
                     <SanForm
                         data={data}
@@ -322,6 +358,12 @@ const ShowEmpleado = ({
                 ) : (
                     ""
                 )}
+
+                <div className="flex w-full justify-center">
+                    <DangerButton onClick={() => setShowBaja(true)}>
+                        DAR DE BAJA
+                    </DangerButton>
+                </div>
             </div>
         </AuthenticatedLayout>
     );

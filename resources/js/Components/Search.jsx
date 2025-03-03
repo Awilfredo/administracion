@@ -11,8 +11,13 @@ function Search({
     const [value, setValue] = useState("");
     const [showFilter, setshowFilter] = useState(false);
 
+    useEffect(() => {
+        handleChange(value);
+    }, [datos]);
+
     const handleChange = (text) => {
         setValue(text);
+        if(text=='')return setResultados(datos);
         if (text) {
             const result = [];
             datos.map((element) => {
@@ -83,8 +88,8 @@ function Search({
     }, [filtros]);
 
     return (
-        <div className="h-10 w-full mt-5 flex justify-center">
-            <div className="flex justify-between w-1/3">
+        <div className="h-10 flex">
+            <div className="flex justify-between">
                 <div
                     className="items-center max-w-md bg-white"
                     x-data="{ search: '' }"

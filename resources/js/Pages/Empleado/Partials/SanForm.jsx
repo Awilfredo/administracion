@@ -157,24 +157,6 @@ function SanForm({
                             ></TextInput>
 
                             <TextInput
-                                className={errors.anapas && "border-red-500"}
-                                label={
-                                    <div>
-                                        Contraseña
-                                        <span className="text-red-600">*</span>
-                                    </div>
-                                }
-                                placeholder=""
-                                value={data.anapas}
-                                onChange={(e) =>
-                                    setData({
-                                        ...data,
-                                        anapas: e.target.value.toUpperCase(),
-                                    })
-                                }
-                                disabled={disabled}
-                            ></TextInput>
-                            <TextInput
                                 label={
                                     <div>
                                         Email
@@ -380,7 +362,7 @@ function SanForm({
                                 }
                                 disabled={disabled}
                             ></TextInput>
-
+                            {tipo === 'crear' ?
                             <div className="flex items-center mb-5">
                                 <p className="text-gray-800"></p>
                                 <div className="mx-5">
@@ -409,9 +391,9 @@ function SanForm({
                                         checked={!data.isBoss}
                                     />
                                 </div>
-                            </div>
+                            </div> : ''}
 
-                            {data.isBoss && (
+                            {(data.isBoss && tipo=='crear') && (
                                 <div className="mt-5">
                                     <p className="text-gray-800">
                                         Selecciona las jefaturas a asignar:

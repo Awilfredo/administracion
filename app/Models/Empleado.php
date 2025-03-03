@@ -17,7 +17,6 @@ class Empleado extends Model {
     protected $fillable = [
         'anacod',
         'ananam',
-        'anapas',
         'anamai',
         'anasta',
         'anaprf',
@@ -45,7 +44,7 @@ class Empleado extends Model {
     ];
 
     public static function empleados() {
-        $empleados = DB::connection( 'san' )->select( "select a.*, h.nombre as horario from aplicaciones.pro_anacod a left join aplicaciones.pro_horarios h on h.id = a.horario_id where anasta = 'A' and anatip = 'U' and anapai = 'SV';
+        $empleados = DB::connection( 'san' )->select( "select a.*, h.nombre as horario from aplicaciones.pro_anacod a left join aplicaciones.pro_horarios h on h.id = a.horario_id where anatip = 'U' ;
         " );
         return $empleados;
     }
@@ -132,6 +131,8 @@ class Empleado extends Model {
         }
         return DB::connection( 'san' )->insert( $consulta );
     }
+
+    
 
     use HasFactory;
 }

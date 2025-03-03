@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Validator;
 use App\Models\Empleado;
 use App\Models\Horario;
 use App\Models\Hiring;
+use App\Models\UsuarioRedControl;
 use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -35,21 +36,33 @@ class EmpleadoController extends Controller {
         $jefes = Empleado::jefes();
         $areas = Empleado::areas();
         $posiciones = Empleado::posiciones();
-        return Inertia::render( 'Empleado/ShowEmpleado', [ 'empleado' => $empleado, 'anacods' => $anacods, 'jefes' => $jefes, 'areas' => $areas, 'posiciones' => $posiciones, 'horarios' => $horarios ] );
+        $redControl = UsuarioRedControl::where( 'email', $empleado->anamai )->where('empresa', 1)->first();
+        $mensajeria = UsuarioRedControl::where( 'email', $empleado->anamai )->where('empresa', ($empleado->anapai ==='SV') ? 26 : 32 )->first();
+        return Inertia::render( 'Empleado/ShowEmpleado', [ 'empleado' => $empleado, 'anacods' => $anacods, 'jefes' => $jefes, 'areas' => $areas, 'posiciones' => $posiciones, 'horarios' => $horarios, 'redControl' => $redControl, 'mensajeria' => $mensajeria ] );
         //return json_encode( $empleado );
     }
 
-    public function baja( $anacod ) {
-        $empleado = Empleado::where( 'anacod', $anacod )->first();
+    public function baja( Request $request ) {
+        $request->validate( [
+            'anacod' => 'required|string',
+            'fechaBaja' => 'required|date'
+        ] );
+
+        $empleado = Empleado::where( 'anacod', $request->anacod )->first();
+
+        if ( !$empleado ) {
+            return response()->json( [ 'message' => 'Empleado no encontrado' ], 404 );
+        }
         $empleado->anasta = 'I';
+        $empleado->fecha_baja = $request->fechaBaja;
         $empleado->save();
+        return redirect()->route( 'empleados.index' );
     }
 
     public function store( Request $request ) {
         $validatedData = $request->validate( [
             'anacod' => 'required|string|max:50',
             'ananam' => 'required|string|max:255',
-            'anapas' => 'required|string|max:255',
             'anapai' => 'required|string|max:2',
             'anamai' => 'required|email|max:255',
             'anasta' => 'nullable|string|max:1',
@@ -74,20 +87,20 @@ class EmpleadoController extends Controller {
         $empleado = Empleado::create( $validatedData );
         $empleado->asignarRolesSan( $request );
         $empleado->asignarReportes( $request );
-        $empleado->asignarSuplementarios($request);
+        $empleado->asignarSuplementarios( $request );
 
         //Redirect user
-        $recipients = ['awcruz@red.com.sv' ];
-        Mail::to( $recipients )->send( new UserRegistrationConfirmation($empleado->ananam, $empleado->anacod, $empleado->anamai, $empleado->anapas) );
+        $recipients = [ 'awcruz@red.com.sv' ];
+        Mail::to( $recipients )->send( new UserRegistrationConfirmation( $empleado->ananam, $empleado->anacod, $empleado->anamai, $empleado->anapas ) );
         return Redirect::route( 'empleados.show', [ $empleado->anacod ] );
     }
+
     public function saveSan( $request, $empleado ) {
         $request->validate( [
             'anacod' => 'required|string|max:255',
             'nombres' => 'required|string|max:255',
             'apellidos' => 'required|string|max:255',
             'anamai' => 'required|string|max:255',
-            'anapas' => 'required|string|max:255',
             'fecha_nacimiento' => 'required|string|max:255',
             'anapai' => 'required|string|max:255',
             'fecha_ingreso' => 'required|string|max:255',
@@ -99,7 +112,6 @@ class EmpleadoController extends Controller {
         ] );
         $empleado->anacod = $request->anacod;
         $empleado->ananam = $request->nombres . ' ' . $request->apellidos;
-        $empleado->anapas = $request->anapas;
         $empleado->anamai = $request->anamai;
         $empleado->anasta = 'A';
         $empleado->anapai = $request->anapai;
@@ -129,7 +141,6 @@ class EmpleadoController extends Controller {
         $validatedData = $request->validate( [
             'anacod' => 'required|string|max:50',
             'ananam' => 'required|string|max:255',
-            'anapas' => 'required|string|max:255',
             'anapai' => 'required|string|max:2',
             'anamai' => 'required|email|max:255',
             'anatel' => 'nullable|string|max:20',

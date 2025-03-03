@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { CrearEmpleado } from "@/Helpers/CrearEmpleado";
 import { ComprimirImagen } from "@/Helpers/ComprimirImagen";
 import SanForm from "./Partials/SanForm";
+import BackEmpleados from "./components/BackEmpleados";
 
 function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
     const { fechaActual } = ManejoFechas();
@@ -13,7 +14,6 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
         anacod: "", //
         nombres: "", //
         apellidos: "", //
-        anapas: "", //
         anamai: "", //
         anasta: "A",
         anapai: "SV", //
@@ -221,11 +221,6 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
     }, [data.nombres, data.apellidos]);
 
     useEffect(() => {
-        let pwd = generatePassword();
-        setData({ ...data, anapas: pwd });
-    }, []);
-
-    useEffect(() => {
         console.log(data);
         
     }, [data]);
@@ -243,7 +238,13 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
     };
 
     return (
-        <AuthenticatedLayout user={auth.user} header={<p>Alta de empleado</p>}>
+        <AuthenticatedLayout user={auth.user} header={
+        <div className="flex justify-between w-full">
+            <BackEmpleados/>    
+        <p>Alta de empleado</p>
+        </div>
+        }
+        >
             <Head title="Alta" />
 
             <SanForm
