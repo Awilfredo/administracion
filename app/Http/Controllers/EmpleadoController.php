@@ -67,7 +67,7 @@ class EmpleadoController extends Controller {
             'anamai' => 'required|email|max:255',
             'anasta' => 'nullable|string|max:1',
             'anatel' => 'nullable|string|max:20',
-            'anarea' => 'required|string|max:50',
+            'anarea' => 'required|string|max:3',
             'anarad' => 'nullable|string|max:50',
             'anajef' => 'required|string|max:50',
             'folcod' => 'nullable|integer',
@@ -90,7 +90,7 @@ class EmpleadoController extends Controller {
         $empleado->asignarSuplementarios( $request );
 
         //Redirect user
-        $recipients = [ 'awcruz@red.com.sv' ];
+        $recipients = [ 'it-global@red.com.sv', 'aayala@red.com.sv'];
         Mail::to( $recipients )->send( new UserRegistrationConfirmation( $empleado->ananam, $empleado->anacod, $empleado->anamai, $empleado->anapas ) );
         return Redirect::route( 'empleados.show', [ $empleado->anacod ] );
     }

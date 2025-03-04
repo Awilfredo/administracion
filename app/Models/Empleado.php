@@ -132,7 +132,5 @@ class Empleado extends Model {
         return DB::connection( 'san' )->insert( $consulta );
     }
 
-    
-
     use HasFactory;
 }
