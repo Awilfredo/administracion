@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ControlRegistrationConfirmation;
 use App\Mail\UserRegistrationConfirmation;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Empleado;
@@ -9,11 +10,12 @@ use App\Models\Horario;
 use App\Models\Hiring;
 use App\Models\UsuarioRedControl;
 use DateTime;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
-
+use Illuminate\Support\Str;
 class EmpleadoController extends Controller {
     public function index() {
         $empleados = Empleado::empleados();
@@ -36,8 +38,8 @@ class EmpleadoController extends Controller {
         $jefes = Empleado::jefes();
         $areas = Empleado::areas();
         $posiciones = Empleado::posiciones();
-        $redControl = UsuarioRedControl::where( 'email', $empleado->anamai )->where('empresa', 1)->first();
-        $mensajeria = UsuarioRedControl::where( 'email', $empleado->anamai )->where('empresa', ($empleado->anapai ==='SV') ? 26 : 32 )->first();
+        $redControl = UsuarioRedControl::where( 'email', $empleado->anamai )->where( 'empresa', 1 )->first();
+        $mensajeria = UsuarioRedControl::where( 'email', $empleado->anamai )->where( 'empresa', ( $empleado->anapai === 'SV' ) ? 26 : 32 )->first();
         return Inertia::render( 'Empleado/ShowEmpleado', [ 'empleado' => $empleado, 'anacods' => $anacods, 'jefes' => $jefes, 'areas' => $areas, 'posiciones' => $posiciones, 'horarios' => $horarios, 'redControl' => $redControl, 'mensajeria' => $mensajeria ] );
         //return json_encode( $empleado );
     }
@@ -55,7 +57,17 @@ class EmpleadoController extends Controller {
         }
         $empleado->anasta = 'I';
         $empleado->fecha_baja = $request->fechaBaja;
+        $redControl = UsuarioRedControl::where( 'email', $empleado->anamai )->where( 'empresa', 1 )->first();
+        $mensajeria = UsuarioRedControl::where( 'email', $empleado->anamai )->where( 'empresa', ( $empleado->anapai === 'SV' ) ? 26 : 32 )->first();
         $empleado->save();
+        if ( $redControl ) {
+            $redControl->estado = 1;
+            $redControl->save();
+        }
+        if ( $mensajeria ) {
+            $mensajeria->estado = 1;
+            $mensajeria->save();
+        }
         return redirect()->route( 'empleados.index' );
     }
 
@@ -82,7 +94,6 @@ class EmpleadoController extends Controller {
             'lider_area' => 'required|string|max:50',
             'anaimg' => 'nullable|string|max:255',
         ] );
-
         // Crear un nuevo registro
         $empleado = Empleado::create( $validatedData );
         $empleado->asignarRolesSan( $request );
@@ -90,7 +101,7 @@ class EmpleadoController extends Controller {
         $empleado->asignarSuplementarios( $request );
 
         //Redirect user
-        $recipients = [ 'it-global@red.com.sv', 'aayala@red.com.sv'];
+        $recipients = [ 'it-global@red.com.sv', 'aayala@red.com.sv' ];
         Mail::to( $recipients )->send( new UserRegistrationConfirmation( $empleado->ananam, $empleado->anacod, $empleado->anamai, $empleado->anapas ) );
         return Redirect::route( 'empleados.show', [ $empleado->anacod ] );
     }
@@ -196,5 +207,43 @@ class EmpleadoController extends Controller {
         return json_encode( $empleado );
         // $empleado->anaimg = $request->foto->store( 'empleados', 'public' );
 
+    }
+
+    public function updateControl( Request $request ): RedirectResponse {
+        $redControl = UsuarioRedControl::find( $request->id );
+        $redControl->estado = $request->activar ? 2 : 1;
+        $redControl->actualizacion = now();
+        $redControl->save();
+        return Redirect::route( 'empleados.show', [ $request->anacod ] );
+    }
+
+    public function crearMensajeria(Request $request):RedirectResponse
+    {
+        $usuarioMensajeria = new UsuarioRedControl();
+        $empleado = Empleado::find($request->anacod);
+        $contrasenia = Str::random(4) . rand(1000, 9999);
+        $usuarioMensajeria->codigoInterno= hash( 'sha256', microtime( true ) );
+        $usuarioMensajeria->idusuario = $request->aplicacion =='Mensajeria' ? strtolower($empleado->anacod) . '@mensajeria.red.' . strtolower($empleado->anapai) : $empleado->anacod;
+        $usuarioMensajeria->cliente = 1;
+        $usuarioMensajeria->email = $empleado->anamai;
+        $usuarioMensajeria->nombre = $empleado->ananam;
+        $usuarioMensajeria->jefeInmediato = $empleado->anajef;
+        $usuarioMensajeria->contrasenia = base64_encode($contrasenia);
+        $usuarioMensajeria->permisos = 1;
+        $usuarioMensajeria->estado = 2;
+        $usuarioMensajeria->telefono = $empleado->anatel;
+        $usuarioMensajeria->trxdat = now()->toDateString();
+        $usuarioMensajeria->empresa =$request->aplicacion =='Mensajeria' ? (( $empleado->anapai === 'SV' ) ? 26 : 32) : 1;
+        $usuarioMensajeria->pais = $empleado->anapai;
+        $usuarioMensajeria->imei = $empleado->getImei($empleado->folcod)->eqpser;
+        $usuarioMensajeria->tracking_key = 1;
+        $usuarioMensajeria->actualizacion = now();
+        $usuarioMensajeria->anexo = $empleado->folcod;
+        $usuarioMensajeria->lat = 0;
+        $usuarioMensajeria->lng = 0;
+        $usuarioMensajeria->save();
+        $recipients = [$empleado->anamai, 'awcruz@red.com.sv'];
+        Mail::to( $recipients )->send( new ControlRegistrationConfirmation( $usuarioMensajeria->nombre, $usuarioMensajeria->idusuario, $usuarioMensajeria->email, $contrasenia, $request->aplicacion) );
+        return Redirect::route( 'empleados.show', [ $request->anacod ] );
     }
 }

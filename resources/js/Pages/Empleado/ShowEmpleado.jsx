@@ -19,7 +19,8 @@ const ShowEmpleado = ({
     areas,
     posiciones,
     horarios,
-    redControl, mensajeria
+    redControl,
+    mensajeria,
 }) => {
     const [disabled, setDisabled] = useState(true);
     const defaultData = {
@@ -57,7 +58,6 @@ const ShowEmpleado = ({
     const [showBaja, setShowBaja] = useState(false);
     console.log(redControl);
     console.log(mensajeria);
-    
 
     // Función para manejar cambios en los inputs
     const handleInputChange = (e) => {
@@ -320,8 +320,20 @@ const ShowEmpleado = ({
                     </div>
                 </div>
                 <div className="flex">
-                    <PerfilAplicaciones aplicacion={'Red Control'} usuario={redControl?.idusuario}></PerfilAplicaciones>
-                    <PerfilAplicaciones aplicacion={'Mensajeria'} usuario={mensajeria?.idusuario}></PerfilAplicaciones>
+                    <PerfilAplicaciones
+                        aplicacion={"Red Control"}
+                        usuario={redControl?.idusuario}
+                        estado={redControl?.estado}
+                        id={redControl?.id}
+                        anacod={empleado.anacod}
+                    ></PerfilAplicaciones>
+                    <PerfilAplicaciones
+                        aplicacion={"Mensajeria"}
+                        usuario={mensajeria?.idusuario}
+                        estado={mensajeria?.estado}
+                        id={mensajeria?.id}
+                        anacod={empleado.anacod}
+                    ></PerfilAplicaciones>
                 </div>
 
                 {data.anacod ? (

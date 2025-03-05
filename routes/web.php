@@ -7,7 +7,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\HiringController;
 use App\Models\Asistencia;
-
+use App\Models\Empleado;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
@@ -87,6 +87,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/empleados/{anacod}/baja', [EmpleadoController::class, 'baja'])->name('empleados.baja');
     Route::get('asistencia/resumen/{anio}/{mes}', [AsistenciaController::class, 'resumenFecha'])->name('resumen.fecha');
     Route::post('empleados/update/image', [EmpleadoController::class, 'updateImage'])->name('empleados.update.image');
+    Route::patch('empleados/update/control', [EmpleadoController::class, 'updateControl'])->name('empleados.update.control');
+    Route::post('empleados/create/control', [EmpleadoController::class, 'crearMensajeria'])->name('empleado.create.control');
 });
 
 

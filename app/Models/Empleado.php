@@ -132,5 +132,11 @@ class Empleado extends Model {
         return DB::connection( 'san' )->insert( $consulta );
     }
 
+    public function getImei($folcod)
+    {
+        $result = DB::connection('san')->select("SELECT eqpser from cliente.pro_foleqp where folcod = $folcod and eqptip='E'");
+        return collect($result)->first(); //si no hay retorna null
+    }
+
     use HasFactory;
 }

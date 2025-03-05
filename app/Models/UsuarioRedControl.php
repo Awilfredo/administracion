@@ -12,6 +12,7 @@ class UsuarioRedControl extends Model
     public $timestamps = false;
     public $id = false;
     protected $table = 'Agenda.usuario';
+    protected $hidden = ['contrasenia'];
     protected $fillable = [
         'codigoInterno',
         'idusuario',
