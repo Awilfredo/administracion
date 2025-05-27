@@ -41,6 +41,18 @@ function Empleados({ empleados, auth }) {
 
     const columns = [
         {
+            name: "Acciones",
+            selector: (row) => (
+                <img
+                    className="w-22 h-22 rounded-xl py-2"
+                    src={row.anaimg ? `http://san.red.com.sv/img/user/${row.anaimg}` : "http://san.red.com.sv/img/user/no_imagen.png"}
+                    alt=""
+                />
+            ),
+            sortable: true,
+            maxWidth: "150px",
+        },
+        {
             name: "Usuario",
             selector: (row) => row.anacod,
             sortable: true,
@@ -48,6 +60,7 @@ function Empleados({ empleados, auth }) {
         },
         {
             name: "Nombre",
+            wrap: true,
             selector: (row) => row.ananam,
             sortable: true,
         },

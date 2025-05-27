@@ -1,6 +1,6 @@
 import { useState } from "react";
 import ApplicationLogo from "@/Components/ApplicationLogo";
-import Dropdown from "@/Components/Dropdown";
+import Dropdown from "@/Components/Dropdown";   
 import NavLink from "@/Components/NavLink";
 import ResponsiveNavLink from "@/Components/ResponsiveNavLink";
 import { Link } from "@inertiajs/react";
@@ -15,10 +15,24 @@ export default function Authenticated({ user, header, children }) {
     const navSelectedClass =
         "relative px-4 py-3 flex items-center space-x-4 rounded-xl text-white bg-gradient-to-r from-sky-600 to-cyan-400";
 
+    const toggleMobileMenu = () => {
+        const sidebar = document.getElementById("sidebar");
+        if (sidebar.classList.contains("hidden")) {
+            sidebar.classList.remove("hidden");
+        } else {
+            sidebar.classList.add("hidden");
+        }
+    };
+
+    const toggleContent = () => {
+        const sidebar = document.getElementById("sidebar");
+        if (!sidebar.classList.contains("hidden"))sidebar.classList.add("hidden");
+    };
+
     return (
         <div className="min-h-screen bg-gray-100">
             <div className="bg-gray-100">
-                <aside className="ml-[-100%] fixed z-10 top-0 pb-3 px-6 w-full flex flex-col justify-between h-screen border-r bg-white transition duration-300 md:w-4/12 lg:ml-0 lg:w-[25%] xl:w-[20%] 2xl:w-[16%] overflow-y-auto">
+                <aside id="sidebar" className="hidden lg:block fixed z-10 top-0 pb-3 px-6 w-full flex flex-col justify-between h-screen border-r bg-gradient-to-r from-indigo-200 to-gray-200 transition duration-300 md:w-4/12 lg:ml-0 lg:w-[25%] xl:w-[20%] 2xl:w-[16%] overflow-y-auto">
                     <div>
                         <div className="mt-5 text-center">
                             <img
@@ -36,7 +50,7 @@ export default function Authenticated({ user, header, children }) {
                             </h5>
                         </div>
 
-                        <ul className="space-y-2 tracking-wide mt-8">
+                        <ul className="space-y-2 tracking-wide mt-8 text-white">
                             <li>
                                 <Link
                                     href={route("dashboard")}
@@ -421,11 +435,11 @@ export default function Authenticated({ user, header, children }) {
                     </div>
                 </aside>
 
-                <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[85%]">
+                <div className="ml-auto mb-6 lg:w-[75%] xl:w-[80%] 2xl:w-[84%]" id="content" >
                     <div className="sticky z-10 top-0 h-16 border-b bg-white lg:py-2.5">
                         <div className="px-6 flex items-center justify-between space-x-4 2xl:container">
                             {header}
-                            <button className="w-12 h-16 -mr-2 border-r lg:hidden">
+                            <button className="w-12 h-16 -mr-2 border-r lg:hidden" onClick={toggleMobileMenu}>
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     className="h-6 w-6 my-auto"
@@ -443,7 +457,7 @@ export default function Authenticated({ user, header, children }) {
                             </button>
                         </div>
                     </div>
-                    <main>{children}</main>
+                    <main onClick={toggleContent}>{children}</main>
                 </div>
             </div>
         </div>

@@ -42,9 +42,6 @@ const ShowEmpleado = ({
         fecha_ingreso: empleado.fecha_ingreso ? empleado.fecha_ingreso : "",
         horario_id: empleado.horario_id ? empleado.horario_id : "",
         lider_area: empleado.lider_area ? empleado.lider_area : "",
-        anaimg: empleado.anacod
-            ? `${empleado.anacod.toLocaleLowerCase()}.jpg`
-            : "", // Validación con transformación});
     };
     const [data, setData] = useState(defaultData);
     const [errors, setErrors] = useState({});
@@ -87,9 +84,7 @@ const ShowEmpleado = ({
             fecha_ingreso: data.fecha_ingreso ? data.fecha_ingreso : null,
             horario_id: data.horario_id ? data.horario_id : null,
             lider_area: data.lider_area ? data.lider_area : null,
-            anaimg: data.anacod
-                ? `${data.anacod.toLocaleLowerCase()}.jpg`
-                : null, // Validación con transformación
+
         };
         console.log(postData);
         router.patch(

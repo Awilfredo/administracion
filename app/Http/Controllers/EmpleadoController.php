@@ -167,10 +167,27 @@ class EmpleadoController extends Controller {
             'fecha_ingreso' => 'nullable|date',
             'horario_id' => 'required|integer',
             'lider_area' => 'required|string|max:50',
-            'anaimg' => 'nullable|string|max:255',
         ] );
+
         $empleado = Empleado::find( $anacod );
-        $empleado->update( $validatedData );
+        $empleado->anacod = $request->anacod;
+        $empleado->ananam = $request->ananam;
+        $empleado->anapai = $request->anapai;
+        $empleado->anamai = $request->anamai;
+        $empleado->anatel = $request->anatel;
+        $empleado->anarea = $request->anarea;
+        $empleado->anarad = $request->anarad;
+        $empleado->anajef = $request->anajef;
+        $empleado->folcod = $request->folcod;
+        $empleado->folcodreal = $request->folcodreal;
+        $empleado->anaext = $request->anaext;
+        $empleado->anapos = $request->anapos;
+        $empleado->anames = $request->anames;
+        $empleado->anadia = $request->anadia;
+        $empleado->fecha_ingreso = $request->fecha_ingreso;
+        $empleado->horario_id = $request->horario_id;
+        $empleado->lider_area = $request->lider_area;
+        $empleado->save();
         return Redirect::route( 'empleados.show', [ $empleado->anacod ] );
     }
 
