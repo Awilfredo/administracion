@@ -45,7 +45,7 @@ function Empleados({ empleados, auth }) {
             selector: (row) => (
                 <img
                     className="w-22 h-22 rounded-xl py-2"
-                    src={row.anaimg ? `http://san.red.com.sv/img/user/${row.anaimg}` : "http://san.red.com.sv/img/user/no_imagen.png"}
+                    src={row.anaimg ? `http://172.17.10.31/img/user/${row.anaimg}` : "http://172.17.10.31/img/user/no_imagen.png"}
                     alt=""
                 />
             ),

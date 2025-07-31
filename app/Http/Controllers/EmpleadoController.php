@@ -263,4 +263,24 @@ class EmpleadoController extends Controller {
         Mail::to( $recipients )->send( new ControlRegistrationConfirmation( $usuarioMensajeria->nombre, $usuarioMensajeria->idusuario, $usuarioMensajeria->email, $contrasenia, $request->aplicacion) );
         return Redirect::route( 'empleados.show', [ $request->anacod ] );
     }
+
+    public function DatosIndex($anacod)
+    {
+        $empleado = Empleado::where( 'anacod', $anacod )->first();
+       return Inertia::render('Empleado/Datos', [ 'empleado' => $empleado ]);
+    }
+
+    public function DatosStore(Request $request): RedirectResponse
+    {
+        $empleado = Empleado::where( 'anacod', $request->anacod )->first();
+        $empleado->update($request->all());
+        return Redirect::route( 'empleados.show', [ $request->anacod ] );
+    }
+
+
+    public function DatosCreate($anacod)
+    {
+        $empleado = Empleado::where( 'anacod', $anacod )->first();
+       return Inertia::render('Empleado/CreateDatos', [ 'empleado' => $empleado ]);
+    }
 }

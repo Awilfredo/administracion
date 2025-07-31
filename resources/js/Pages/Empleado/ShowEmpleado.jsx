@@ -10,6 +10,7 @@ import DangerButton from "@/Components/DangerButton";
 import SecondaryButton from "@/Components/SecondaryButton";
 import BackEmpleados from "./components/BackEmpleados";
 import PerfilAplicaciones from "@/Components/PerfilAplicaciones";
+import Nav from "./Partials/Nav";
 
 const ShowEmpleado = ({
     auth,
@@ -48,7 +49,7 @@ const ShowEmpleado = ({
     const [preview, setPreview] = useState(null);
     const [foto, setFoto] = useState([]);
     const [fotoPerfil, setFotoPerfil] = useState(
-        `http://san.red.com.sv/img/user/${empleado.anaimg}`
+        `http://172.17.10.31/img/user/${empleado.anaimg}`
     );
     const { fechaActual } = ManejoFechas();
     const [fechaBaja, setFechaBaja] = useState(fechaActual());
@@ -165,7 +166,7 @@ const ShowEmpleado = ({
         const formData = new FormData();
         formData.append("image", foto);
         formData.append("anacod", empleado.anacod);
-        fetch("http://san.red.com.sv/empleado/uploadImage", {
+        fetch("http://172.17.10.31/empleado/uploadImage", {
             method: "POST",
             body: formData,
         })
@@ -191,7 +192,7 @@ const ShowEmpleado = ({
     const handleCancelSaveImagen = (e) => {
         setPreview(null);
         setFoto([]);
-        setFotoPerfil(`http://san.red.com.sv/img/user/${empleado.anaimg}`);
+        setFotoPerfil(`http://172.17.10.31/img/user/${empleado.anaimg}`);
     };
 
     const handleCancelBaja = (e) => {
@@ -204,7 +205,8 @@ const ShowEmpleado = ({
             header={
                 <div className="flex justify-between w-full">
                     <BackEmpleados></BackEmpleados>
-                    <p>Alta de empleado</p>
+                    <Nav user={empleado}></Nav>
+                    <div> </div>
                 </div>
             }
         >

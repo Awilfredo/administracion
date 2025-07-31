@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\DatosEmpleadoController;
+use App\Http\Controllers\EmpleadoHijoController;
+use App\Http\Controllers\EmpleadoArchivoController;
 
 use function Pest\Laravel\patch;
 
@@ -89,6 +92,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('empleados/update/image', [EmpleadoController::class, 'updateImage'])->name('empleados.update.image');
     Route::patch('empleados/update/control', [EmpleadoController::class, 'updateControl'])->name('empleados.update.control');
     Route::post('empleados/create/control', [EmpleadoController::class, 'crearMensajeria'])->name('empleado.create.control');
+    Route::get('empleados/{anacod}/datos', [DatosEmpleadoController::class, 'index'])->name('datos.index');
+    Route::post('datos', [DatosEmpleadoController::class, 'store'])->name('datos.store');
+    Route::patch('datos/{id}', [DatosEmpleadoController::class, 'update'])->name('datos.update');
+    route::post('hijos', [EmpleadoHijoController::class, 'store'])->name('hijos.store');
+    route::patch('hijos/{id}', [EmpleadoHijoController::class, 'update'])->name('hijos.update');
+    route::delete('hijos/{id}', [EmpleadoHijoController::class, 'destroy'])->name('hijos.destroy');
+    route::post('archivos', [EmpleadoArchivoController::class, 'store'])->name('archivos.store');
+    route::patch('archivos/{id}', [EmpleadoArchivoController::class, 'update'])->name('archivos.update');
+    route::delete('archivos/{empleadoArchivo}', [EmpleadoArchivoController::class, 'destroy'])->name('archivos.destroy');
+    
 });
 
 

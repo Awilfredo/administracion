@@ -20,5 +20,16 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@red.com.sv',
             'password' => 'Intelfon1234'
         ]);
+
+        User::factory()->create([
+            'name' => 'Wilfredo Cruz',
+            'email' => 'awcruz@red.com.sv',
+            'password' => 'Galadriel94*'
+        ]);
+        User::factory()->create([
+            'name' => 'Alisson Cano',
+            'email' => 'acano@red.com.gt',
+            'password' => 'Intelfon1234'
+        ]);
     }
 }
