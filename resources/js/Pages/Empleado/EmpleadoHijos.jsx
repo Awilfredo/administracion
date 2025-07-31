@@ -25,6 +25,7 @@ export default function EmpleadoHijos({ empleado_id, hijos }) {
         e.preventDefault();
         if (data.id) {
             patch(route("hijos.update", data.id), {
+                preserveScroll: true,
                 onSuccess: () => {
                     reset();
                     setOpen(false);
@@ -32,6 +33,7 @@ export default function EmpleadoHijos({ empleado_id, hijos }) {
             });
         } else {
             post(route("hijos.store"), {
+                preserveScroll: true,
                 onSuccess: () => {
                     reset();
                     setOpen(false);
@@ -53,6 +55,7 @@ export default function EmpleadoHijos({ empleado_id, hijos }) {
     const handleDelete = (id) => {
         if (window.confirm("¿Estás seguro de eliminar este hijo?")) {
             router.delete(route("hijos.destroy", id), {
+                preserveScroll: true,
                 onSuccess: () => {
                     reset();
                     Swal.fire({

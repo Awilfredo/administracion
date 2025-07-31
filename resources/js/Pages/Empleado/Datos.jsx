@@ -45,6 +45,7 @@ const Datos = ({ datos, empleado}) => {
         e.preventDefault();
         if (data.id) {
             patch(route("datos.update", data.id), {
+                preserveScroll: true,
                 onSuccess: () => {
                     setDisabled(true);
                     Swal.fire({
@@ -57,6 +58,7 @@ const Datos = ({ datos, empleado}) => {
             });
         } else {
             post(route("datos.store"), {
+                preserveScroll: true,
                 onSuccess: () => {
                     setDisabled(true);
                     Swal.fire({
