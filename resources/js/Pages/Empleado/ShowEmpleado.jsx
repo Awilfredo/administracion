@@ -49,7 +49,7 @@ const ShowEmpleado = ({
     const [preview, setPreview] = useState(null);
     const [foto, setFoto] = useState([]);
     const [fotoPerfil, setFotoPerfil] = useState(
-        `http://172.17.10.31/img/user/${empleado.anaimg}`
+        `http://172.17.10.31/img/user/${empleado.anaimg}?${Date.now()}`
     );
     const { fechaActual } = ManejoFechas();
     const [fechaBaja, setFechaBaja] = useState(fechaActual());
