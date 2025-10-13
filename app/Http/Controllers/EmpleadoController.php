@@ -218,12 +218,16 @@ class EmpleadoController extends Controller {
         ] );
         $empleado = Empleado::find( $request->anacod );
         $imagen_name = mb_strtolower( $empleado->anacod ) . '.' . $request->foto->getClientOriginalExtension();
+        //si existe la imagen la borra
+        if (Storage::disk('public')->exists('uploads/' . $empleado->anaimg)) {
+            Storage::disk('public')->delete('uploads/' . $empleado->anaimg);
+        }
         $request->foto->storeAs( 'uploads', $imagen_name, 'public' );
 
         $empleado->anaimg = $imagen_name;
-        return json_encode( $empleado );
+        //return json_encode( $empleado );
+        return  back()->with('success', 'Imagen actualizada correctamente');
         // $empleado->anaimg = $request->foto->store( 'empleados', 'public' );
-
     }
 
     public function updateControl( Request $request ): RedirectResponse {
