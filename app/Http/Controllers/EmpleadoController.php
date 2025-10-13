@@ -217,7 +217,8 @@ class EmpleadoController extends Controller {
             'foto' => 'required|file|image|max:1024',
         ] );
         $empleado = Empleado::find( $request->anacod );
-        $imagen_name = mb_strtolower( $empleado->anacod ) . '.' . $request->foto->getClientOriginalExtension();
+        //agregar un timestamp al nombre de la omagen imagen
+        $imagen_name = mb_strtolower( $empleado->anacod ) . '_' . time() . '.' . $request->foto->getClientOriginalExtension();
         //si existe la imagen la borra
         if (Storage::disk('public')->exists('uploads/' . $empleado->anaimg)) {
             Storage::disk('public')->delete('uploads/' . $empleado->anaimg);
