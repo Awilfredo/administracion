@@ -1,16 +1,17 @@
+import ExportButton from "@/Components/ExportButton";
 import Search from "@/Components/Search";
 import TextInput from "@/Components/TextInput";
-import { ExportCSV } from "@/Helpers/ExportCSV";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
-import { Head, router } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import DataTable from "react-data-table-component";
+import { RiUserAddFill } from "react-icons/ri";
+import { EmpleadoHelper } from "./Empleado/Helpers/EmpleadoHelper";
 
 function Empleados({ empleados, auth }) {
     const headers = ["Usuario", "Nombre", "Estado", "Correo", "Telefono"];
     const keys = ["anacod", "ananam", "anasta", "anamai", "anatel"];
     const [resultados, setResultados] = useState([]);
-    const { downloadCSV, Export } = ExportCSV();
     const [usuarios, setUsuarios] = useState({
         activos: true,
         inactivos: false,
@@ -18,6 +19,8 @@ function Empleados({ empleados, auth }) {
         gt: true,
     });
     const [empleadosFiltrados, setEmpleadosFiltrados] = useState(empleados);
+    const [data, setData] = useState([]);
+
 
     useEffect(() => {
         const empleadosFiltrados = empleados.filter(
@@ -45,7 +48,13 @@ function Empleados({ empleados, auth }) {
             selector: (row) => (
                 <img
                     className="w-22 h-22 rounded-xl py-2"
-                    src={row.anaimg ? `http://172.17.10.31/img/user/${row.anaimg}?${Date.now()}` : "http://172.17.10.31/img/user/no_imagen.png"}
+                    src={
+                        row.anaimg
+                            ? `http://172.17.10.31/img/user/${
+                                  row.anaimg
+                              }?${Date.now()}`
+                            : "http://172.17.10.31/img/user/no_imagen.png"
+                    }
                     alt=""
                 />
             ),
@@ -103,43 +112,62 @@ function Empleados({ empleados, auth }) {
         },
     ];
 
+
     const handleRowClicked = (row) => {
         console.log(`${row.anacod} was clicked!`);
         router.visit(route("empleados.show", { anacod: row.anacod }));
     };
 
-    const handleExport = useCallback(() => {
-        downloadCSV(
-            resultados,
-            ["anacod", "ananam", "anaext", "anatel", "horario"],
-            `Empleados`
-        );
-    }, [resultados]);
 
-    // Memoriza el componente Export para que solo se actualice cuando handleExport cambie
-    const descargar = useMemo(
-        () => (
-            <Export onExport={handleExport}>
-                <a
-                    className="text-blue-400 hover:text-blue-700"
-                    href={route("empleados.create")}
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="32"
-                        height="32"
-                        viewBox="0 0 26 26"
-                    >
-                        <path
-                            fill="currentColor"
-                            d="M10.5.156c-3.017 0-5.438 2.072-5.438 6.032c0 2.586 1.03 5.22 2.594 6.843c.61 1.623-.49 2.227-.718 2.313C3.781 16.502.093 18.602.093 20.688v.78c0 2.843 5.414 3.5 10.437 3.5a45.48 45.48 0 0 0 3.281-.124a7.75 7.75 0 0 1-2.124-5.344c0-1.791.61-3.432 1.624-4.75c-.15-.352-.21-.907.063-1.75c1.555-1.625 2.563-4.236 2.563-6.813c0-3.959-2.424-6.03-5.438-6.03zm9 13.031a6.312 6.312 0 1 0 0 12.625a6.312 6.312 0 0 0 0-12.625zM18.625 16h1.75v2.594h2.594v1.812h-2.594V23h-1.75v-2.594H16v-1.812h2.625V16z"
-                        />
-                    </svg>
-                </a>
-            </Export>
-        ),
-        [handleExport]
-    );
+
+    useEffect(() => {
+        if(resultados.length > 0){
+        let data = [];
+        resultados.map((empleado) => {
+            const row = {
+                anacod: empleado.anacod,
+                ananam: empleado.ananam,
+                anapai: empleado.anapai,
+                anamai: empleado.anamai,
+                anarea: empleado.anarea,
+                anajef: empleado.anajef,
+                anapos: empleado.anapos,
+                anatel: empleado.anatel,
+                anasta: empleado.anasta,
+                anarea: empleado.anarea,
+                fecha_ingreso: empleado.fecha_ingreso,
+                afp: empleado?.datos?.afp ? `${empleado?.datos?.afp}` : null,
+                asegurado: empleado?.datos?.asegurado ? `${empleado?.datos?.asegurado}` : null,
+                cc: empleado?.datos?.cc ? `${empleado?.datos?.cc}` : null,
+                cel_personal: empleado?.datos?.cel_personal ? `${empleado?.datos?.cel_personal}` : null,
+                comentarios: empleado?.datos?.comentarios ? `${empleado?.datos?.comentarios}` : null,
+                created_at: empleado?.created_at ? `${empleado?.created_at}` : null,
+                direccion: empleado?.datos?.direccion ? `${empleado?.datos?.direccion}` : null,
+                dui: empleado?.datos?.dui ? `${empleado?.datos?.dui}` : null,
+                dui_adjunto: empleado?.datos?.dui_adjunto ? `${empleado?.datos?.dui_adjunto}` : null,
+                genero: empleado?.datos?.genero ? `${empleado?.datos?.genero}` : null,
+                hijos: empleado?.datos?.hijos.length,
+                id: empleado.id,
+                imei: empleado?.datos?.imei ? `${empleado?.datos?.imei}` : null,
+                isss: empleado?.datos?.isss ? `${empleado?.datos?.isss}` : null,
+                madre: empleado?.datos?.madre ? `${empleado?.datos?.madre}` : null,
+                modelo_red_ptt: empleado?.datos?.modelo_red_ptt ? `${empleado?.datos?.modelo_red_ptt}` : null,
+                nit: empleado?.datos?.nit ? `${empleado?.datos?.nit}` : null,
+                observacion_equipo: empleado?.datos?.observacion_equipo ? `${empleado?.datos?.observacion_equipo}` : null,
+                padre: empleado?.datos?.padre ? `${empleado?.datos?.padre}` : null,
+                simcard: empleado?.datos?.simcard ? `${empleado?.datos?.simcard}` : null,
+                tarjeta_acceso: empleado?.datos?.tarjeta_acceso ? `${empleado?.datos?.tarjeta_acceso}` : null,
+                tel_casa: empleado?.datos?.tel_casa ? `${empleado?.datos?.tel_casa}` : null,
+                tipo_afp: empleado?.datos?.tipo_afp ? `${empleado?.datos?.tipo_afp}` : null,
+                tipo_sim: empleado?.datos?.tipo_sim ? `${empleado?.datos?.tipo_sim}` : null,
+                updated_at: empleado?.updated_at ? `${empleado?.updated_at}` : null,
+            };
+            data.push(row);
+        }); 
+        setData(data);
+    }
+    }, [resultados]);
+    
 
     return (
         <AuthenticatedLayout
@@ -170,7 +198,7 @@ function Empleados({ empleados, auth }) {
                     }
                     filter={true}
                     title={
-                        <div className="py-2">
+                        <div className="py-2 flex justify-between items-center">
                             <div className="flex gap-5 flex-wrap">
                                 <div>
                                     <label
@@ -249,6 +277,15 @@ function Empleados({ empleados, auth }) {
                                     ></TextInput>
                                 </div>
                             </div>
+                            <div className="flex gap-2 items-center flex-wrap">
+                                <Link href={route("empleados.create")}>
+                                        <RiUserAddFill className="text-4xl text-blue-400 hover:text-blue-500 transition-all duration-200" />
+                                </Link>
+                                <ExportButton
+                                    data={data}
+                                    name="Empleados"
+                                />
+                            </div>
                         </div>
                     }
                     columns={columns}
@@ -257,7 +294,6 @@ function Empleados({ empleados, auth }) {
                     fixedHeader
                     highlightOnHover={true}
                     onRowClicked={handleRowClicked}
-                    actions={descargar}
                 ></DataTable>
             </div>
         </AuthenticatedLayout>

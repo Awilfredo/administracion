@@ -16,9 +16,15 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
+use App\Models\DatosEmpleado;
+
 class EmpleadoController extends Controller {
     public function index() {
         $empleados = Empleado::empleados();
+        foreach($empleados as $empleado){
+            $empleado->datos = DatosEmpleado::with('hijos')->where('anacod', $empleado->anacod)->first();
+        }
+
         return Inertia::render( 'Empleados', [ 'empleados' => $empleados ] );
     }
 
