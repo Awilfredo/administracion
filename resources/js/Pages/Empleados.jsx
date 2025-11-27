@@ -129,7 +129,7 @@ function Empleados({ empleados, auth }) {
                 anapai: empleado.anapai,
                 anamai: empleado.anamai,
                 anarea: empleado.anarea,
-                anajef: empleado.anajef, ""
+                anajef: empleado.anajef,
                 anapos: empleado.anapos,
                 anatel: empleado.anatel,
                 anasta: empleado.anasta,
