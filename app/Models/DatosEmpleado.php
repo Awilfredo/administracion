@@ -10,6 +10,7 @@ class DatosEmpleado extends Model
     protected $fillable = [
         'cc',
         'anacod',
+        'fecha_nacimiento',
         'genero',
         'padre',
         'madre',

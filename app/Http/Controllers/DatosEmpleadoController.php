@@ -26,6 +26,7 @@ class DatosEmpleadoController extends Controller
         $request->validate([
             'anacod' => 'required',
             'cc' => 'nullable',
+            'fecha_nacimiento' => 'nullable',
             'genero' => 'nullable',
             'padre' => 'nullable',
             'madre' => 'nullable',
@@ -58,6 +59,7 @@ class DatosEmpleadoController extends Controller
         $request->validate([
             'anacod' => 'required',
             'cc' => 'nullable',
+            'fecha_nacimiento' => 'nullable',
             'genero' => 'nullable',
             'padre' => 'nullable',
             'madre' => 'nullable',

@@ -114,7 +114,6 @@ function Empleados({ empleados, auth }) {
 
 
     const handleRowClicked = (row) => {
-        console.log(`${row.anacod} was clicked!`);
         router.visit(route("empleados.show", { anacod: row.anacod }));
     };
 
@@ -130,12 +129,13 @@ function Empleados({ empleados, auth }) {
                 anapai: empleado.anapai,
                 anamai: empleado.anamai,
                 anarea: empleado.anarea,
-                anajef: empleado.anajef,
+                anajef: empleado.anajef, ""
                 anapos: empleado.anapos,
                 anatel: empleado.anatel,
                 anasta: empleado.anasta,
                 anarea: empleado.anarea,
                 fecha_ingreso: empleado.fecha_ingreso,
+                fecha_nacimiento: empleado?.datos?.fecha_nacimiento ? `${empleado?.datos?.fecha_nacimiento}` : null,
                 afp: empleado?.datos?.afp ? `${empleado?.datos?.afp}` : null,
                 asegurado: empleado?.datos?.asegurado ? `${empleado?.datos?.asegurado}` : null,
                 cc: empleado?.datos?.cc ? `${empleado?.datos?.cc}` : null,
@@ -147,6 +147,7 @@ function Empleados({ empleados, auth }) {
                 dui_adjunto: empleado?.datos?.dui_adjunto ? `${empleado?.datos?.dui_adjunto}` : null,
                 genero: empleado?.datos?.genero ? `${empleado?.datos?.genero}` : null,
                 hijos: empleado?.datos?.hijos.length,
+                nombre_hijos: empleado?.datos?.hijos.map((hijo) => `${hijo.fecha_nacimiento} - ${hijo.nombre}`).join(", "),
                 id: empleado.id,
                 imei: empleado?.datos?.imei ? `${empleado?.datos?.imei}` : null,
                 isss: empleado?.datos?.isss ? `${empleado?.datos?.isss}` : null,
@@ -165,6 +166,7 @@ function Empleados({ empleados, auth }) {
             data.push(row);
         }); 
         setData(data);
+        console.log(data);
     }
     }, [resultados]);
     

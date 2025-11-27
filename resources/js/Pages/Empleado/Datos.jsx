@@ -12,12 +12,12 @@ const Datos = ({ datos, empleado}) => {
     const auth = usePage().props.auth;
     const [disabled, setDisabled] = useState(true);
     
-    console.log(datos);
 
     const { data, setData, post, patch, processing, errors } = useForm({
         id: datos?.id || null,
         anacod: empleado?.anacod || "",
         cc: datos?.cc || "",
+        fecha_nacimiento: datos?.fecha_nacimiento || "",
         genero: datos?.genero || "",
         padre: datos?.padre || "",
         madre: datos?.madre || "",
@@ -77,6 +77,7 @@ const Datos = ({ datos, empleado}) => {
             id: empleado?.id || null,
             anacod: empleado?.anacod || "",
             cc: empleado?.cc || "",
+            fecha_nacimiento: empleado?.fecha_nacimiento || "",
             genero: empleado?.genero || "",
             padre: empleado?.padre || "",
             madre: empleado?.madre || "",
@@ -101,6 +102,7 @@ const Datos = ({ datos, empleado}) => {
         });
         setDisabled(true);
     };
+
 
     return (
         <AuthenticatedLayout
@@ -146,6 +148,14 @@ const Datos = ({ datos, empleado}) => {
                             name="cc"
                             label="CC"
                             value={data.cc}
+                            setData={setData}
+                            disabled={disabled}
+                        />
+                        <InputField
+                            name="fecha_nacimiento"
+                            type="date"
+                            label="Fecha de nacimiento"
+                            value={data.fecha_nacimiento} 
                             setData={setData}
                             disabled={disabled}
                         />

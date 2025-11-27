@@ -11,6 +11,7 @@ const CreateDatos = ({ empleado }) => {
     const { data, setData, post, processing, errors } = useForm({
         cod_empleado: "",
         cc: "",
+        fecha_nacimiento: "",
         genero: "",
         padre_madre: "",
         hijos: "",
@@ -69,6 +70,15 @@ const CreateDatos = ({ empleado }) => {
                         <TextInput
                             name="cc"
                             value={data.cc}
+                            onChange={setData}
+                        />
+                    </div>
+                    <div className="w-full flex flex-col">
+                        <InputLabel value="FECHA NACIMIENTO" />
+                        <TextInput
+                            type="date"
+                            name="fecha_nacimiento"
+                            value={data.fecha_nacimiento}
                             onChange={setData}
                         />
                     </div>
