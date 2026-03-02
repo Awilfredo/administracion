@@ -31,6 +31,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
         folcodreal: null, // Valor numérico
         horario_id: 2, // Valor numérico
         isBoss: false,
+        freelance: false,
         jefaturas: [],
     });
 

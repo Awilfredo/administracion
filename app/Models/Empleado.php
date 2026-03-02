@@ -40,7 +40,8 @@ class Empleado extends Model {
         'fecha_baja',
         'lider_area',
         'folcodreal',
-        'horario_id'
+        'horario_id',
+        'freelance'
     ];
 
     public static function empleados() {

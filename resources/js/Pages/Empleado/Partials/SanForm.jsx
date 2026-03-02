@@ -15,16 +15,13 @@ function SanForm({
     children,
     tipo = "crear",
 }) {
-
     const [jefaturas, setJefaturas] = useState([]);
-    
+
     const handleJefaturas = (e) => {
         if (jefaturas.length > 0) {
-            let areas =[...jefaturas];
+            let areas = [...jefaturas];
             if (areas.includes(e.target.value)) {
-                let exist = areas.filter(
-                    (area) => area != e.target.value
-                );
+                let exist = areas.filter((area) => area != e.target.value);
                 areas = exist;
             } else {
                 areas.push(e.target.value);
@@ -33,7 +30,6 @@ function SanForm({
         } else {
             setJefaturas([e.target.value]);
         }
-        
     };
 
     useEffect(() => {
@@ -41,7 +37,7 @@ function SanForm({
         setData({
             ...data,
             jefaturas: jefaturas,
-        });        
+        });
     }, [jefaturas]);
 
     return (
@@ -362,38 +358,47 @@ function SanForm({
                                 }
                                 disabled={disabled}
                             ></TextInput>
-                            {tipo === 'crear' ?
-                            <div className="flex items-center mb-5">
-                                <p className="text-gray-800"></p>
-                                <div className="mx-5">
-                                    <label htmlFor="jefe">Jefe</label>
-                                    <input
-                                        type="radio"
-                                        name="isBoss"
-                                        id="jefe"
-                                        className="mx-2"
-                                        onChange={() =>
-                                            setData({ ...data, isBoss: true })
-                                        }
-                                        checked={data.isBoss}
-                                    />
+                            {tipo === "crear" ? (
+                                <div className="flex items-center mb-5">
+                                    <p className="text-gray-800"></p>
+                                    <div className="mx-5">
+                                        <label htmlFor="jefe">Jefe</label>
+                                        <input
+                                            type="radio"
+                                            name="isBoss"
+                                            id="jefe"
+                                            className="mx-2"
+                                            onChange={() =>
+                                                setData({
+                                                    ...data,
+                                                    isBoss: true,
+                                                })
+                                            }
+                                            checked={data.isBoss}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="noJefe">No jefe</label>
+                                        <input
+                                            type="radio"
+                                            name="isBoss"
+                                            id="noJefe"
+                                            className="mx-2"
+                                            onChange={() =>
+                                                setData({
+                                                    ...data,
+                                                    isBoss: false,
+                                                })
+                                            }
+                                            checked={!data.isBoss}
+                                        />
+                                    </div>
                                 </div>
-                                <div>
-                                    <label htmlFor="noJefe">No jefe</label>
-                                    <input
-                                        type="radio"
-                                        name="isBoss"
-                                        id="noJefe"
-                                        className="mx-2"
-                                        onChange={() =>
-                                            setData({ ...data, isBoss: false })
-                                        }
-                                        checked={!data.isBoss}
-                                    />
-                                </div>
-                            </div> : ''}
+                            ) : (
+                                ""
+                            )}
 
-                            {(data.isBoss && tipo=='crear') && (
+                            {data.isBoss && tipo == "crear" && (
                                 <div className="mt-5">
                                     <p className="text-gray-800">
                                         Selecciona las jefaturas a asignar:
@@ -555,12 +560,35 @@ function SanForm({
                                         {
                                             horarios.find(
                                                 (obj) =>
-                                                    obj.id === data.horario_id
+                                                    obj.id === data.horario_id,
                                             )?.nombre
                                         }
                                     </p>
                                 </div>
                             )}
+                        </div>
+                        <div className="flex flex-col">
+                            <label
+                                htmlFor="freelance"
+                                className="text-stone-600 text-sm font-medium"
+                            >
+                                Freelance
+                            </label>
+                            <input
+                                disabled={disabled}
+                                onChange={(e) => setData({
+                                    ...data,
+                                    freelance: e.target.checked,
+                                })}
+                                type="checkbox"
+                                id="freelance"
+                                placeholder="Freelance"
+                                className={
+                                    "mt-2 block rounded-md border border-gray-200 px-2 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 " +
+                                    "w-2"   
+                                }
+                                checked={data.freelance}
+                            />
                         </div>
                     </div>
 
@@ -786,6 +814,7 @@ function SanForm({
                                     setData("direccion", e.target.value)
                                 }
                             ></TextInput>
+
 
                         </div>
 

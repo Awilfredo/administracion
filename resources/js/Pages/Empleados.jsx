@@ -110,6 +110,21 @@ function Empleados({ empleados, auth }) {
             selector: (row) => row.horario,
             sortable: true,
         },
+        {
+            name: "Freelance",
+            selector: (row) =>
+                row.freelance ? (
+                    <div className="bg-blue-500 py-1 px-2 rounded-xl text-white text-center">
+                        Sí
+                    </div>
+                ) : (
+                    <div className="bg-gray-400 py-1 px-2 rounded-xl text-white text-center">
+                        No
+                    </div>
+                ),
+            sortable: true,
+            maxWidth: "120px",
+        },
     ];
 
 
@@ -162,6 +177,7 @@ function Empleados({ empleados, auth }) {
                 tipo_afp: empleado?.datos?.tipo_afp ? `${empleado?.datos?.tipo_afp}` : null,
                 tipo_sim: empleado?.datos?.tipo_sim ? `${empleado?.datos?.tipo_sim}` : null,
                 updated_at: empleado?.updated_at ? `${empleado?.updated_at}` : null,
+                freelance: empleado.freelance || false,
             };
             data.push(row);
         }); 

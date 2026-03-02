@@ -126,6 +126,7 @@ class EmpleadoController extends Controller {
             'anajef' => 'required|string|max:255',
             'lider_area' => 'required|string|max:255',
             'horario_id' => 'required|string|max:255',
+            'freelance' => 'required|boolean',
         ] );
         $empleado->anacod = $request->anacod;
         $empleado->ananam = $request->nombres . ' ' . $request->apellidos;
@@ -141,6 +142,7 @@ class EmpleadoController extends Controller {
         $empleado->anatip = 'U';
         $empleado->anapos = $request->anapos;
         $empleado->anasuc = 1;
+        $empleado->freelance = isset($request->freelance) ? $request->freelance : false;
         if ( $request->fecha_nacimiento ) {
             $fechaNacimiento = new DateTime( $request->fecha_nacimiento );
             $empleado->anames = $fechaNacimiento->format( 'm' );
@@ -173,6 +175,7 @@ class EmpleadoController extends Controller {
             'fecha_ingreso' => 'nullable|date',
             'horario_id' => 'required|integer',
             'lider_area' => 'required|string|max:50',
+            
         ] );
 
         $empleado = Empleado::find( $anacod );
@@ -193,6 +196,7 @@ class EmpleadoController extends Controller {
         $empleado->fecha_ingreso = $request->fecha_ingreso;
         $empleado->horario_id = $request->horario_id;
         $empleado->lider_area = $request->lider_area;
+        $empleado->freelance = isset($request->freelance) ? $request->freelance : false;
         $empleado->save();
         return Redirect::route( 'empleados.show', [ $empleado->anacod ] );
     }
