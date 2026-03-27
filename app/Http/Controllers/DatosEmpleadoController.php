@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use App\Models\DatosEmpleado;
 use App\Models\Empleado;
 use App\Models\EmpleadoHijo;
+use App\Models\PttEquipo;
 
 class DatosEmpleadoController extends Controller
 {
@@ -14,9 +15,11 @@ class DatosEmpleadoController extends Controller
     public function index($anacod)
     {
         $datos = DatosEmpleado::where('anacod', $anacod)->with(['hijos', 'archivos'])->first();
+        $equipos = PttEquipo::where('anacod', $anacod)->get();
         $empleado = Empleado::where('anacod', $anacod)->first();
         return Inertia::render('Empleado/Datos', [
             'datos' => $datos,
+            'equipos' => $equipos,
             'empleado' => $empleado,
         ]);
     }

@@ -16,6 +16,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\DatosEmpleadoController;
 use App\Http\Controllers\EmpleadoHijoController;
 use App\Http\Controllers\EmpleadoArchivoController;
+use App\Http\Controllers\PttEquipoController;
 
 use function Pest\Laravel\patch;
 
@@ -101,6 +102,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     route::post('archivos', [EmpleadoArchivoController::class, 'store'])->name('archivos.store');
     route::patch('archivos/{id}', [EmpleadoArchivoController::class, 'update'])->name('archivos.update');
     route::delete('archivos/{empleadoArchivo}', [EmpleadoArchivoController::class, 'destroy'])->name('archivos.destroy');
+
+
+    Route::post('/ptt-equipos', [PttEquipoController::class, 'store'])->name('ptt-equipos.store');
+    Route::patch('/ptt-equipos/{pttEquipo}', [PttEquipoController::class, 'update'])->name('ptt-equipos.update');
+    Route::delete('/ptt-equipos/{pttEquipo}', [PttEquipoController::class, 'destroy'])->name('ptt-equipos.destroy');
     
 });
 

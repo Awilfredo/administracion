@@ -71,7 +71,8 @@
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,
-        "allow-plugins": {}
+        "allow-plugins": {},
+        "process-timeout": 0
     },
     "minimum-stability": "stable",
     "prefer-stable": true

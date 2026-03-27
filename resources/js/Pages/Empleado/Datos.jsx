@@ -7,8 +7,9 @@ import Nav from "./Partials/Nav";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import EmpleadoHijos from "./EmpleadoHijos";
 import Archivos from "./Archivos";
+import EquiposEmpleado from "./components/EquiposEmpleado";
 
-const Datos = ({ datos, empleado}) => {
+const Datos = ({ datos, equipos, empleado}) => {
     const auth = usePage().props.auth;
     const [disabled, setDisabled] = useState(true);
     
@@ -342,6 +343,9 @@ const Datos = ({ datos, empleado}) => {
                     />
                 </div>
             </div>
+
+
+            <EquiposEmpleado empleado={empleado} equipos={equipos} />
 
             {
                 datos?.id &&

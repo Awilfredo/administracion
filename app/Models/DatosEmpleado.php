@@ -43,4 +43,9 @@ class DatosEmpleado extends Model
     {
         return $this->hasMany(EmpleadoArchivo::class, 'empleado_id');
     }
+
+    public function pttEquipos()
+    {
+        return $this->hasMany(PttEquipo::class, 'anacod');
+    }
 }
