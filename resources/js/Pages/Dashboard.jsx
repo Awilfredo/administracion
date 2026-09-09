@@ -460,6 +460,90 @@ export default function Dashboard({ auth, data }) {
                         />
                     </div>
                 </Section>
+                                    {/* Sub-grupo 7.4: Movimiento de personal */}
+                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-6">
+                        Movimiento de personal
+                    </h4>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
+                                <span>Últimas altas</span>
+                                <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">ING</span>
+                            </p>
+                            {(extra?.ultimas_altas ?? []).length === 0 ? (
+                                <p className="text-sm text-gray-500">Sin altas recientes.</p>
+                            ) : (
+                                <table className="w-full text-sm">
+                                    <thead className="text-left text-xs text-gray-500 uppercase border-b">
+                                        <tr>
+                                            <th className="pb-1">Empleado</th>
+                                            <th className="pb-1">País</th>
+                                            <th className="pb-1">Área</th>
+                                            <th className="pb-1 text-right">Ingreso</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {extra.ultimas_altas.map(r => (
+                                            <tr key={r.anacod} className="border-b border-gray-100">
+                                                <td className="py-1.5">
+                                                    <Link href={route("empleados.show", { anacod: r.anacod })} className="text-indigo-600 hover:text-indigo-800">
+                                                        {r.ananam}
+                                                    </Link>
+                                                    <div className="text-xs text-gray-500 font-mono">{r.anacod}</div>
+                                                </td>
+                                                <td className="py-1.5">
+                                                    <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${r.anapai === 'SV' ? 'bg-blue-50 text-blue-700' : r.anapai === 'GT' ? 'bg-orange-50 text-orange-700' : 'bg-gray-50 text-gray-600'}`}>
+                                                        {r.anapai ?? '—'}
+                                                    </span>
+                                                </td>
+                                                <td className="py-1.5 text-gray-600 text-xs">{r.anarea ?? "—"}</td>
+                                                <td className="py-1.5 text-right text-gray-600 text-xs">{r.fecha_ingreso}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
+                                <span>Últimas bajas</span>
+                                <span className="text-xs bg-red-50 text-red-700 px-2 py-0.5 rounded-full">BAJ</span>
+                            </p>
+                            {(extra?.ultimas_bajas ?? []).length === 0 ? (
+                                <p className="text-sm text-gray-500">Sin bajas recientes.</p>
+                            ) : (
+                                <table className="w-full text-sm">
+                                    <thead className="text-left text-xs text-gray-500 uppercase border-b">
+                                        <tr>
+                                            <th className="pb-1">Empleado</th>
+                                            <th className="pb-1">País</th>
+                                            <th className="pb-1">Área</th>
+                                            <th className="pb-1 text-right">Fecha baja</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {extra.ultimas_bajas.map(r => (
+                                            <tr key={r.anacod} className="border-b border-gray-100">
+                                                <td className="py-1.5">
+                                                    <Link href={route("empleados.show", { anacod: r.anacod })} className="text-indigo-600 hover:text-indigo-800">
+                                                        {r.ananam}
+                                                    </Link>
+                                                    <div className="text-xs text-gray-500 font-mono">{r.anacod}</div>
+                                                </td>
+                                                <td className="py-1.5">
+                                                    <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${r.anapai === 'SV' ? 'bg-blue-50 text-blue-700' : r.anapai === 'GT' ? 'bg-orange-50 text-orange-700' : 'bg-gray-50 text-gray-600'}`}>
+                                                        {r.anapai ?? '—'}
+                                                    </span>
+                                                </td>
+                                                <td className="py-1.5 text-gray-600 text-xs">{r.anarea ?? "—"}</td>
+                                                <td className="py-1.5 text-right text-gray-600 text-xs">{r.fecha_baja}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
 
                 {/* SECCIÓN 5B: EMPLEADOS EN PERIODO DE PRUEBA */}
                 <Section title={`Empleados en periodo de prueba (${(extra?.periodo_prueba_list ?? []).length})`}>
@@ -569,92 +653,51 @@ export default function Dashboard({ auth, data }) {
                         </div>
                     </div>
 
-                    {/* Sub-grupo 7.2: Movimiento de personal */}
+                    {/* Sub-grupo 7.2: Top antiguedad */}
                     <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-6">
-                        Movimiento de personal
+                        Top 10 con más antigüedad
                     </h4>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
-                        <div className="bg-white shadow-md rounded-lg p-5">
-                            <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
-                                <span>Últimas altas</span>
-                                <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">ING</span>
-                            </p>
-                            {(extra?.ultimas_altas ?? []).length === 0 ? (
-                                <p className="text-sm text-gray-500">Sin altas recientes.</p>
-                            ) : (
-                                <table className="w-full text-sm">
-                                    <thead className="text-left text-xs text-gray-500 uppercase border-b">
-                                        <tr>
-                                            <th className="pb-1">Empleado</th>
-                                            <th className="pb-1">País</th>
-                                            <th className="pb-1">Área</th>
-                                            <th className="pb-1 text-right">Ingreso</th>
+                    <div className="bg-white shadow-md rounded-lg p-5">
+                        {(extra?.top_antiguedad ?? []).length === 0 ? (
+                            <p className="text-sm text-gray-500">Sin datos de antigüedad.</p>
+                        ) : (
+                            <table className="w-full text-sm">
+                                <thead className="text-left text-xs text-gray-500 uppercase border-b">
+                                    <tr>
+                                        <th className="pb-1">Empleado</th>
+                                        <th className="pb-1">Área</th>
+                                        <th className="pb-1">País</th>
+                                        <th className="pb-1 text-right">Antigüedad</th>
+                                        <th className="pb-1 text-right">Fecha ingreso</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(extra.top_antiguedad).map(r => (
+                                        <tr key={r.anacod} className="border-b border-gray-100">
+                                            <td className="py-1.5">
+                                                <Link href={route("empleados.show", { anacod: r.anacod })} className="text-indigo-600 hover:text-indigo-800">
+                                                    {r.ananam}
+                                                </Link>
+                                                <div className="text-xs text-gray-500 font-mono">{r.anacod}</div>
+                                            </td>
+                                            <td className="py-1.5 text-gray-600 text-xs">{r.anarea ?? "—"}</td>
+                                            <td className="py-1.5">
+                                                <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${r.anapai === 'SV' ? 'bg-blue-50 text-blue-700' : r.anapai === 'GT' ? 'bg-orange-50 text-orange-700' : 'bg-gray-50 text-gray-600'}`}>
+                                                    {r.anapai ?? '—'}
+                                                </span>
+                                            </td>
+                                            <td className="py-1.5 text-right text-gray-600 text-xs">{r.anios} años</td>
+                                            <td className="py-1.5 text-right text-gray-600 text-xs">{r.fecha_ingreso}</td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        {extra.ultimas_altas.map(r => (
-                                            <tr key={r.anacod} className="border-b border-gray-100">
-                                                <td className="py-1.5">
-                                                    <Link href={route("empleados.show", { anacod: r.anacod })} className="text-indigo-600 hover:text-indigo-800">
-                                                        {r.ananam}
-                                                    </Link>
-                                                    <div className="text-xs text-gray-500 font-mono">{r.anacod}</div>
-                                                </td>
-                                                <td className="py-1.5">
-                                                    <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${r.anapai === 'SV' ? 'bg-blue-50 text-blue-700' : r.anapai === 'GT' ? 'bg-orange-50 text-orange-700' : 'bg-gray-50 text-gray-600'}`}>
-                                                        {r.anapai ?? '—'}
-                                                    </span>
-                                                </td>
-                                                <td className="py-1.5 text-gray-600 text-xs">{r.anarea ?? "—"}</td>
-                                                <td className="py-1.5 text-right text-gray-600 text-xs">{r.fecha_ingreso}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
-                        <div className="bg-white shadow-md rounded-lg p-5">
-                            <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
-                                <span>Últimas bajas</span>
-                                <span className="text-xs bg-red-50 text-red-700 px-2 py-0.5 rounded-full">BAJ</span>
-                            </p>
-                            {(extra?.ultimas_bajas ?? []).length === 0 ? (
-                                <p className="text-sm text-gray-500">Sin bajas recientes.</p>
-                            ) : (
-                                <table className="w-full text-sm">
-                                    <thead className="text-left text-xs text-gray-500 uppercase border-b">
-                                        <tr>
-                                            <th className="pb-1">Empleado</th>
-                                            <th className="pb-1">País</th>
-                                            <th className="pb-1">Área</th>
-                                            <th className="pb-1 text-right">Fecha baja</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {extra.ultimas_bajas.map(r => (
-                                            <tr key={r.anacod} className="border-b border-gray-100">
-                                                <td className="py-1.5">
-                                                    <Link href={route("empleados.show", { anacod: r.anacod })} className="text-indigo-600 hover:text-indigo-800">
-                                                        {r.ananam}
-                                                    </Link>
-                                                    <div className="text-xs text-gray-500 font-mono">{r.anacod}</div>
-                                                </td>
-                                                <td className="py-1.5">
-                                                    <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${r.anapai === 'SV' ? 'bg-blue-50 text-blue-700' : r.anapai === 'GT' ? 'bg-orange-50 text-orange-700' : 'bg-gray-50 text-gray-600'}`}>
-                                                        {r.anapai ?? '—'}
-                                                    </span>
-                                                </td>
-                                                <td className="py-1.5 text-gray-600 text-xs">{r.anarea ?? "—"}</td>
-                                                <td className="py-1.5 text-right text-gray-600 text-xs">{r.fecha_baja}</td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
 
-                    {/* Sub-grupo 7.3: Cumpleaños */}
+
+
+                    {/* Sub-grupo 7.5: Cumpleaños */}
                     <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-6">
                         Cumpleaños
                     </h4>

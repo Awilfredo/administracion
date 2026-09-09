@@ -788,13 +788,13 @@ class Asistencia extends Model
         }
     }
 
-    public static function seccionTopAntiguedad(int $limit = 5): array
+    public static function seccionTopAntiguedad(int $limit = 10): array
     {
         $rows = DB::connection('san')->select(
-            "SELECT anacod, ananam, anarea, fecha_ingreso,
+            "SELECT anacod, ananam, anarea, anapai, fecha_ingreso,
                 EXTRACT(YEAR FROM AGE(CURRENT_DATE, fecha_ingreso))::int AS anios
             FROM aplicaciones.pro_anacod
-            WHERE anasta='A' AND anatip='U' AND fecha_ingreso IS NOT NULL AND anapai='SV'
+            WHERE anasta='A' AND anatip='U' AND fecha_ingreso IS NOT NULL
             ORDER BY fecha_ingreso ASC
             LIMIT ?",
             [$limit]
@@ -803,6 +803,7 @@ class Asistencia extends Model
             'anacod'        => $r->anacod,
             'ananam'        => $r->ananam,
             'anarea'        => $r->anarea,
+            'anapai'        => $r->anapai,
             'anios'         => (int) $r->anios,
             'fecha_ingreso' => (string) $r->fecha_ingreso,
         ], $rows);
