@@ -394,7 +394,7 @@ export default function Dashboard({ auth, data }) {
                     <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-6">
                         Distribución
                     </h4>
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-2">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
                         <div className="bg-white shadow-md rounded-lg p-5">
                             <p className="text-sm text-gray-500 mb-2">Distribución por área (top 10)</p>
                             <BarChartMini
@@ -416,23 +416,13 @@ export default function Dashboard({ auth, data }) {
                                 xKey="label"
                             />
                         </div>
-                        <div className="bg-white shadow-md rounded-lg p-5">
-                            <p className="text-sm text-gray-500 mb-2">Eventos por hora del día (30 días)</p>
-                            <BarChartMini
-                                data={(extra?.por_hora ?? []).map((v, i) => ({ label: i + "h", value: v }))}
-                                xKey="label"
-                                dataKey="value"
-                                color="#dc2626"
-                                layout="horizontal"
-                            />
-                        </div>
                     </div>
 
                     {/* Sub-grupo 5.3: Tendencias */}
                     <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-6">
                         Tendencias
                     </h4>
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-2">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
                         <div className="bg-white shadow-md rounded-lg p-5">
                             <p className="text-sm text-gray-500 mb-2">Crecimiento neto (6 meses)</p>
                             <StackedBarsMini
@@ -456,9 +446,6 @@ export default function Dashboard({ auth, data }) {
                                 unit="%"
                                 xKey="label"
                             />
-                        </div>
-                        <div className="bg-white shadow-md rounded-lg p-5 flex items-center justify-center text-gray-400 text-sm">
-                            <span className="text-center">Slot libre<br /><span className="text-xs">(para nueva métrica)</span></span>
                         </div>
                     </div>
 
@@ -586,7 +573,18 @@ export default function Dashboard({ auth, data }) {
                                 </div>
                             )}
                         </div>
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
+                                <span>Cumpleaños del mes</span>
+                                <span className="text-xs bg-pink-50 text-pink-700 px-2 py-0.5 rounded-full">mes</span>
+                            </p>
+                            <p className="text-xs text-gray-400">
+                                {(extra?.cumpleanos_mes?.items ?? []).length} empleado(s) cumplen este mes
+                            </p>
+                        </div>
                     </div>
+
+                    <CalendarCumple data={extra?.cumpleanos_mes ?? { mes: '', items: [] }} />
                 </Section>
             </div>
         </AuthenticatedLayout>
