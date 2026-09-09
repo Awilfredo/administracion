@@ -53,19 +53,27 @@ class AsistenciaController extends Controller {
     }
 
     public function nfcIndex() {
-        $fecha = isset( $_GET[ 'fecha' ] ) ? $_GET[ 'fecha' ] : null;
-        $fecha_fin = isset( $_GET[ 'fecha_fin' ] ) ? $_GET[ 'fecha_fin' ] : null;
-        if ($fecha && $fecha_fin) {
-            $fecha = $_GET[ 'fecha' ];
-            $fecha_fin = $_GET[ 'fecha_fin' ];
-            $registros = Asistencia::registrosNFCRango( $fecha, $fecha_fin );
-            return json_encode( $registros );
-        } elseif($fecha){
-            $fecha = $_GET[ 'fecha' ];
-            $registros = Asistencia::registrosNFC( $fecha );
-            return json_encode( $registros );
+        $fechaActual = Carbon::now()->format( 'Y-m-d' );
+        $fecha = $_GET[ 'fecha' ] ?? $fechaActual;
+        $fechaFin = $_GET[ 'fecha_fin' ] ?? null;
+        $usuario = strtoupper( $_GET[ 'usuario' ] ?? '' );
+        $preset = $_GET[ 'preset' ] ?? 'hoy';
+
+        if ( $fechaFin && $fechaFin !== $fecha ) {
+            $registros = Asistencia::registrosNFCRango( $fecha, $fechaFin, $usuario );
+        } else {
+            $registros = Asistencia::registrosNFC( $fecha, $usuario );
         }
-        return Inertia::render( 'Asistencia/RegistrosNFC');
+
+        return Inertia::render( 'Asistencia/RegistrosNFC', [
+            'registros' => $registros,
+            'filters' => [
+                'fecha' => $fecha,
+                'fecha_fin' => $fechaFin,
+                'usuario' => $usuario,
+                'preset' => $preset,
+            ],
+        ] );
     }
 
     public function create() {
@@ -114,30 +122,41 @@ class AsistenciaController extends Controller {
     }
 
     public function resumen() {
-        if ( isset( $_GET[ 'mes' ] ) ) {
-            $mes = $_GET[ 'mes' ];
-            $anio = $_GET[ 'anio' ];
-            $resumenEventos = Asistencia::resumenAsistenciaContador( $mes, $anio );
-            return json_encode( $resumenEventos );
-        } else {
-            $resumenEventos = Asistencia::resumenAsistenciaContador( date( 'm' ), date( 'Y' ) );
-            $llegadas_Tarde = Asistencia::tarde();
-            $ausencias = Asistencia::ausencia();
+        $mes = (int) ( $_GET[ 'mes' ] ?? date( 'n' ) );
+        $anio = $_GET[ 'anio' ] ?? date( 'Y' );
 
-            $recipients = [ 'dbolaines@red.com.sv', 'awcruz@red.com.sv' ];
-            //Mail::to( $recipients )->send( new UserRegistrationConfirmation() );
+        $eventos = Asistencia::resumenAsistenciaContador( $mes, $anio );
+        $kpis = [
+            'tasa_puntualidad' => Asistencia::tasaPuntualidadMes( $mes, $anio ),
+            'total_eventos' => Asistencia::totalEventosMes( $mes, $anio ),
+            'empleados_sin_incidencias' => Asistencia::empleadosSinIncidencias( $mes, $anio ),
+            'total_empleados' => Asistencia::totalEmpleadosActivos(),
+        ];
+        $tendencia = Asistencia::tendenciaMensual( $mes, $anio, 6 );
+        $porJefe = Asistencia::eventosPorJefe( $mes, $anio );
+        $topImpuntuales = Asistencia::topImpuntuales( $mes, $anio, 5 );
+        $topPontuales = Asistencia::topPontuales( $mes, $anio, 5 );
 
-            return Inertia::render( 'Asistencia/Resumen', [ 'llegadas_tarde' => $llegadas_Tarde, 'ausencias' => $ausencias, 'eventos' => $resumenEventos ] );
-        }
-
-        //return json_encode( $resumen );
+        return Inertia::render( 'Asistencia/Resumen', [
+            'eventos' => $eventos,
+            'kpis' => $kpis,
+            'tendencia' => $tendencia,
+            'porJefe' => $porJefe,
+            'topImpuntuales' => $topImpuntuales,
+            'topPontuales' => $topPontuales,
+            'filters' => [
+                'mes' => $mes,
+                'anio' => $anio,
+            ],
+        ] );
     }
 
     public function resumenFecha( $anio, $mes ) {
-        //return null;
         $eventos = Asistencia::resumenMes( $anio, $mes );
-        return json_encode( $eventos );
-        //return json_encode( [ 'anio' => $anio, 'mes'=>$mes ] );
+        return Inertia::render( 'Asistencia/Resumen', [
+            'eventos' => $eventos,
+            'filters' => [ 'mes' => $mes, 'anio' => $anio ],
+        ] );
     }
 
     public function resumenUsuario( $anacod, $evento ) {
@@ -205,20 +224,20 @@ class AsistenciaController extends Controller {
     }
 
     public function nfcCreate() {
-        $tags = Asistencia::tags();
-        return Inertia::render( 'Nfc/Create', [ 'tags'=>$tags ] );
+        return Inertia::render( 'Nfc/Create', [
+            'tagsConTag' => Asistencia::tagsConTag(),
+            'tagsSinTag' => Asistencia::tagsSinTag(),
+            'totalEmpleados' => Asistencia::totalEmpleadosActivos(),
+        ] );
     }
 
     public function nfcStore( Request $request ) {
         Asistencia::nfcStore( $request->uid, $request->anacod );
-        $tags = Asistencia::tags();
-        $this->nfcCreate();
+        return $this->nfcCreate();
     }
 
     public function deleteTag( Request $request ) {
-        //return json_encode( $request->uid );
         Asistencia::deleteTag( $request->uid );
-
-        $this->nfcCreate();
+        return $this->nfcCreate();
     }
 }

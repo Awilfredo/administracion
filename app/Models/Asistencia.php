@@ -988,20 +988,183 @@ class Asistencia extends Model
     }
 
 
-    public static function registrosNFC( $fecha ) {
-        $registros = DB::connection( 'san' )->select( "SELECT u.uid, u.anacod, pa.ananam, pa.anajef, mac, fecha_registro as hora, evento FROM aplicaciones.log_accesos_sitios a left join aplicaciones.pro_anatags u ON u.uid=a.uid  left join aplicaciones.pro_anacod pa on pa.anacod = u.anacod where fecha_registro >= (DATE('$fecha') - INTERVAL '3 HOURS') AND fecha_registro <= (DATE('$fecha') + INTERVAL '1 day' + INTERVAL '3 hours') AND u.anacod IS NOT NULL order by u.anacod" );
+    public static function tasaPuntualidadMes( $mes, $anio ) {
+        $result = DB::connection( 'san' )->selectOne( "
+            WITH dias_laborales AS (
+                SELECT COUNT(*)::int AS total
+                FROM generate_series(
+                    DATE '$anio-$mes-01',
+                    (DATE '$anio-$mes-01' + INTERVAL '1 MONTH - 1 day')::DATE,
+                    '1 day'::interval
+                ) AS fecha
+                WHERE EXTRACT(DOW FROM fecha) BETWEEN 1 AND 5
+            ),
+            eventos_mes AS (
+                SELECT COUNT(*)::int AS total
+                FROM aplicaciones.pro_eventos_asistencia a
+                INNER JOIN aplicaciones.pro_anacod b ON b.anacod = a.anacod
+                WHERE EXTRACT(MONTH FROM DATE(a.fecha)) = $mes
+                  AND EXTRACT(YEAR FROM DATE(a.fecha)) = $anio
+                  AND a.accion_personal IS NULL
+                  AND a.evento IN ('Tarde', 'Ausencia', 'Sin nfc', 'Salida antes')
+                  AND b.anasta = 'A' AND b.anatip = 'U' AND b.anapai = 'SV'
+            ),
+            empleados AS (
+                SELECT COUNT(*)::int AS total
+                FROM aplicaciones.pro_anacod
+                WHERE anasta = 'A' AND anatip = 'U' AND anapai = 'SV'
+            )
+            SELECT
+                (1.0 - (e.total::numeric / NULLIF(d.total * em.total, 0))) * 100 AS tasa
+            FROM dias_laborales d, eventos_mes e, empleados em
+        " );
+        return $result ? (float) $result->tasa : 0.0;
+    }
+
+
+    public static function totalEventosMes( $mes, $anio ) {
+        $result = DB::connection( 'san' )->selectOne( "
+            SELECT COUNT(*)::int AS total
+            FROM aplicaciones.pro_eventos_asistencia a
+            INNER JOIN aplicaciones.pro_anacod b ON b.anacod = a.anacod
+            WHERE EXTRACT(MONTH FROM DATE(a.fecha)) = $mes
+              AND EXTRACT(YEAR FROM DATE(a.fecha)) = $anio
+              AND a.accion_personal IS NULL
+              AND b.anasta = 'A' AND b.anatip = 'U' AND b.anapai = 'SV'
+        " );
+        return $result ? (int) $result->total : 0;
+    }
+
+
+    public static function empleadosSinIncidencias( $mes, $anio ) {
+        $result = DB::connection( 'san' )->selectOne( "
+            SELECT COUNT(*)::int AS total
+            FROM aplicaciones.pro_anacod b
+            WHERE b.anasta = 'A' AND b.anatip = 'U' AND b.anapai = 'SV'
+              AND b.anacod NOT IN (
+                  SELECT DISTINCT a.anacod
+                  FROM aplicaciones.pro_eventos_asistencia a
+                  INNER JOIN aplicaciones.pro_anacod b2 ON b2.anacod = a.anacod
+                  WHERE EXTRACT(MONTH FROM DATE(a.fecha)) = $mes
+                    AND EXTRACT(YEAR FROM DATE(a.fecha)) = $anio
+                    AND a.accion_personal IS NULL
+                    AND b2.anapai = 'SV'
+              )
+        " );
+        return $result ? (int) $result->total : 0;
+    }
+
+
+    public static function tendenciaMensual( $mes, $anio, $cantidad = 6 ) {
+        return DB::connection( 'san' )->select( "
+            WITH meses AS (
+                SELECT
+                    EXTRACT(MONTH FROM a.fecha)::int AS mes,
+                    EXTRACT(YEAR FROM a.fecha)::int AS anio,
+                    a.evento,
+                    COUNT(*)::int AS total
+                FROM aplicaciones.pro_eventos_asistencia a
+                INNER JOIN aplicaciones.pro_anacod b ON b.anacod = a.anacod
+                WHERE a.accion_personal IS NULL
+                  AND b.anasta = 'A' AND b.anatip = 'U' AND b.anapai = 'SV'
+                  AND a.fecha >= (
+                      DATE '$anio-$mes-01' - INTERVAL '$cantidad months'
+                  )
+                  AND a.fecha < (DATE '$anio-$mes-01' + INTERVAL '1 month')
+                GROUP BY 1, 2, 3
+            )
+            SELECT anio, mes,
+                SUM(CASE WHEN evento = 'Tarde' THEN total ELSE 0 END) AS tardes,
+                SUM(CASE WHEN evento = 'Ausencia' THEN total ELSE 0 END) AS ausencias,
+                SUM(CASE WHEN evento = 'Sin nfc' THEN total ELSE 0 END) AS sin_nfc,
+                SUM(CASE WHEN evento = 'Salida antes' THEN total ELSE 0 END) AS salidas_antes,
+                SUM(total) AS total
+            FROM meses
+            GROUP BY anio, mes
+            ORDER BY anio, mes
+        " );
+    }
+
+
+    public static function eventosPorJefe( $mes, $anio ) {
+        return DB::connection( 'san' )->select( "
+            SELECT
+                COALESCE(NULLIF(b.anajef, ''), 'Sin jefe') AS jefe,
+                COUNT(*)::int AS total,
+                SUM(CASE WHEN a.evento = 'Tarde' THEN 1 ELSE 0 END)::int AS tardes,
+                SUM(CASE WHEN a.evento = 'Ausencia' THEN 1 ELSE 0 END)::int AS ausencias,
+                SUM(CASE WHEN a.evento = 'Sin nfc' THEN 1 ELSE 0 END)::int AS sin_nfc,
+                SUM(CASE WHEN a.evento = 'Salida antes' THEN 1 ELSE 0 END)::int AS salidas_antes
+            FROM aplicaciones.pro_eventos_asistencia a
+            INNER JOIN aplicaciones.pro_anacod b ON b.anacod = a.anacod
+            WHERE EXTRACT(MONTH FROM DATE(a.fecha)) = $mes
+              AND EXTRACT(YEAR FROM DATE(a.fecha)) = $anio
+              AND a.accion_personal IS NULL
+              AND b.anasta = 'A' AND b.anatip = 'U' AND b.anapai = 'SV'
+            GROUP BY b.anajef
+            ORDER BY total DESC
+        " );
+    }
+
+
+    public static function topImpuntuales( $mes, $anio, $limit = 5 ) {
+        return DB::connection( 'san' )->select( "
+            SELECT a.anacod, b.ananam, b.anajef,
+                COUNT(*)::int AS total_eventos,
+                SUM(CASE WHEN a.evento = 'Tarde' THEN 1 ELSE 0 END)::int AS tardes,
+                SUM(CASE WHEN a.evento = 'Ausencia' THEN 1 ELSE 0 END)::int AS ausencias,
+                SUM(CASE WHEN a.evento = 'Sin nfc' THEN 1 ELSE 0 END)::int AS sin_nfc,
+                SUM(CASE WHEN a.evento = 'Salida antes' THEN 1 ELSE 0 END)::int AS salidas_antes
+            FROM aplicaciones.pro_eventos_asistencia a
+            INNER JOIN aplicaciones.pro_anacod b ON b.anacod = a.anacod
+            WHERE EXTRACT(MONTH FROM DATE(a.fecha)) = $mes
+              AND EXTRACT(YEAR FROM DATE(a.fecha)) = $anio
+              AND a.accion_personal IS NULL
+              AND b.anasta = 'A' AND b.anatip = 'U' AND b.anapai = 'SV'
+            GROUP BY a.anacod, b.ananam, b.anajef
+            HAVING COUNT(*) > 0
+            ORDER BY total_eventos DESC
+            LIMIT $limit
+        " );
+    }
+
+
+    public static function topPontuales( $mes, $anio, $limit = 5 ) {
+        return DB::connection( 'san' )->select( "
+            SELECT a.anacod, b.ananam, b.anajef,
+                COUNT(*)::int AS total_eventos,
+                SUM(CASE WHEN a.evento = 'Tarde' THEN 1 ELSE 0 END)::int AS tardes,
+                SUM(CASE WHEN a.evento = 'Ausencia' THEN 1 ELSE 0 END)::int AS ausencias,
+                SUM(CASE WHEN a.evento = 'Sin nfc' THEN 1 ELSE 0 END)::int AS sin_nfc,
+                SUM(CASE WHEN a.evento = 'Salida antes' THEN 1 ELSE 0 END)::int AS salidas_antes
+            FROM aplicaciones.pro_eventos_asistencia a
+            INNER JOIN aplicaciones.pro_anacod b ON b.anacod = a.anacod
+            WHERE EXTRACT(MONTH FROM DATE(a.fecha)) = $mes
+              AND EXTRACT(YEAR FROM DATE(a.fecha)) = $anio
+              AND a.accion_personal IS NULL
+              AND b.anasta = 'A' AND b.anatip = 'U' AND b.anapai = 'SV'
+            GROUP BY a.anacod, b.ananam, b.anajef
+            ORDER BY total_eventos ASC
+            LIMIT $limit
+        " );
+    }
+
+
+    public static function registrosNFC( $fecha, $usuario = '' ) {
+        $registros = DB::connection( 'san' )->select( "SELECT u.uid, u.anacod, pa.ananam, pa.anajef, mac, fecha_registro as hora, evento FROM aplicaciones.log_accesos_sitios a left join aplicaciones.pro_anatags u ON u.uid=a.uid  left join aplicaciones.pro_anacod pa on pa.anacod = u.anacod where fecha_registro >= (DATE('$fecha') - INTERVAL '3 HOURS') AND fecha_registro <= (DATE('$fecha') + INTERVAL '1 day' + INTERVAL '3 hours') AND u.anacod IS NOT NULL AND ('$usuario' = '' OR u.anacod = '$usuario') order by u.anacod" );
         return $registros;
     }
 
 
-    public static function registrosNFCRango( $fecha, $fecha_fin ) {
-        $registros = DB::connection( 'san' )->select( "SELECT u.uid, u.anacod, pa.ananam, pa.anajef, a.mac, a.fecha_registro AS hora, a.evento 
+    public static function registrosNFCRango( $fecha, $fecha_fin, $usuario = '' ) {
+        $registros = DB::connection( 'san' )->select( "SELECT u.uid, u.anacod, pa.ananam, pa.anajef, a.mac, a.fecha_registro AS hora, a.evento
             FROM aplicaciones.log_accesos_sitios a
-            LEFT JOIN aplicaciones.pro_anatags u ON u.uid = a.uid  
-            LEFT JOIN aplicaciones.pro_anacod pa ON pa.anacod = u.anacod 
-            WHERE a.fecha_registro BETWEEN '$fecha' AND '$fecha_fin' 
-            AND u.anacod IS NOT NULL 
-            ORDER BY u.anacod, hora;" 
+            LEFT JOIN aplicaciones.pro_anatags u ON u.uid = a.uid
+            LEFT JOIN aplicaciones.pro_anacod pa ON pa.anacod = u.anacod
+            WHERE a.fecha_registro BETWEEN '$fecha' AND '$fecha_fin'
+            AND u.anacod IS NOT NULL
+            AND ('$usuario' = '' OR u.anacod = '$usuario')
+            ORDER BY u.anacod, hora;"
         );
 
         return $registros;
@@ -1574,14 +1737,48 @@ class Asistencia extends Model
 
 
     public static function tags() {
-        $tags = DB::connection( 'san' )->select( "SELECT t.uid, u.anacod, u.ananam from aplicaciones.pro_anacod u 
+        $tags = DB::connection( 'san' )->select( "SELECT t.uid, u.anacod, u.ananam from aplicaciones.pro_anacod u
                 left join aplicaciones.pro_anatags t on t.anacod = u.anacod
-                where anasta= 'A' and anapai ='SV' and anatip='U' 
-                union 
+                where anasta= 'A' and anapai ='SV' and anatip='U'
+                union
                 select uid, anacod, '' as ananam from aplicaciones.pro_anatags where anacod not in (select anacod from aplicaciones.pro_anacod)
                 order by ananam asc
         " );
         return $tags;
+    }
+
+
+    public static function tagsConTag() {
+        return DB::connection( 'san' )->select( "
+            SELECT t.uid, u.anacod, u.ananam
+            FROM aplicaciones.pro_anatags t
+            INNER JOIN aplicaciones.pro_anacod u ON u.anacod = t.anacod
+            WHERE u.anasta = 'A' AND u.anapai = 'SV' AND u.anatip = 'U'
+            ORDER BY u.ananam ASC
+        " );
+    }
+
+
+    public static function tagsSinTag() {
+        return DB::connection( 'san' )->select( "
+            SELECT u.anacod, u.ananam
+            FROM aplicaciones.pro_anacod u
+            WHERE u.anasta = 'A' AND u.anapai = 'SV' AND u.anatip = 'U'
+              AND NOT EXISTS (
+                  SELECT 1 FROM aplicaciones.pro_anatags t WHERE t.anacod = u.anacod
+              )
+            ORDER BY u.ananam ASC
+        " );
+    }
+
+
+    public static function totalEmpleadosActivos() {
+        $result = DB::connection( 'san' )->selectOne( "
+            SELECT COUNT(*) AS total
+            FROM aplicaciones.pro_anacod u
+            WHERE u.anasta = 'A' AND u.anapai = 'SV' AND u.anatip = 'U'
+        " );
+        return $result ? (int) $result->total : 0;
     }
 
 
