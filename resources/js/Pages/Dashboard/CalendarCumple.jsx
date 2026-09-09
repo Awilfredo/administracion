@@ -146,7 +146,7 @@ export default function CalendarCumple({ data }) {
                 cumple_anio: parseInt(nextMes.split("-")[0], 10),
             },
             only: ["data"],
-            preserveState: true,
+            preserveState: false,
         });
     };
 
