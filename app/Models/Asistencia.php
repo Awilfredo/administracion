@@ -81,10 +81,10 @@ class Asistencia extends Model
         $r = DB::connection('san')->selectOne(
             "SELECT
                 (SELECT COUNT(*) FROM aplicaciones.pro_anacod WHERE anasta='A' AND anatip='U') AS empleados_activos,
-                (SELECT COUNT(*) FROM aplicaciones.log_accesos_sitios a
-                 INNER JOIN aplicaciones.pro_anatags t ON t.anacod = a.uid
-                 INNER JOIN aplicaciones.pro_anacod u ON u.anacod = t.anacod
-                 WHERE DATE(a.fecha_registro) = CURRENT_DATE AND u.anapai = 'SV') AS registros_nfc,
+                 (SELECT COUNT(*) FROM aplicaciones.log_accesos_sitios a
+                  INNER JOIN aplicaciones.pro_anatags t ON t.uid = a.uid
+                  INNER JOIN aplicaciones.pro_anacod u ON u.anacod = t.anacod
+                  WHERE DATE(a.fecha_registro) = CURRENT_DATE AND u.anapai = 'SV') AS registros_nfc,
                 (SELECT COUNT(*) FROM aplicaciones.pro_eventos_asistencia a
                  INNER JOIN aplicaciones.pro_anacod b ON b.anacod = a.anacod
                  WHERE DATE(a.fecha) = CURRENT_DATE AND b.anapai = 'SV') AS eventos_hoy,
