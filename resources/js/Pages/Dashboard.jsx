@@ -559,6 +559,7 @@ export default function Dashboard({ auth, data }) {
                                         <th className="pb-1">Área</th>
                                         <th className="pb-1">País</th>
                                         <th className="pb-1 text-right">Fecha ingreso</th>
+                                        <th className="pb-1 text-right">Meses</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -577,6 +578,9 @@ export default function Dashboard({ auth, data }) {
                                                 </span>
                                             </td>
                                             <td className="py-1.5 text-right text-gray-600 text-xs">{r.fecha_ingreso}</td>
+                                            <td className="py-1.5 text-right">
+                                                <span className="text-xs font-semibold text-amber-600">{r.meses}</span>
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
