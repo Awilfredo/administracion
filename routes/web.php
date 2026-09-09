@@ -83,6 +83,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/horarios/editar/{dia}', [HorarioController::class, 'destroyDay'])->name('horarioDia.destroy');
     Route::patch('/horarios/editar/update', [HorarioController::class, 'updateDay'])->name('horarioDia.update');
     Route::get('/empleados', [EmpleadoController::class, 'index'])->name('empleados.index');
+    Route::get('/empleados/export', [EmpleadoController::class, 'export'])->name('empleados.export');
     Route::get('/estadisticas', [AsistenciaController::class, 'estadisticas'])->name('estadisticas.index');
     Route::get('/empleados/nuevo', [EmpleadoController::class, 'create'])->name('empleados.create');
     Route::post('/empleados/store', [EmpleadoController::class, 'store'])->name('empleados.store');

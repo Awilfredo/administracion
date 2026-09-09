@@ -1,87 +1,593 @@
-import Card from "@/Components/Card";
-import { ManejoFechas } from "@/Helpers/ManejoFechas";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, Link } from "@inertiajs/react";
-import {  useState } from "react";
+import Sparkline from "./Dashboard/Sparkline";
+import BarChartMini from "./Dashboard/BarChartMini";
+import StackedBarsMini from "./Dashboard/StackedBarsMini";
+import LineChartMini from "./Dashboard/LineChartMini";
+import CalendarCumple from "./Dashboard/CalendarCumple";
+
+function TrendBadge({ value, lowerIsBetter = true }) {
+    if (value === 0 || value == null) {
+        return (
+            <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+                = sin cambios
+            </span>
+        );
+    }
+    const negative = value < 0;
+    const arrow = negative ? "▼" : "▲";
+    const improved = lowerIsBetter ? negative : !negative;
+    const color = improved ? "text-green-600" : "text-red-600";
+    const bg = improved ? "bg-green-50" : "bg-red-50";
+    return (
+        <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${bg} ${color}`}
+            title={improved ? "Mejor que el mes pasado" : "Peor que el mes pasado"}
+        >
+            <span>{arrow}</span>
+            <span>{Math.abs(value)}</span>
+            <span className="text-gray-500">vs mes anterior</span>
+        </span>
+    );
+}
+
+const Icons = {
+    Users: () => (
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 12c2.2 0 4-1.8 4-4s-1.8-4-4-4s-4 1.8-4 4s1.8 4 4 4zm0 2c-4.1 0-8 2.6-8 5v2h16v-2c0-2.4-3.9-5-8-5zM18 12c1.7 0 3-1.3 3-3s-1.3-3-3-3c-.5 0-.9.1-1.3.3c.8 1 1.3 2.3 1.3 3.7c0 .7-.1 1.4-.3 2c.1 0 .2 0 .3 0zm-12 0c.1 0 .2 0 .3 0c-.2-.6-.3-1.3-.3-2c0-1.4.5-2.7 1.3-3.7C6.9 6.1 6.5 6 6 6c-1.7 0-3 1.3-3 3s1.3 3 3 3z" />
+        </svg>
+    ),
+    Fingerprint: () => (
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="6" width="18" height="12" rx="2" />
+            <path d="M7 10c1.1-1 2.5-1.5 4-1.5s2.9.5 4 1.5" />
+            <path d="M7 14c1.1 1 2.5 1.5 4 1.5s2.9-.5 4-1.5" />
+            <path d="M9.5 12h3" />
+        </svg>
+    ),
+    Clock: () => (
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+        </svg>
+    ),
+    X: () => (
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.47 2 2 6.47 2 12s4.48 10 10 10 10-4.48 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z" />
+        </svg>
+    ),
+    Early: () => (
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5.5-9c.83 0 1.5-.67 1.5-1.5S7.33 8 6.5 8 5 8.67 5 9.5 5.67 11 6.5 11zm3.5-3c.83 0 1.5-.67 1.5-1.5S10.83 5 10 5s-1.5.67-1.5 1.5S9.17 8 10 8zm5 0c.83 0 1.5-.67 1.5-1.5S15.83 5 15 5s-1.5.67-1.5 1.5S14.17 8 15 8zm3 3c.83 0 1.5-.67 1.5-1.5S18.83 7 18 7s-1.5.67-1.5 1.5.67 1.5 1.5 1.5zM12 17.5c-2.33 0-4.31-1.46-5.11-3.5h10.22c-.8 2.04-2.78 3.5-5.11 3.5z" />
+        </svg>
+    ),
+    Alert: () => (
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 5.99L19.53 19H4.47L12 5.99M12 2L1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z" />
+        </svg>
+    ),
+    Pending: () => (
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z" />
+        </svg>
+    ),
+    Check: () => (
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+        </svg>
+    ),
+    Link: () => (
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z" />
+        </svg>
+    ),
+};
+
+function formatMesLabel(yyyymm) {
+    if (!yyyymm) return "";
+    const [y, m] = yyyymm.split("-");
+    const date = new Date(parseInt(y), parseInt(m) - 1, 1);
+    return date.toLocaleDateString("es-SV", {
+        month: "long",
+        year: "numeric",
+    });
+}
+
+function Card({ title, value, subtitle, icon, link, trend, color = "gray" }) {
+    const colorClasses = {
+        gray: "text-gray-400",
+        orange: "text-orange-400",
+        red: "text-red-400",
+        yellow: "text-yellow-500",
+        green: "text-green-500",
+        blue: "text-blue-400",
+    };
+    const body = (
+        <div className="bg-white shadow-md rounded-lg p-5 hover:shadow-lg transition-shadow duration-200 h-full">
+            <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-500">{title}</p>
+                    <p className="text-3xl font-bold text-gray-800 mt-1">
+                        {value}
+                    </p>
+                    {subtitle && (
+                        <p className="text-xs text-gray-500 mt-1">
+                            {subtitle}
+                        </p>
+                    )}
+                    {trend !== undefined && (
+                        <div className="mt-2">
+                            <TrendBadge value={trend} />
+                        </div>
+                    )}
+                </div>
+                {icon && <div className={colorClasses[color] ?? "text-gray-400"}>{icon}</div>}
+            </div>
+        </div>
+    );
+    return link ? (
+        <Link href={route(link)} className="block h-full">
+            {body}
+        </Link>
+    ) : (
+        body
+    );
+}
+
+function TopList({ title, rows, link, emptyMessage = "Sin datos en los últimos 30 días" }) {
+    return (
+        <div className="bg-white shadow-md rounded-lg p-5 h-full">
+            <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+                    {title}
+                </h4>
+                {link && (
+                    <Link
+                        href={route(link)}
+                        className="text-xs text-indigo-600 hover:text-indigo-800"
+                    >
+                        Ver detalle →
+                    </Link>
+                )}
+            </div>
+            {rows.length === 0 ? (
+                <p className="text-sm text-gray-500 py-4">{emptyMessage}</p>
+            ) : (
+                <table className="w-full text-sm">
+                    <thead className="text-left text-xs text-gray-500 uppercase">
+                        <tr>
+                            <th className="pb-1">#</th>
+                            <th className="pb-1">Empleado</th>
+                            <th className="pb-1 text-right">Eventos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {rows.map((r, idx) => (
+                            <tr key={r.anacod} className="border-t border-gray-100">
+                                <td className="py-1.5 text-gray-500">{idx + 1}</td>
+                                <td className="py-1.5">
+                                    <div className="font-medium text-gray-800 truncate" title={r.ananam}>
+                                        {r.ananam}
+                                    </div>
+                                    <div className="text-xs text-gray-500">{r.anacod}</div>
+                                </td>
+                                <td className="py-1.5 text-right">
+                                    <span className="inline-flex items-center justify-center min-w-7 px-2 py-0.5 rounded-full bg-red-50 text-red-700 font-semibold">
+                                        {r.veces}
+                                    </span>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
+        </div>
+    );
+}
+
+function Section({ title, children }) {
+    return (
+        <section className="mb-6">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                {title}
+            </h3>
+            {children}
+        </section>
+    );
+}
 
 export default function Dashboard({ auth, data }) {
-    const [datos, setDatos] = useState(data[0]);
-    const { fechaActual } = ManejoFechas();
+    const safe = data ?? {};
+    const hoy = safe.hoy ?? {
+        fecha: "",
+        empleados_activos: 0,
+        registros_nfc: 0,
+        eventos: { total: 0, justificados: 0, pendientes: 0 },
+        sin_nfc: 0,
+    };
+    const mes = safe.mes ?? {
+        mes: "",
+        tarde: 0,
+        ausente: 0,
+        salidas: 0,
+        pendientes: 0,
+        justificados: 0,
+    };
+    const comparativa = safe.comparativa ?? {
+        tarde: 0,
+        ausente: 0,
+        salidas: 0,
+        pendientes: 0,
+    };
+    const tendencia = safe.tendencia ?? { labels: [], tarde: [], ausente: [], salidas: [] };
+    const top = safe.top ?? { tarde: [], ausente: [] };
+    const extra = safe.extra ?? {
+        por_area: [], antiguedad: { anios_promedio: 0, con_ingreso: 0, distribucion: {} },
+        por_dia_semana: { labels: [], data: [] }, sin_marcaciones_nfc_3d: [], sin_marcaciones_huella_3d: [], por_pais: [],
+        freelance: { activos: 0, total: 0 }, por_jefe: [], por_hora: [],
+        tasa_justificacion: { labels: [], tasa: [] }, crecimiento: { labels: [], altas: [], bajas: [] },
+        ultimas_altas: [], ultimas_bajas: [],         cumpleanos_mes: { mes: '', items: [] },
+        top_posiciones: [], por_horario: [], tasa_puntualidad: {},
+        periodo_prueba: 0, top_pendientes: [], antiguedad_por_area: [],
+        huerfanos_nfc: [], prox_jubilarse: [], top_antiguedad: [],
+        cumpleanos_hoy: [], prox_cumpleanos: [],
+    };
+
     return (
         <AuthenticatedLayout
             user={auth.user}
             header={
-                <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-                    Dashboard {fechaActual()}
-                </h2>
+                <div className="flex items-center justify-between">
+                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
+                        Resumen del día
+                    </h2>
+                </div>
             }
         >
             <Head title="Dashboard" />
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 mt-5 gap-4 mx-10">
-                <Link href={route('empleados.index')}>
-                    <Card
-                        title="Empleados Activos"
-                        dato={datos.empleados_activos}
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="200"
-                            height="200"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                fill="currentColor"
-                                d="M24 14.6c0 .6-1.2 1-2.6 1.2c-.9-1.7-2.7-3-4.8-3.9c.2-.3.4-.5.6-.8h.8c3.1-.1 6 1.8 6 3.5zM6.8 11H6c-3.1 0-6 1.9-6 3.6c0 .6 1.2 1 2.6 1.2c.9-1.7 2.7-3 4.8-3.9l-.6-.9zm5.2 1c2.2 0 4-1.8 4-4s-1.8-4-4-4s-4 1.8-4 4s1.8 4 4 4zm0 1c-4.1 0-8 2.6-8 5c0 2 8 2 8 2s8 0 8-2c0-2.4-3.9-5-8-5zm5.7-3h.3c1.7 0 3-1.3 3-3s-1.3-3-3-3c-.5 0-.9.1-1.3.3c.8 1 1.3 2.3 1.3 3.7c0 .7-.1 1.4-.3 2zM6 10h.3C6.1 9.4 6 8.7 6 8c0-1.4.5-2.7 1.3-3.7C6.9 4.1 6.5 4 6 4C4.3 4 3 5.3 3 7s1.3 3 3 3z"
-                            />
-                        </svg>
-                    </Card>
-                </Link>
-                <Link href={route('resumen')}>
-                <Card dato={datos.empleados_tarde} title="Entradas tarde este mes">
-                    <svg
-                        className="text-green-800"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="200"
-                        height="200"
-                        viewBox="0 0 24 24"
-                    >
-                        <path
-                            fill="currentColor"
-                            d="M10.997 5.998a6.14 6.14 0 0 1 5.8 4.126l.075.233l.044.144h2.33a2.749 2.749 0 0 1 2.744 2.582l.005.167v1a1.75 1.75 0 0 1-1.606 1.743l-.143.005H18.62l.241.584a1.75 1.75 0 0 1-.813 2.22l-.137.064a1.749 1.749 0 0 1-.496.124l-.171.008h-1.787a1.75 1.75 0 0 1-1.51-.867l-.072-.137l-.539-1.143l.054-.007c-1.4.186-2.817.208-4.221.066l-.497-.057l-.535 1.136a1.75 1.75 0 0 1-1.583 1.005H4.75a1.749 1.749 0 0 1-1.618-2.415l.433-1.05a3.242 3.242 0 0 1-1.57-2.78a.75.75 0 0 1 .648-.742L2.745 12h1.88l.497-1.643a6.137 6.137 0 0 1 5.875-4.359Zm6.777 9.693c-.771.31-1.559.565-2.356.765l-.549.129l.362.77a.25.25 0 0 0 .117.119l.053.018l.056.007h1.787a.25.25 0 0 0 .248-.28l-.017-.065l-.478-1.156h-.043l.411-.148l.409-.159Zm-13.552 0l.39.152l.388.141l-.482 1.166a.25.25 0 0 0 .232.345h1.804l.057-.007a.25.25 0 0 0 .17-.137l.359-.763l.044.01a18.168 18.168 0 0 1-2.962-.906Zm6.775-8.194a4.638 4.638 0 0 0-4.371 3.087l-.068.207l-1.136 3.75l.163.059a16.67 16.67 0 0 0 10.42.133l.406-.133l.162-.059l-1.136-3.75a4.64 4.64 0 0 0-4.006-3.273l-.216-.016l-.218-.005Zm-6.977 6.5l.151-.5l-.507.002l.025.052c.086.166.198.316.33.446ZM17.37 12l.756 2.498l2.12.001a.25.25 0 0 0 .243-.192l.007-.058v-.999a1.25 1.25 0 0 0-1.122-1.243l-.128-.006H17.37Z"
+            <div className="mx-10 my-6">
+                {/* SECCIÓN 1: HOY */}
+                <Section title={`Hoy (${hoy.fecha})`}>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <Card
+                            title="Empleados activos"
+                            value={hoy.empleados_activos}
+                            icon={<Icons.Users />}
+                            link="empleados.index"
+                            color="blue"
                         />
-                    </svg>
-                </Card>
-                </Link> 
-                <Link href={route('resumen')}>
-                <Card
-                    dato={datos.empleados_ausente}
-                    title={"Ausencias este mes"}
-                >
-                    <svg
-                        className="text-red-400"
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="200"
-                        height="200"
-                        viewBox="0 0 14 14"
-                    >
-                        <g
-                            fill="none"
-                            stroke="currentColor"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        >
-                            <path d="M11.5 4h-9a2 2 0 0 0-2 2v5.5a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2m-7 0v-.5a2.5 2.5 0 1 1 5 0V4" />
-                            <path d="M5.5 7.5A1.5 1.5 0 1 1 7 9v.5m.002 2a.25.25 0 1 1 0-.5m0 .5a.25.25 0 1 0 0-.5" />
-                        </g>
-                    </svg>
-                </Card>
-                </Link> 
+                        <Card
+                            title="Registros NFC"
+                            value={hoy.registros_nfc}
+                            icon={<Icons.Fingerprint />}
+                            color="green"
+                        />
+                        <Card
+                            title="Eventos hoy"
+                            value={hoy.eventos.total}
+                            subtitle={`${hoy.eventos.pendientes} pendientes · ${hoy.eventos.justificados} justificados`}
+                            icon={<Icons.Alert />}
+                            color="yellow"
+                        />
+                        <Card
+                            title="Sin NFC vinculado"
+                            value={hoy.sin_nfc}
+                            icon={<Icons.Link />}
+                            color="orange"
+                        />
+                    </div>
+                </Section>
 
-                <Link href={route('resumen')}>
-                <Card dato={datos.salidas_antes} title={'Salidas antes de hora de este mes'}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 2048 2048" className="text-cyan-600"><path fill="currentColor" d="M1792 768q40 0 75 15t61 41t41 61t15 75q0 40-15 75t-41 61t-61 41t-75 15h-320q-26 0-45-19l-147-146l-102 101l211 211q19 19 19 45v384q0 40-15 75t-41 61t-61 41t-75 15q-40 0-75-15t-61-41t-41-61t-15-75v-229l-128-128l-147 146q-19 19-45 19H256q-40 0-75-15t-61-41t-41-61t-15-75q0-40 15-75t41-61t61-41t75-15h293l80-79q-53-23-85-71t-32-106V512q0-27 10-50t27-40t41-28t50-10h512q0-53 20-99t55-82t81-55t100-20q53 0 99 20t82 55t55 81t20 100q0 42-13 80t-36 71t-56 56t-73 37l141 140h165zm-384-512q-27 0-50 10t-40 27t-28 41t-10 50q0 27 10 50t27 40t41 28t50 10q24 0 47-9t41-26t29-38t11-47q0-28-9-53t-25-43t-41-29t-53-11zm384 768q26 0 45-19t19-45q0-32-18-46t-46-18t-63-2t-68 4t-61-1t-45-20l-366-365H640v384q0 26 19 45t45 19q37 0 50-23t16-60t-2-77t-2-77t15-59t51-24h192q26 0 45 19t19 45q0 26-19 45t-45 19H896v192q0 26-19 45l-256 256q-19 19-45 19H256q-26 0-45 19t-19 45q0 26 19 45t45 19h421l174-173q19-19 45-19t45 19l192 192q19 19 19 45v256q0 26 19 45t45 19q26 0 45-19t19-45v-357l-237-238q-19-19-19-45t19-45l192-192q19-19 45-19t45 19l174 173h293z"/></svg>
-                </Card>
-                </Link>
+                {/* SECCIÓN 2: ESTE MES */}
+                <Section title={`Este mes (${formatMesLabel(mes.mes)}) vs mes anterior`}>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <Card
+                            title="Llegadas tarde"
+                            value={mes.tarde}
+                            trend={comparativa.tarde}
+                            icon={<Icons.Clock />}
+                            link="resumen"
+                        />
+                        <Card
+                            title="Ausencias"
+                            value={mes.ausente}
+                            trend={comparativa.ausente}
+                            icon={<Icons.X />}
+                            link="resumen"
+                            color="red"
+                        />
+                        <Card
+                            title="Salidas antes de hora"
+                            value={mes.salidas}
+                            trend={comparativa.salidas}
+                            icon={<Icons.Early />}
+                            link="resumen"
+                            color="yellow"
+                        />
+                    </div>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
+                        <Card
+                            title="Eventos pendientes de justificar"
+                            value={mes.pendientes}
+                            trend={comparativa.pendientes}
+                            icon={<Icons.Pending />}
+                            color="orange"
+                        />
+                        <Card
+                            title="Acciones personales justificadas"
+                            value={mes.justificados}
+                            icon={<Icons.Check />}
+                            color="green"
+                        />
+                    </div>
+                </Section>
+
+                {/* SECCIÓN 3: TENDENCIA 6 MESES */}
+                <Section title="Tendencia últimos 6 meses">
+                    <div className="bg-white shadow-md rounded-lg p-5">
+                        <Sparkline data={tendencia} />
+                    </div>
+                </Section>
+
+                {/* SECCIÓN 4: TOP LISTAS */}
+                <Section title="Quién más acumula (30 días)">
+                    <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-4">
+                        <TopList
+                            title="Top 5 con más llegadas tarde"
+                            rows={top.tarde}
+                            link="resumen"
+                        />
+                        <TopList
+                            title="Top 5 con más ausencias"
+                            rows={top.ausente}
+                            link="resumen"
+                        />
+                    </div>
+                </Section>
+
+                {/* SECCIÓN 5: INFORMACIÓN ADICIONAL */}
+                <Section title="Información adicional">
+                    {/* Sub-grupo 5.1: Organización */}
+                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-2">
+                        Organización
+                    </h4>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-2">
+                        <div className="bg-white shadow-md rounded-lg p-5 flex flex-col">
+                            <p className="text-sm text-gray-500">Antigüedad del personal</p>
+                            <p className="text-3xl font-bold text-gray-800 mt-1">
+                                {(extra?.antiguedad?.anios_promedio ?? 0).toFixed(1)} <span className="text-base text-gray-500 font-normal">años</span>
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                                {extra?.antiguedad?.con_ingreso ?? 0} empleados con fecha de ingreso
+                            </p>
+                            <div className="mt-3 space-y-1 text-xs flex-1">
+                                {Object.entries(extra?.antiguedad?.distribucion ?? {}).map(([k, v]) => (
+                                    <div key={k} className="flex justify-between">
+                                        <span className="text-gray-600">{k}</span>
+                                        <span className="font-semibold">{v}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-2">Empleados por jefe (top 5)</p>
+                            <BarChartMini
+                                data={(extra?.por_jefe ?? []).map(r => ({ label: r.anajef, value: r.reportes }))}
+                                xKey="label"
+                                dataKey="value"
+                                color="#8b5cf6"
+                                layout="horizontal"
+                            />
+                        </div>
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-2">Distribución SV vs GT</p>
+                            <BarChartMini
+                                data={(extra?.por_pais ?? []).map(r => ({ label: r.pais, value: r.activos }))}
+                                xKey="label"
+                                dataKey="value"
+                                color="#06b6d4"
+                                layout="horizontal"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Sub-grupo 5.2: Distribución */}
+                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-6">
+                        Distribución
+                    </h4>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-2">
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-2">Distribución por área (top 10)</p>
+                            <BarChartMini
+                                data={(extra?.por_area ?? []).map(r => ({ label: r.area, value: r.empleados }))}
+                                xKey="label"
+                                dataKey="value"
+                                color="#2563eb"
+                                layout="horizontal"
+                            />
+                        </div>
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-2">Eventos por día de la semana</p>
+                            <StackedBarsMini
+                                data={(extra?.por_dia_semana?.data ?? []).map((d, i) => ({
+                                    label: extra.por_dia_semana.labels[i],
+                                    ...d,
+                                }))}
+                                series={["tarde", "ausente", "salidas"]}
+                                xKey="label"
+                            />
+                        </div>
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-2">Eventos por hora del día (30 días)</p>
+                            <BarChartMini
+                                data={(extra?.por_hora ?? []).map((v, i) => ({ label: i + "h", value: v }))}
+                                xKey="label"
+                                dataKey="value"
+                                color="#dc2626"
+                                layout="horizontal"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Sub-grupo 5.3: Tendencias */}
+                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-6">
+                        Tendencias
+                    </h4>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-2">
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-2">Crecimiento neto (6 meses)</p>
+                            <StackedBarsMini
+                                data={(extra?.crecimiento?.labels ?? []).map((l, i) => ({
+                                    label: l,
+                                    altas: extra.crecimiento.altas[i] ?? 0,
+                                    bajas: extra.crecimiento.bajas[i] ?? 0,
+                                }))}
+                                series={["bajas", "altas"]}
+                                xKey="label"
+                            />
+                        </div>
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-2">Tasa de justificación (6 meses)</p>
+                            <LineChartMini
+                                data={(extra?.tasa_justificacion?.labels ?? []).map((l, i) => ({
+                                    label: l,
+                                    Justificados: extra.tasa_justificacion.tasa[i] ?? 0,
+                                }))}
+                                lines={["Justificados"]}
+                                unit="%"
+                                xKey="label"
+                            />
+                        </div>
+                        <div className="bg-white shadow-md rounded-lg p-5 flex items-center justify-center text-gray-400 text-sm">
+                            <span className="text-center">Slot libre<br /><span className="text-xs">(para nueva métrica)</span></span>
+                        </div>
+                    </div>
+
+                    {/* Sub-grupo 5.4: Operación */}
+                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-6">
+                        Operación
+                    </h4>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
+                        <div className="bg-white shadow-md rounded-lg p-5 flex flex-col">
+                            <p className="text-sm text-gray-500">Empleados freelance</p>
+                            <p className="text-3xl font-bold text-gray-800 mt-1">
+                                {extra?.freelance?.activos ?? 0} <span className="text-base text-gray-500 font-normal">/ {extra?.freelance?.total ?? 0} totales</span>
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                                Activos actualmente
+                            </p>
+                        </div>
+                        <div className="bg-white shadow-md rounded-lg p-5 flex flex-col">
+                            <p className="text-sm text-gray-500">En periodo de prueba</p>
+                            <p className="text-3xl font-bold text-gray-800 mt-1">
+                                {extra?.periodo_prueba ?? 0}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                                Ingresos &lt; 3 meses
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
+                                <span>Sin marcas NFC últimos 3 días</span>
+                                <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">NFC</span>
+                            </p>
+                            {(extra?.sin_marcaciones_nfc_3d ?? []).length === 0 ? (
+                                <p className="text-sm text-gray-500">Todos los empleados tienen marcas NFC recientes.</p>
+                            ) : (
+                                <table className="w-full text-sm">
+                                    <thead className="text-left text-xs text-gray-500 uppercase border-b">
+                                        <tr>
+                                            <th className="pb-1">Empleado</th>
+                                            <th className="pb-1">Área</th>
+                                            <th className="pb-1 text-right">Última marca NFC</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(extra.sin_marcaciones_nfc_3d).map(r => (
+                                            <tr key={r.anacod} className="border-b border-gray-100">
+                                                <td className="py-1.5">
+                                                    <Link href={route("empleados.show", { anacod: r.anacod })} className="text-indigo-600 hover:text-indigo-800">
+                                                        {r.ananam}
+                                                    </Link>
+                                                    <div className="text-xs text-gray-500">{r.anacod} · {r.anarea ?? "—"}</div>
+                                                </td>
+                                                <td className="py-1.5 text-right text-gray-600 text-xs">
+                                                    {r.ultima_marca ?? "(nunca)"}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
+                                <span>Sin marcas de huella últimos 3 días</span>
+                                <span className="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">Huella</span>
+                            </p>
+                            {(extra?.sin_marcaciones_huella_3d ?? []).length === 0 ? (
+                                <p className="text-sm text-gray-500">Todos los empleados tienen marcas de huella recientes.</p>
+                            ) : (
+                                <table className="w-full text-sm">
+                                    <thead className="text-left text-xs text-gray-500 uppercase border-b">
+                                        <tr>
+                                            <th className="pb-1">Empleado</th>
+                                            <th className="pb-1">Área</th>
+                                            <th className="pb-1 text-right">Última marca</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(extra.sin_marcaciones_huella_3d).map(r => (
+                                            <tr key={r.anacod} className="border-b border-gray-100">
+                                                <td className="py-1.5">
+                                                    <Link href={route("empleados.show", { anacod: r.anacod })} className="text-indigo-600 hover:text-indigo-800">
+                                                        {r.ananam}
+                                                    </Link>
+                                                    <div className="text-xs text-gray-500">{r.anacod} · {r.anarea ?? "—"}</div>
+                                                </td>
+                                                <td className="py-1.5 text-right text-gray-600 text-xs">
+                                                    {r.ultima_marca ?? "(nunca)"}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
+                                <span>Próximos cumpleaños (7 días)</span>
+                                <span className="text-xs bg-pink-50 text-pink-700 px-2 py-0.5 rounded-full">7d</span>
+                            </p>
+                            {(extra?.prox_cumpleanos ?? []).length === 0 ? (
+                                <p className="text-sm text-gray-500">Nadie cumple años en los próximos 7 días.</p>
+                            ) : (
+                                <div className="space-y-1">
+                                    {(extra.prox_cumpleanos).map(r => (
+                                        <Link
+                                            key={r.anacod}
+                                            href={route("empleados.show", { anacod: r.anacod })}
+                                            className="flex items-center justify-between gap-2 px-2 py-1 rounded hover:bg-pink-50 text-sm"
+                                        >
+                                            <span className="truncate">
+                                                <span className="font-medium text-pink-700">{r.ananam}</span>
+                                                <span className="ml-1 text-xs text-gray-500 font-mono">{r.anacod}</span>
+                                            </span>
+                                            <span className="text-xs text-gray-600 whitespace-nowrap">
+                                                {r.fecha?.slice(5)} · {r.anarea ?? "—"}
+                                            </span>
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </Section>
             </div>
         </AuthenticatedLayout>
     );

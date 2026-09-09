@@ -17,15 +17,152 @@ use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
 use App\Models\DatosEmpleado;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class EmpleadoController extends Controller {
-    public function index() {
-        $empleados = Empleado::empleados();
-        foreach($empleados as $empleado){
-            $empleado->datos = DatosEmpleado::with('hijos')->where('anacod', $empleado->anacod)->first();
+    private const INDEX_COLUMNS = [
+        'anacod', 'ananam', 'anasta', 'anapai',
+        'anamai', 'anatel', 'anaimg', 'horario', 'freelance',
+    ];
+
+    private function getBaseEmpleados(): \Illuminate\Support\Collection {
+        $rows = Empleado::empleados();
+        return Empleado::hydrate(array_map(fn($r) => (array) $r, $rows));
+    }
+
+    private function filtrarModelos(\Illuminate\Support\Collection $modelos, Request $request): \Illuminate\Support\Collection {
+        $fActivos   = $request->has('activos') ? $request->boolean('activos') : true;
+        $fInactivos = $request->has('inactivos') ? $request->boolean('inactivos') : false;
+        $fSv        = $request->has('sv') ? $request->boolean('sv') : true;
+        $fGt        = $request->has('gt') ? $request->boolean('gt') : true;
+        $q          = trim((string) $request->query('q', ''));
+
+        if ($fActivos && ! $fInactivos) {
+            $modelos = $modelos->where('anasta', 'A');
+        } elseif ($fInactivos && ! $fActivos) {
+            $modelos = $modelos->where('anasta', 'I');
+        } elseif (! $fActivos && ! $fInactivos) {
+            $modelos = collect();
         }
 
-        return Inertia::render( 'Empleados', [ 'empleados' => $empleados ] );
+        $paises = [];
+        if ($fSv) $paises[] = 'SV';
+        if ($fGt) $paises[] = 'GT';
+        if (! empty($paises)) {
+            $modelos = $modelos->whereIn('anapai', $paises);
+        } elseif (! $fSv && ! $fGt) {
+            $modelos = collect();
+        }
+
+        if ($q !== '') {
+            $qLower = mb_strtolower($q);
+            $modelos = $modelos->filter(function ($e) use ($qLower) {
+                return str_contains(mb_strtolower((string) $e->anacod), $qLower)
+                    || str_contains(mb_strtolower((string) $e->ananam), $qLower)
+                    || str_contains(mb_strtolower((string) $e->anamai), $qLower)
+                    || str_contains(mb_strtolower((string) $e->anatel), $qLower);
+            });
+        }
+
+        return $modelos;
+    }
+
+    public function index(Request $request) {
+        $fActivos   = $request->has('activos') ? $request->boolean('activos') : true;
+        $fInactivos = $request->has('inactivos') ? $request->boolean('inactivos') : false;
+        $fSv        = $request->has('sv') ? $request->boolean('sv') : true;
+        $fGt        = $request->has('gt') ? $request->boolean('gt') : true;
+        $q          = trim((string) $request->query('q', ''));
+
+        $modelos = $this->filtrarModelos($this->getBaseEmpleados(), $request);
+
+        $page    = max(1, (int) $request->query('page', 1));
+        $perPage = (int) $request->query('per_page', 25);
+        $perPage = max(10, min(100, $perPage));
+        $total   = $modelos->count();
+
+        $items = $modelos->forPage($page, $perPage)->map(function ($e) {
+            return [
+                'anacod'    => $e->anacod,
+                'ananam'    => $e->ananam,
+                'anasta'    => $e->anasta,
+                'anapai'    => $e->anapai,
+                'anamai'    => $e->anamai,
+                'anatel'    => $e->anatel,
+                'anaimg'    => $e->anaimg,
+                'horario'   => $e->horario,
+                'freelance' => (bool) ($e->freelance ?? false),
+            ];
+        })->values();
+
+        $paginator = new LengthAwarePaginator(
+            $items, $total, $perPage, $page,
+            [
+                'path'  => route('empleados.index'),
+                'query' => $request->query(),
+            ]
+        );
+
+        return Inertia::render('Empleados/Index', [
+            'empleados' => $paginator,
+            'filters' => [
+                'activos'   => $fActivos,
+                'inactivos' => $fInactivos,
+                'sv'        => $fSv,
+                'gt'        => $fGt,
+            ],
+            'q' => $q,
+        ]);
+    }
+
+    public function export(Request $request) {
+        $modelos = $this->filtrarModelos($this->getBaseEmpleados(), $request);
+        $anacods = $modelos->pluck('anacod');
+        if ($anacods->isNotEmpty()) {
+            $datosByAnacod = DatosEmpleado::with('hijos')
+                ->whereIn('anacod', $anacods)
+                ->get()
+                ->keyBy('anacod');
+            foreach ($modelos as $m) {
+                $m->setRelation('datos', $datosByAnacod->get($m->anacod));
+            }
+        }
+
+        $data = $modelos->map(function ($e) {
+            $d = $e->datos;
+            return [
+                'anacod'           => $e->anacod,
+                'ananam'           => $e->ananam,
+                'anapai'           => $e->anapai,
+                'anamai'           => $e->anamai,
+                'anarea'           => $e->anarea,
+                'anajef'           => $e->anajef,
+                'anapos'           => $e->anapos,
+                'anatel'           => $e->anatel,
+                'anasta'           => $e->anasta,
+                'fecha_ingreso'    => $e->fecha_ingreso,
+                'freelance'        => (bool) ($e->freelance ?? false),
+                'fecha_nacimiento' => $d?->fecha_nacimiento,
+                'afp'              => $d?->afp,
+                'cc'               => $d?->cc,
+                'cel_personal'     => $d?->cel_personal,
+                'direccion'        => $d?->direccion,
+                'dui'              => $d?->dui,
+                'genero'           => $d?->genero,
+                'hijos'            => $d?->hijos?->count() ?? 0,
+                'nombre_hijos'     => $d?->hijos?->map(fn($h) => "{$h->fecha_nacimiento} - {$h->nombre}")->join(', '),
+                'imei'             => $d?->imei,
+                'isss'             => $d?->isss,
+                'nit'              => $d?->nit,
+                'padre'            => $d?->padre,
+                'madre'            => $d?->madre,
+                'simcard'          => $d?->simcard,
+                'tel_casa'         => $d?->tel_casa,
+                'tipo_afp'         => $d?->tipo_afp,
+            ];
+        })->values();
+
+        return response()->json(['data' => $data]);
     }
 
     public function create() {
@@ -34,7 +171,7 @@ class EmpleadoController extends Controller {
         $jefes = Empleado::jefes();
         $areas = Empleado::areas();
         $posiciones = Empleado::posiciones();
-        return Inertia::render( 'Empleado/Create', [ 'anacods' => $anacods, 'jefes' => $jefes, 'areas' => $areas, 'posiciones' => $posiciones, 'horarios' => $horarios ] );
+        return Inertia::render( 'Empleados/Create', [ 'anacods' => $anacods, 'jefes' => $jefes, 'areas' => $areas, 'posiciones' => $posiciones, 'horarios' => $horarios ] );
     }
 
     public function show( $anacod ) {
@@ -46,7 +183,7 @@ class EmpleadoController extends Controller {
         $posiciones = Empleado::posiciones();
         $redControl = UsuarioRedControl::where( 'email', $empleado->anamai )->where( 'empresa', 1 )->first();
         $mensajeria = UsuarioRedControl::where( 'email', $empleado->anamai )->where( 'empresa', ( $empleado->anapai === 'SV' ) ? 26 : 32 )->first();
-        return Inertia::render( 'Empleado/ShowEmpleado', [ 'empleado' => $empleado, 'anacods' => $anacods, 'jefes' => $jefes, 'areas' => $areas, 'posiciones' => $posiciones, 'horarios' => $horarios, 'redControl' => $redControl, 'mensajeria' => $mensajeria ] );
+        return Inertia::render( 'Empleados/Show', [ 'empleado' => $empleado, 'anacods' => $anacods, 'jefes' => $jefes, 'areas' => $areas, 'posiciones' => $posiciones, 'horarios' => $horarios, 'redControl' => $redControl, 'mensajeria' => $mensajeria ] );
         //return json_encode( $empleado );
     }
 
@@ -282,7 +419,7 @@ class EmpleadoController extends Controller {
     public function DatosIndex($anacod)
     {
         $empleado = Empleado::where( 'anacod', $anacod )->first();
-       return Inertia::render('Empleado/Datos', [ 'empleado' => $empleado ]);
+       return Inertia::render('Empleados/Datos', [ 'empleado' => $empleado ]);
     }
 
     public function DatosStore(Request $request): RedirectResponse
@@ -296,6 +433,6 @@ class EmpleadoController extends Controller {
     public function DatosCreate($anacod)
     {
         $empleado = Empleado::where( 'anacod', $anacod )->first();
-       return Inertia::render('Empleado/CreateDatos', [ 'empleado' => $empleado ]);
+       return Inertia::render('Empleados/CreateDatos', [ 'empleado' => $empleado ]);
     }
 }

@@ -17,20 +17,22 @@ use Inertia\Inertia;
 class AsistenciaController extends Controller {
     public function formulario() {
         $anacod = isset( $_GET[ 'anacod' ] ) ? $_GET[ 'anacod' ] : null;
-        return Inertia::render( 'Formulario', [ 'anacod' => $anacod ] );
+        return Inertia::render( 'Asistencia/Formulario', [ 'anacod' => $anacod ] );
     }
 
     public function formularioStore( Request $request ) {
         DB::connection( 'san' )->insert( "INSERT INTO aplicaciones.pro_usuarios_sistemas (anacod, posicion, modulos) VALUES ('$request->anacod', '$request->puesto', '$request->modulos')" );
     }
 
-    public function dashboard() {
-        $data = Asistencia::dashboard();
+    public function dashboard(Request $request) {
+        $cumpleMes  = $request->has('cumple_mes')  ? (int) $request->query('cumple_mes')  : null;
+        $cumpleAnio = $request->has('cumple_anio') ? (int) $request->query('cumple_anio') : null;
+        $data = Asistencia::dashboard(null, null, $cumpleMes, $cumpleAnio);
         return Inertia::render( 'Dashboard', [ 'data' => $data ] );
     }
 
     public function index() {
-        return Inertia::render( 'Eventos' );
+        return Inertia::render( 'Asistencia/Eventos' );
     }
 
     public function getEventos() {
@@ -63,7 +65,7 @@ class AsistenciaController extends Controller {
             $registros = Asistencia::registrosNFC( $fecha );
             return json_encode( $registros );
         }
-        return Inertia::render( 'RegistrosNFC');
+        return Inertia::render( 'Asistencia/RegistrosNFC');
     }
 
     public function create() {
@@ -125,7 +127,7 @@ class AsistenciaController extends Controller {
             $recipients = [ 'dbolaines@red.com.sv', 'awcruz@red.com.sv' ];
             //Mail::to( $recipients )->send( new UserRegistrationConfirmation() );
 
-            return Inertia::render( 'Resumen', [ 'llegadas_tarde' => $llegadas_Tarde, 'ausencias' => $ausencias, 'eventos' => $resumenEventos ] );
+            return Inertia::render( 'Asistencia/Resumen', [ 'llegadas_tarde' => $llegadas_Tarde, 'ausencias' => $ausencias, 'eventos' => $resumenEventos ] );
         }
 
         //return json_encode( $resumen );
@@ -154,7 +156,7 @@ class AsistenciaController extends Controller {
         //$registros = Asistencia::marcas( Carbon::parse( '2024-06-01' ) );
         //return Inertia::render( 'Marcaciones', [ 'registros'=> $registros, 'fecha' => Carbon::parse( '2024-06-01' ) ] );
         //return json_encode( $registros );
-        return Inertia::render( 'Marcaciones', [ 'registros' => $registros, 'nfc' => $nfc, 'fecha' => Carbon::today() ] );
+        return Inertia::render( 'Asistencia/Marcaciones', [ 'registros' => $registros, 'nfc' => $nfc, 'fecha' => Carbon::today() ] );
     }
 
     public function estadisticas() {
@@ -165,7 +167,7 @@ class AsistenciaController extends Controller {
         } else {
             $now = Carbon::now();
             $data = Asistencia::horasNFCMes( $now->format( 'Y' ), $now->format( 'm' ) );
-            return Inertia::render( 'Estadisticas', [ 'datos' => $data, 'empleados' => $empleados ] );
+            return Inertia::render( 'Asistencia/Estadisticas', [ 'datos' => $data, 'empleados' => $empleados ] );
         }
     }
 

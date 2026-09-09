@@ -17,7 +17,7 @@ class DatosEmpleadoController extends Controller
         $datos = DatosEmpleado::where('anacod', $anacod)->with(['hijos', 'archivos'])->first();
         $equipos = PttEquipo::where('anacod', $anacod)->get();
         $empleado = Empleado::where('anacod', $anacod)->first();
-        return Inertia::render('Empleado/Datos', [
+        return Inertia::render('Empleados/Datos', [
             'datos' => $datos,
             'equipos' => $equipos,
             'empleado' => $empleado,

@@ -17,7 +17,7 @@ class HorarioController extends Controller
     public function index()
     {
         $horarios = Horario::with('dias')->get();
-        return Inertia::render('Horario', ['horarios' => $horarios]);
+        return Inertia::render('Horarios/Index', ['horarios' => $horarios]);
         //return json_encode($horarios);
     }
 
@@ -67,7 +67,7 @@ class HorarioController extends Controller
     {
         $horario = Horario::where('id', $horario)->with('dias')->get();
         //return json_encode($horario);
-        return Inertia::render('Horario/Edit', ['horario' => $horario[0]]);
+        return Inertia::render('Horarios/Edit', ['horario' => $horario[0]]);
     }
 
     /**
