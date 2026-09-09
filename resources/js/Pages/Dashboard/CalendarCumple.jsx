@@ -1,5 +1,5 @@
 import { Link, router } from "@inertiajs/react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 const MONTH_NAMES = [
     "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -121,24 +121,30 @@ function BirthdayCell({ it, isToday }) {
 export default function CalendarCumple({ data }) {
     const initialMes = data?.mes ?? new Date().toISOString().slice(0, 7);
     const [viewMes, setViewMes] = useState(initialMes);
+    const [localData, setLocalData] = useState(data);
+
+    useEffect(() => {
+        setLocalData(data);
+    }, [data]);
 
     const [year, month] = viewMes.split("-").map(Number);
     const cells = useMemo(() => buildCalendar(year, month), [year, month]);
 
     const byDay = useMemo(() => {
         const map = {};
-        (data?.items ?? []).forEach((it) => {
+        (localData?.items ?? []).forEach((it) => {
             if (!map[it.dia]) map[it.dia] = [];
             map[it.dia].push(it);
         });
         return map;
-    }, [data]);
+    }, [localData]);
 
     const today = new Date();
     const isCurrentMonth = today.getFullYear() === year && (today.getMonth() + 1) === month;
     const todayDay = isCurrentMonth ? today.getDate() : null;
 
     const navigateTo = (nextMes) => {
+        setLocalData({ mes: '', items: [] });
         setViewMes(nextMes);
         router.reload({
             data: {
