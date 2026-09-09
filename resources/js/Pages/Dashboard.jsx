@@ -390,7 +390,80 @@ export default function Dashboard({ auth, data }) {
                         </div>
                     </div>
 
-                    {/* Sub-grupo 5.2: Distribución */}
+                    {/* Sub-grupo 5.2: Movimiento de personal */}
+                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-6">
+                        Movimiento de personal
+                    </h4>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
+                                <span>Últimas altas</span>
+                                <span className="text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded-full">ING</span>
+                            </p>
+                            {(extra?.ultimas_altas ?? []).length === 0 ? (
+                                <p className="text-sm text-gray-500">Sin altas recientes.</p>
+                            ) : (
+                                <table className="w-full text-sm">
+                                    <thead className="text-left text-xs text-gray-500 uppercase border-b">
+                                        <tr>
+                                            <th className="pb-1">Empleado</th>
+                                            <th className="pb-1">Área</th>
+                                            <th className="pb-1 text-right">Ingreso</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {extra.ultimas_altas.map(r => (
+                                            <tr key={r.anacod} className="border-b border-gray-100">
+                                                <td className="py-1.5">
+                                                    <Link href={route("empleados.show", { anacod: r.anacod })} className="text-indigo-600 hover:text-indigo-800">
+                                                        {r.ananam}
+                                                    </Link>
+                                                    <div className="text-xs text-gray-500 font-mono">{r.anacod}</div>
+                                                </td>
+                                                <td className="py-1.5 text-gray-600 text-xs">{r.anarea ?? "—"}</td>
+                                                <td className="py-1.5 text-right text-gray-600 text-xs">{r.fecha_ingreso}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
+                                <span>Últimas bajas</span>
+                                <span className="text-xs bg-red-50 text-red-700 px-2 py-0.5 rounded-full">BAJ</span>
+                            </p>
+                            {(extra?.ultimas_bajas ?? []).length === 0 ? (
+                                <p className="text-sm text-gray-500">Sin bajas recientes.</p>
+                            ) : (
+                                <table className="w-full text-sm">
+                                    <thead className="text-left text-xs text-gray-500 uppercase border-b">
+                                        <tr>
+                                            <th className="pb-1">Empleado</th>
+                                            <th className="pb-1">Área</th>
+                                            <th className="pb-1 text-right">Fecha baja</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {extra.ultimas_bajas.map(r => (
+                                            <tr key={r.anacod} className="border-b border-gray-100">
+                                                <td className="py-1.5">
+                                                    <Link href={route("empleados.show", { anacod: r.anacod })} className="text-indigo-600 hover:text-indigo-800">
+                                                        {r.ananam}
+                                                    </Link>
+                                                    <div className="text-xs text-gray-500 font-mono">{r.anacod}</div>
+                                                </td>
+                                                <td className="py-1.5 text-gray-600 text-xs">{r.anarea ?? "—"}</td>
+                                                <td className="py-1.5 text-right text-gray-600 text-xs">{r.fecha_baja}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Sub-grupo 5.3: Distribución */}
                     <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-6">
                         Distribución
                     </h4>
@@ -418,7 +491,7 @@ export default function Dashboard({ auth, data }) {
                         </div>
                     </div>
 
-                    {/* Sub-grupo 5.3: Tendencias */}
+                    {/* Sub-grupo 5.4: Tendencias */}
                     <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-6">
                         Tendencias
                     </h4>
@@ -449,7 +522,7 @@ export default function Dashboard({ auth, data }) {
                         </div>
                     </div>
 
-                    {/* Sub-grupo 5.4: Operación */}
+                    {/* Sub-grupo 5.5: Operación */}
                     <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-6">
                         Operación
                     </h4>
