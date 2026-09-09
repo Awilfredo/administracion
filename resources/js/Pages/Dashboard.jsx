@@ -407,6 +407,7 @@ export default function Dashboard({ auth, data }) {
                                     <thead className="text-left text-xs text-gray-500 uppercase border-b">
                                         <tr>
                                             <th className="pb-1">Empleado</th>
+                                            <th className="pb-1">País</th>
                                             <th className="pb-1">Área</th>
                                             <th className="pb-1 text-right">Ingreso</th>
                                         </tr>
@@ -419,6 +420,11 @@ export default function Dashboard({ auth, data }) {
                                                         {r.ananam}
                                                     </Link>
                                                     <div className="text-xs text-gray-500 font-mono">{r.anacod}</div>
+                                                </td>
+                                                <td className="py-1.5">
+                                                    <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${r.anapai === 'SV' ? 'bg-blue-50 text-blue-700' : r.anapai === 'GT' ? 'bg-orange-50 text-orange-700' : 'bg-gray-50 text-gray-600'}`}>
+                                                        {r.anapai ?? '—'}
+                                                    </span>
                                                 </td>
                                                 <td className="py-1.5 text-gray-600 text-xs">{r.anarea ?? "—"}</td>
                                                 <td className="py-1.5 text-right text-gray-600 text-xs">{r.fecha_ingreso}</td>
@@ -440,6 +446,7 @@ export default function Dashboard({ auth, data }) {
                                     <thead className="text-left text-xs text-gray-500 uppercase border-b">
                                         <tr>
                                             <th className="pb-1">Empleado</th>
+                                            <th className="pb-1">País</th>
                                             <th className="pb-1">Área</th>
                                             <th className="pb-1 text-right">Fecha baja</th>
                                         </tr>
@@ -452,6 +459,11 @@ export default function Dashboard({ auth, data }) {
                                                         {r.ananam}
                                                     </Link>
                                                     <div className="text-xs text-gray-500 font-mono">{r.anacod}</div>
+                                                </td>
+                                                <td className="py-1.5">
+                                                    <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${r.anapai === 'SV' ? 'bg-blue-50 text-blue-700' : r.anapai === 'GT' ? 'bg-orange-50 text-orange-700' : 'bg-gray-50 text-gray-600'}`}>
+                                                        {r.anapai ?? '—'}
+                                                    </span>
                                                 </td>
                                                 <td className="py-1.5 text-gray-600 text-xs">{r.anarea ?? "—"}</td>
                                                 <td className="py-1.5 text-right text-gray-600 text-xs">{r.fecha_baja}</td>

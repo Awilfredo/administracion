@@ -821,7 +821,7 @@ class Asistencia extends Model
     public static function seccionUltimasAltas(int $limit = 8): array
     {
         $rows = DB::connection('san')->select(
-            "SELECT anacod, ananam, anasta, fecha_ingreso, anapos, anarea
+            "SELECT anacod, ananam, anasta, fecha_ingreso, anapos, anarea, anapai
             FROM aplicaciones.pro_anacod
             WHERE anatip='U'
               AND fecha_ingreso IS NOT NULL
@@ -837,13 +837,14 @@ class Asistencia extends Model
             'fecha_ingreso' => (string) $r->fecha_ingreso,
             'anapos'        => $r->anapos,
             'anarea'        => $r->anarea,
+            'anapai'        => $r->anapai,
         ], $rows);
     }
 
     public static function seccionUltimasBajas(int $limit = 8): array
     {
         $rows = DB::connection('san')->select(
-            "SELECT anacod, ananam, anasta, fecha_baja, anapos, anarea
+            "SELECT anacod, ananam, anasta, fecha_baja, anapos, anarea, anapai
             FROM aplicaciones.pro_anacod
             WHERE anatip='U'
               AND anasta='I'
@@ -860,6 +861,7 @@ class Asistencia extends Model
             'fecha_baja' => (string) $r->fecha_baja,
             'anapos'     => $r->anapos,
             'anarea'     => $r->anarea,
+            'anapai'     => $r->anapai,
         ], $rows);
     }
 
