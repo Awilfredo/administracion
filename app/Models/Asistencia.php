@@ -80,7 +80,7 @@ class Asistencia extends Model
     {
         $r = DB::connection('san')->selectOne(
             "SELECT
-                (SELECT COUNT(*) FROM aplicaciones.pro_anacod WHERE anasta='A' AND anatip='U' AND anapai='SV') AS empleados_activos,
+                (SELECT COUNT(*) FROM aplicaciones.pro_anacod WHERE anasta='A' AND anatip='U') AS empleados_activos,
                 (SELECT COUNT(*) FROM aplicaciones.log_accesos_sitios a
                  INNER JOIN aplicaciones.pro_anatags t ON t.anacod = a.uid
                  INNER JOIN aplicaciones.pro_anacod u ON u.anacod = t.anacod
@@ -645,7 +645,7 @@ class Asistencia extends Model
                 COUNT(*) FILTER (WHERE AGE(CURRENT_DATE, fecha_ingreso) >= INTERVAL '10 years') AS m10,
                 COUNT(*) AS total
             FROM aplicaciones.pro_anacod
-            WHERE anasta='A' AND anatip='U' AND anarea IS NOT NULL AND anarea <> '' AND anapai='SV'
+            WHERE anasta='A' AND anatip='U' AND anarea IS NOT NULL AND anarea <> ''
             GROUP BY anarea
             ORDER BY total DESC
             LIMIT 10"
@@ -826,7 +826,6 @@ class Asistencia extends Model
             WHERE anatip='U'
               AND fecha_ingreso IS NOT NULL
               AND fecha_ingreso <= CURRENT_DATE
-              AND anapai='SV'
             ORDER BY fecha_ingreso DESC, anacod
             LIMIT ?",
             [$limit]
@@ -850,7 +849,6 @@ class Asistencia extends Model
               AND anasta='I'
               AND fecha_baja IS NOT NULL
               AND fecha_baja <= CURRENT_DATE
-              AND anapai='SV'
             ORDER BY fecha_baja DESC, anacod
             LIMIT ?",
             [$limit]
