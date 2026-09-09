@@ -172,21 +172,36 @@ class AsistenciaController extends Controller {
     }
 
     public function marcasCompletasDia() {
-        if ( isset( $_GET[ 'fecha' ] ) ) {
-            if ( isset( $_GET[ 'busqueda' ] ) && $_GET[ 'busqueda' ] == 'mes' ) {
-                $fecha = $_GET[ 'fecha' ];
-                $marcas = Asistencia::marcasCompletasMes( $fecha );
-                return json_encode( $marcas );
-            } else {
-                $fecha = $_GET[ 'fecha' ];
-                $marcas = Asistencia::marcasCompletasDia( $fecha );
-                return json_encode( $marcas );
-            }
-        } else {
-            $fechaActual = Carbon::now()->format( 'Y-m-d' );
-            $marcas = Asistencia::marcasCompletasDia( $fechaActual );
-            return Inertia::render( 'Asistencia/MarcasDia', [ 'marcas' => $marcas ] );
+        $fechaActual = Carbon::now()->format( 'Y-m-d' );
+        $fecha = $_GET[ 'fecha' ] ?? $fechaActual;
+        $fechaFin = $_GET[ 'fecha_fin' ] ?? null;
+        $usuario = strtoupper( $_GET[ 'usuario' ] ?? '' );
+        $preset = $_GET[ 'preset' ] ?? 'hoy';
+
+        if ( isset( $_GET[ 'busqueda' ] ) && $_GET[ 'busqueda' ] == 'mes' ) {
+            $marcas = Asistencia::marcasCompletasMes( $fecha );
+            return Inertia::render( 'Asistencia/MarcasDia', [
+                'marcas' => $marcas,
+                'filters' => [
+                    'fecha' => $fecha,
+                    'fecha_fin' => $fechaFin,
+                    'usuario' => $usuario,
+                    'preset' => $preset,
+                ],
+            ] );
         }
+
+        $marcas = Asistencia::marcasCompletasDia( $fecha, $fechaFin, $usuario );
+
+        return Inertia::render( 'Asistencia/MarcasDia', [
+            'marcas' => $marcas,
+            'filters' => [
+                'fecha' => $fecha,
+                'fecha_fin' => $fechaFin,
+                'usuario' => $usuario,
+                'preset' => $preset,
+            ],
+        ] );
     }
 
     public function nfcCreate() {
