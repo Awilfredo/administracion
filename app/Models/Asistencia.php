@@ -65,6 +65,7 @@ class Asistencia extends Model
                 'por_horario'        => self::seccionPorHorario(),
                 'tasa_puntualidad'   => self::seccionTasaPuntualidadPorDOW($mes, $anio),
                 'periodo_prueba'     => self::seccionEnPeriodoPrueba(),
+                'periodo_prueba_list' => self::seccionEmpleadosPeriodoPrueba(),
                 'top_pendientes'     => self::seccionTopPendientesJustificar(),
                 'antiguedad_por_area'=> self::seccionAntiguedadPorArea(),
                 'huerfanos_nfc'      => self::seccionHuerfanosNFC(),
@@ -610,6 +611,25 @@ class Asistencia extends Model
               AND fecha_ingreso <= CURRENT_DATE"
         );
         return (int) ($r->c ?? 0);
+    }
+
+    public static function seccionEmpleadosPeriodoPrueba(): array
+    {
+        $rows = DB::connection('san')->select(
+            "SELECT anacod, ananam, anarea, fecha_ingreso, anapai
+            FROM aplicaciones.pro_anacod
+            WHERE anasta='A' AND anatip='U'
+              AND fecha_ingreso >= CURRENT_DATE - INTERVAL '3 months'
+              AND fecha_ingreso <= CURRENT_DATE
+            ORDER BY fecha_ingreso DESC"
+        );
+        return array_map(fn($r) => [
+            'anacod'        => $r->anacod,
+            'ananam'        => $r->ananam,
+            'anarea'        => $r->anarea,
+            'anapai'        => $r->anapai,
+            'fecha_ingreso' => (string) $r->fecha_ingreso,
+        ], $rows);
     }
 
     public static function seccionTopPendientesJustificar(int $limit = 5): array

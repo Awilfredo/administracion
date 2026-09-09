@@ -227,7 +227,7 @@ export default function Dashboard({ auth, data }) {
         tasa_justificacion: { labels: [], tasa: [] }, crecimiento: { labels: [], altas: [], bajas: [] },
         ultimas_altas: [], ultimas_bajas: [],         cumpleanos_mes: { mes: '', items: [] },
         top_posiciones: [], por_horario: [], tasa_puntualidad: {},
-        periodo_prueba: 0, top_pendientes: [], antiguedad_por_area: [],
+        periodo_prueba: 0, periodo_prueba_list: [], top_pendientes: [], antiguedad_por_area: [],
         huerfanos_nfc: [], prox_jubilarse: [], top_antiguedad: [],
         cumpleanos_hoy: [], prox_cumpleanos: [],
     };
@@ -321,10 +321,112 @@ export default function Dashboard({ auth, data }) {
                     </div>
                 </Section>
 
-                {/* SECCIÓN 3: TENDENCIA 6 MESES */}
-                <Section title="Tendencia últimos 6 meses">
-                    <div className="bg-white shadow-md rounded-lg p-5">
+                {/* SECCIÓN 3: TENDENCIAS Y CRECIMIENTO */}
+                <Section title="Tendencias y crecimiento (6 meses)">
+                    <div className="bg-white shadow-md rounded-lg p-5 mb-4">
+                        <p className="text-sm text-gray-500 mb-2">Tendencia diaria (30 días)</p>
                         <Sparkline data={tendencia} />
+                    </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-2">Tasa de justificación</p>
+                            <LineChartMini
+                                data={(extra?.tasa_justificacion?.labels ?? []).map((l, i) => ({
+                                    label: l,
+                                    Justificados: extra.tasa_justificacion.tasa[i] ?? 0,
+                                }))}
+                                lines={["Justificados"]}
+                                unit="%"
+                                xKey="label"
+                            />
+                        </div>
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-2">Eventos por día de la semana</p>
+                            <StackedBarsMini
+                                data={(extra?.por_dia_semana?.data ?? []).map((d, i) => ({
+                                    label: extra.por_dia_semana.labels[i],
+                                    ...d,
+                                }))}
+                                series={["tarde", "ausente", "salidas"]}
+                                xKey="label"
+                            />
+                        </div>
+                    </div>
+                </Section>
+
+                {/* SECCIÓN 6: ALERTAS NFC Y HUELLA */}
+                <Section title="Alertas NFC y huella (3 días)">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
+                                <span>Sin marca NFC</span>
+                                <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">NFC</span>
+                            </p>
+                            {(extra?.sin_marcaciones_nfc_3d ?? []).length === 0 ? (
+                                <p className="text-sm text-gray-500">Sin alertas.</p>
+                            ) : (
+                                <table className="w-full text-sm">
+                                    <thead className="text-left text-xs text-gray-500 uppercase border-b">
+                                        <tr>
+                                            <th className="pb-1">Empleado</th>
+                                            <th className="pb-1">Área</th>
+                                            <th className="pb-1 text-right">Última marca</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(extra.sin_marcaciones_nfc_3d).map(r => (
+                                            <tr key={r.anacod} className="border-b border-gray-100">
+                                                <td className="py-1.5">
+                                                    <Link href={route("empleados.show", { anacod: r.anacod })} className="text-indigo-600 hover:text-indigo-800">
+                                                        {r.ananam}
+                                                    </Link>
+                                                    <div className="text-xs text-gray-500">{r.anacod}</div>
+                                                </td>
+                                                <td className="py-1.5 text-gray-600 text-xs">{r.anarea ?? "—"}</td>
+                                                <td className="py-1.5 text-right text-gray-600 text-xs">
+                                                    {r.ultima_marca ?? "(nunca)"}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
+                                <span>Sin marca huella</span>
+                                <span className="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">Huella</span>
+                            </p>
+                            {(extra?.sin_marcaciones_huella_3d ?? []).length === 0 ? (
+                                <p className="text-sm text-gray-500">Sin alertas.</p>
+                            ) : (
+                                <table className="w-full text-sm">
+                                    <thead className="text-left text-xs text-gray-500 uppercase border-b">
+                                        <tr>
+                                            <th className="pb-1">Empleado</th>
+                                            <th className="pb-1">Área</th>
+                                            <th className="pb-1 text-right">Última marca</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(extra.sin_marcaciones_huella_3d).map(r => (
+                                            <tr key={r.anacod} className="border-b border-gray-100">
+                                                <td className="py-1.5">
+                                                    <Link href={route("empleados.show", { anacod: r.anacod })} className="text-indigo-600 hover:text-indigo-800">
+                                                        {r.ananam}
+                                                    </Link>
+                                                    <div className="text-xs text-gray-500">{r.anacod}</div>
+                                                </td>
+                                                <td className="py-1.5 text-gray-600 text-xs">{r.anarea ?? "—"}</td>
+                                                <td className="py-1.5 text-right text-gray-600 text-xs">
+                                                    {r.ultima_marca ?? "(nunca)"}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
                     </div>
                 </Section>
 
@@ -344,9 +446,90 @@ export default function Dashboard({ auth, data }) {
                     </div>
                 </Section>
 
-                {/* SECCIÓN 5: INFORMACIÓN ADICIONAL */}
-                <Section title="Información adicional">
-                    {/* Sub-grupo 5.1: Organización */}
+                {/* SECCIÓN 5: CRECIMIENTO NETO */}
+                <Section title="Crecimiento neto (6 meses)">
+                    <div className="bg-white shadow-md rounded-lg p-5">
+                        <StackedBarsMini
+                            data={(extra?.crecimiento?.labels ?? []).map((l, i) => ({
+                                label: l,
+                                altas: extra.crecimiento.altas[i] ?? 0,
+                                bajas: extra.crecimiento.bajas[i] ?? 0,
+                            }))}
+                            series={["bajas", "altas"]}
+                            xKey="label"
+                        />
+                    </div>
+                </Section>
+
+                {/* SECCIÓN 5B: EMPLEADOS EN PERIODO DE PRUEBA */}
+                <Section title={`Empleados en periodo de prueba (${(extra?.periodo_prueba_list ?? []).length})`}>
+                    <div className="bg-white shadow-md rounded-lg p-5">
+                        {(extra?.periodo_prueba_list ?? []).length === 0 ? (
+                            <p className="text-sm text-gray-500">No hay empleados en periodo de prueba.</p>
+                        ) : (
+                            <table className="w-full text-sm">
+                                <thead className="text-left text-xs text-gray-500 uppercase border-b">
+                                    <tr>
+                                        <th className="pb-1">Código</th>
+                                        <th className="pb-1">Nombre</th>
+                                        <th className="pb-1">Área</th>
+                                        <th className="pb-1">País</th>
+                                        <th className="pb-1 text-right">Fecha ingreso</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(extra.periodo_prueba_list).map(r => (
+                                        <tr key={r.anacod} className="border-b border-gray-100">
+                                            <td className="py-1.5 font-mono text-xs text-gray-600">{r.anacod}</td>
+                                            <td className="py-1.5">
+                                                <Link href={route("empleados.show", { anacod: r.anacod })} className="text-indigo-600 hover:text-indigo-800">
+                                                    {r.ananam}
+                                                </Link>
+                                            </td>
+                                            <td className="py-1.5 text-gray-600 text-xs">{r.anarea ?? "—"}</td>
+                                            <td className="py-1.5">
+                                                <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${r.anapai === 'SV' ? 'bg-blue-50 text-blue-700' : r.anapai === 'GT' ? 'bg-orange-50 text-orange-700' : 'bg-gray-50 text-gray-600'}`}>
+                                                    {r.anapai ?? '—'}
+                                                </span>
+                                            </td>
+                                            <td className="py-1.5 text-right text-gray-600 text-xs">{r.fecha_ingreso}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                </Section>
+
+                {/* SECCIÓN 7: DISTRIBUCIÓN */}
+                <Section title="Distribución">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-2">Por área (top 10)</p>
+                            <BarChartMini
+                                data={(extra?.por_area ?? []).map(r => ({ label: r.area, value: r.empleados }))}
+                                xKey="label"
+                                dataKey="value"
+                                color="#2563eb"
+                                layout="horizontal"
+                            />
+                        </div>
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <p className="text-sm text-gray-500 mb-2">SV vs GT</p>
+                            <BarChartMini
+                                data={(extra?.por_pais ?? []).map(r => ({ label: r.pais, value: r.activos }))}
+                                xKey="label"
+                                dataKey="value"
+                                color="#06b6d4"
+                                layout="horizontal"
+                            />
+                        </div>
+                    </div>
+                </Section>
+
+                {/* SECCIÓN 8: ORGANIZACIÓN Y ALERTAS */}
+                <Section title="Organización y alertas">
+                    {/* Sub-grupo 7.1: Organización */}
                     <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-2">
                         Organización
                     </h4>
@@ -369,7 +552,7 @@ export default function Dashboard({ auth, data }) {
                             </div>
                         </div>
                         <div className="bg-white shadow-md rounded-lg p-5">
-                            <p className="text-sm text-gray-500 mb-2">Empleados por jefe (top 5)</p>
+                            <p className="text-sm text-gray-500 mb-2">Por jefe (top 5)</p>
                             <BarChartMini
                                 data={(extra?.por_jefe ?? []).map(r => ({ label: r.anajef, value: r.reportes }))}
                                 xKey="label"
@@ -378,19 +561,15 @@ export default function Dashboard({ auth, data }) {
                                 layout="horizontal"
                             />
                         </div>
-                        <div className="bg-white shadow-md rounded-lg p-5">
-                            <p className="text-sm text-gray-500 mb-2">Distribución SV vs GT</p>
-                            <BarChartMini
-                                data={(extra?.por_pais ?? []).map(r => ({ label: r.pais, value: r.activos }))}
-                                xKey="label"
-                                dataKey="value"
-                                color="#06b6d4"
-                                layout="horizontal"
-                            />
+                        <div className="bg-white shadow-md rounded-lg p-5 flex flex-col">
+                            <p className="text-sm text-gray-500">Empleados freelance</p>
+                            <p className="text-3xl font-bold text-gray-800 mt-1">
+                                {extra?.freelance?.activos ?? 0} <span className="text-base text-gray-500 font-normal">/ {extra?.freelance?.total ?? 0}</span>
+                            </p>
                         </div>
                     </div>
 
-                    {/* Sub-grupo 5.2: Movimiento de personal */}
+                    {/* Sub-grupo 7.2: Movimiento de personal */}
                     <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-6">
                         Movimiento de personal
                     </h4>
@@ -475,165 +654,14 @@ export default function Dashboard({ auth, data }) {
                         </div>
                     </div>
 
-                    {/* Sub-grupo 5.3: Distribución */}
+                    {/* Sub-grupo 7.3: Cumpleaños */}
                     <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-6">
-                        Distribución
+                        Cumpleaños
                     </h4>
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
                         <div className="bg-white shadow-md rounded-lg p-5">
-                            <p className="text-sm text-gray-500 mb-2">Distribución por área (top 10)</p>
-                            <BarChartMini
-                                data={(extra?.por_area ?? []).map(r => ({ label: r.area, value: r.empleados }))}
-                                xKey="label"
-                                dataKey="value"
-                                color="#2563eb"
-                                layout="horizontal"
-                            />
-                        </div>
-                        <div className="bg-white shadow-md rounded-lg p-5">
-                            <p className="text-sm text-gray-500 mb-2">Eventos por día de la semana</p>
-                            <StackedBarsMini
-                                data={(extra?.por_dia_semana?.data ?? []).map((d, i) => ({
-                                    label: extra.por_dia_semana.labels[i],
-                                    ...d,
-                                }))}
-                                series={["tarde", "ausente", "salidas"]}
-                                xKey="label"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Sub-grupo 5.4: Tendencias */}
-                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-6">
-                        Tendencias
-                    </h4>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
-                        <div className="bg-white shadow-md rounded-lg p-5">
-                            <p className="text-sm text-gray-500 mb-2">Crecimiento neto (6 meses)</p>
-                            <StackedBarsMini
-                                data={(extra?.crecimiento?.labels ?? []).map((l, i) => ({
-                                    label: l,
-                                    altas: extra.crecimiento.altas[i] ?? 0,
-                                    bajas: extra.crecimiento.bajas[i] ?? 0,
-                                }))}
-                                series={["bajas", "altas"]}
-                                xKey="label"
-                            />
-                        </div>
-                        <div className="bg-white shadow-md rounded-lg p-5">
-                            <p className="text-sm text-gray-500 mb-2">Tasa de justificación (6 meses)</p>
-                            <LineChartMini
-                                data={(extra?.tasa_justificacion?.labels ?? []).map((l, i) => ({
-                                    label: l,
-                                    Justificados: extra.tasa_justificacion.tasa[i] ?? 0,
-                                }))}
-                                lines={["Justificados"]}
-                                unit="%"
-                                xKey="label"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Sub-grupo 5.5: Operación */}
-                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-6">
-                        Operación
-                    </h4>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
-                        <div className="bg-white shadow-md rounded-lg p-5 flex flex-col">
-                            <p className="text-sm text-gray-500">Empleados freelance</p>
-                            <p className="text-3xl font-bold text-gray-800 mt-1">
-                                {extra?.freelance?.activos ?? 0} <span className="text-base text-gray-500 font-normal">/ {extra?.freelance?.total ?? 0} totales</span>
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                                Activos actualmente
-                            </p>
-                        </div>
-                        <div className="bg-white shadow-md rounded-lg p-5 flex flex-col">
-                            <p className="text-sm text-gray-500">En periodo de prueba</p>
-                            <p className="text-3xl font-bold text-gray-800 mt-1">
-                                {extra?.periodo_prueba ?? 0}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                                Ingresos &lt; 3 meses
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
-                        <div className="bg-white shadow-md rounded-lg p-5">
                             <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
-                                <span>Sin marcas NFC últimos 3 días</span>
-                                <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">NFC</span>
-                            </p>
-                            {(extra?.sin_marcaciones_nfc_3d ?? []).length === 0 ? (
-                                <p className="text-sm text-gray-500">Todos los empleados tienen marcas NFC recientes.</p>
-                            ) : (
-                                <table className="w-full text-sm">
-                                    <thead className="text-left text-xs text-gray-500 uppercase border-b">
-                                        <tr>
-                                            <th className="pb-1">Empleado</th>
-                                            <th className="pb-1">Área</th>
-                                            <th className="pb-1 text-right">Última marca NFC</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {(extra.sin_marcaciones_nfc_3d).map(r => (
-                                            <tr key={r.anacod} className="border-b border-gray-100">
-                                                <td className="py-1.5">
-                                                    <Link href={route("empleados.show", { anacod: r.anacod })} className="text-indigo-600 hover:text-indigo-800">
-                                                        {r.ananam}
-                                                    </Link>
-                                                    <div className="text-xs text-gray-500">{r.anacod} · {r.anarea ?? "—"}</div>
-                                                </td>
-                                                <td className="py-1.5 text-right text-gray-600 text-xs">
-                                                    {r.ultima_marca ?? "(nunca)"}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
-                        <div className="bg-white shadow-md rounded-lg p-5">
-                            <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
-                                <span>Sin marcas de huella últimos 3 días</span>
-                                <span className="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">Huella</span>
-                            </p>
-                            {(extra?.sin_marcaciones_huella_3d ?? []).length === 0 ? (
-                                <p className="text-sm text-gray-500">Todos los empleados tienen marcas de huella recientes.</p>
-                            ) : (
-                                <table className="w-full text-sm">
-                                    <thead className="text-left text-xs text-gray-500 uppercase border-b">
-                                        <tr>
-                                            <th className="pb-1">Empleado</th>
-                                            <th className="pb-1">Área</th>
-                                            <th className="pb-1 text-right">Última marca</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {(extra.sin_marcaciones_huella_3d).map(r => (
-                                            <tr key={r.anacod} className="border-b border-gray-100">
-                                                <td className="py-1.5">
-                                                    <Link href={route("empleados.show", { anacod: r.anacod })} className="text-indigo-600 hover:text-indigo-800">
-                                                        {r.ananam}
-                                                    </Link>
-                                                    <div className="text-xs text-gray-500">{r.anacod} · {r.anarea ?? "—"}</div>
-                                                </td>
-                                                <td className="py-1.5 text-right text-gray-600 text-xs">
-                                                    {r.ultima_marca ?? "(nunca)"}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-2">
-                        <div className="bg-white shadow-md rounded-lg p-5">
-                            <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
-                                <span>Próximos cumpleaños (7 días)</span>
+                                <span>Próximos (7 días)</span>
                                 <span className="text-xs bg-pink-50 text-pink-700 px-2 py-0.5 rounded-full">7d</span>
                             </p>
                             {(extra?.prox_cumpleanos ?? []).length === 0 ? (
@@ -660,7 +688,7 @@ export default function Dashboard({ auth, data }) {
                         </div>
                         <div className="bg-white shadow-md rounded-lg p-5">
                             <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
-                                <span>Cumpleaños del mes</span>
+                                <span>Del mes</span>
                                 <span className="text-xs bg-pink-50 text-pink-700 px-2 py-0.5 rounded-full">mes</span>
                             </p>
                             <p className="text-xs text-gray-400">
@@ -668,7 +696,6 @@ export default function Dashboard({ auth, data }) {
                             </p>
                         </div>
                     </div>
-
                     <CalendarCumple data={extra?.cumpleanos_mes ?? { mes: '', items: [] }} />
                 </Section>
             </div>
