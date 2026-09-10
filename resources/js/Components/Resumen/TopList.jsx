@@ -2,6 +2,7 @@ import { HiCheckCircle, HiExclamationCircle } from "react-icons/hi";
 
 function TopList({ items, tipo = "impuntuales", onItemClick = null }) {
     const isImpuntuales = tipo === "impuntuales";
+
     const colors = isImpuntuales
         ? {
             bg: "bg-red-50",
@@ -12,7 +13,8 @@ function TopList({ items, tipo = "impuntuales", onItemClick = null }) {
             badgeText: "text-red-700",
             gradient: "from-red-500 to-red-600",
             title: "Top impuntuales",
-            subtitle: "Empleados con más eventos este mes",
+            subtitle: "Empleados con más eventos sin justificar este mes",
+            badgeSolid: "bg-red-100 text-red-700",
         }
         : {
             bg: "bg-green-50",
@@ -23,7 +25,8 @@ function TopList({ items, tipo = "impuntuales", onItemClick = null }) {
             badgeText: "text-green-700",
             gradient: "from-green-500 to-green-600",
             title: "Top puntuales",
-            subtitle: "Empleados sin incidencias este mes",
+            subtitle: "Empleados con menos eventos sin justificar este mes",
+            badgeSolid: "bg-green-100 text-green-700",
         };
 
     const Icon = colors.icon;
@@ -80,40 +83,38 @@ function TopList({ items, tipo = "impuntuales", onItemClick = null }) {
                             <p className="text-xs text-gray-500 truncate">
                                 {item.anacod} {item.anajef ? `· ${item.anajef}` : ""}
                             </p>
-                            {!isImpuntuales && item.tardes !== undefined && (
-                                <div className="flex gap-2 mt-1 text-[10px]">
-                                    {item.tardes > 0 && (
-                                        <span className="text-amber-700">
-                                            {item.tardes}T
-                                        </span>
-                                    )}
-                                    {item.ausencias > 0 && (
-                                        <span className="text-red-700">
-                                            {item.ausencias}A
-                                        </span>
-                                    )}
-                                    {item.sin_nfc > 0 && (
-                                        <span className="text-purple-700">
-                                            {item.sin_nfc}N
-                                        </span>
-                                    )}
-                                    {item.salidas_antes > 0 && (
-                                        <span className="text-blue-700">
-                                            {item.salidas_antes}S
-                                        </span>
-                                    )}
-                                    {item.total_eventos === 0 && (
-                                        <span className="text-green-700 font-semibold">
-                                            Sin incidencias
-                                        </span>
-                                    )}
-                                </div>
-                            )}
+                            <div className="flex flex-wrap gap-2 mt-1">
+                                {item.tardes > 0 && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-medium">
+                                        {item.tardes} tarde{item.tardes > 1 ? "s" : ""}
+                                    </span>
+                                )}
+                                {item.salidas_antes > 0 && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-medium">
+                                        {item.salidas_antes} salida{item.salidas_antes > 1 ? "s" : ""}
+                                    </span>
+                                )}
+                                {item.ausencias > 0 && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-medium">
+                                        {item.ausencias} ausencia{item.ausencias > 1 ? "s" : ""}
+                                    </span>
+                                )}
+                                {item.sin_nfc > 0 && (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 font-medium">
+                                        {item.sin_nfc} sin NFC
+                                    </span>
+                                )}
+                                {item.tardes === 0 && item.salidas_antes === 0 && item.ausencias === 0 && (
+                                    <span className="text-[10px] text-green-700 font-semibold">
+                                        Sin incidencias
+                                    </span>
+                                )}
+                            </div>
                         </div>
                         <span
-                            className={`${colors.badgeBg} ${colors.badgeText} px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0`}
+                            className={`${colors.badgeSolid} px-2.5 py-1 rounded-full text-xs font-bold flex-shrink-0`}
                         >
-                            {item.total_eventos}
+                            {item.tasa ?? 0}%
                         </span>
                     </li>
                 ))}

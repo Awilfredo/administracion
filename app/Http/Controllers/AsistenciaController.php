@@ -28,6 +28,15 @@ class AsistenciaController extends Controller {
         $cumpleMes  = $request->has('cumple_mes')  ? (int) $request->query('cumple_mes')  : null;
         $cumpleAnio = $request->has('cumple_anio') ? (int) $request->query('cumple_anio') : null;
         $data = Asistencia::dashboard(null, null, $cumpleMes, $cumpleAnio);
+
+        $anioActual = (int) date( 'Y' );
+        $data['puntualidad_anual'] = [
+            'anio' => $anioActual,
+            'tasa' => round( Asistencia::tasaPuntualidadAnio( $anioActual ), 1 ),
+            'tasa_anio_anterior' => round( Asistencia::tasaPuntualidadAnio( $anioActual - 1 ), 1 ),
+            'top_10' => Asistencia::tasaPuntualidadUsuariosAnio( $anioActual, 10 ),
+        ];
+
         return Inertia::render( 'Dashboard', [ 'data' => $data ] );
     }
 

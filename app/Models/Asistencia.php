@@ -962,7 +962,7 @@ class Asistencia extends Model
         INNER JOIN aplicaciones.pro_anacod b ON a.anacod = b.anacod
         WHERE EXTRACT(MONTH FROM DATE(fecha)) = $month
         AND EXTRACT(YEAR FROM DATE(fecha)) = $year
-        AND b.anasta='A'
+        AND b.anasta='A' AND b.anatip = 'U'
         GROUP BY a.anacod, b.ananam, b.anajef)
         SELECT * FROM resumen_eventos WHERE veces_tarde > 0 OR veces_ausente > 0 OR veces_sin_nfc > 0 OR veces_salidas_antes > 0" );
         return $resumenContador;
@@ -1019,6 +1019,105 @@ class Asistencia extends Model
             FROM dias_laborales d, eventos_mes e, empleados em
         " );
         return $result ? (float) $result->tasa : 0.0;
+    }
+
+
+    public static function tasaPuntualidadAnio( $anio ) {
+        $result = DB::connection( 'san' )->selectOne( "
+            WITH dias_laborales AS (
+                SELECT COUNT(*)::int AS total
+                FROM generate_series(
+                    DATE '$anio-01-01',
+                    DATE '$anio-12-31',
+                    '1 day'::interval
+                ) AS fecha
+                WHERE EXTRACT(DOW FROM fecha) BETWEEN 1 AND 5
+            ),
+            puntos_equipo AS (
+                SELECT COALESCE(SUM(
+                    CASE
+                        WHEN a.evento = 'Ausencia' AND (a.accion_personal IS NULL OR a.accion_personal = '')
+                            THEN 10
+                        WHEN a.evento = 'Tarde' THEN 3
+                        WHEN a.evento = 'Salida antes' THEN 3
+                        ELSE 0
+                    END
+                ), 0)::int AS puntos,
+                COUNT(*) FILTER (WHERE b.anasta = 'A' AND b.anatip = 'U' AND b.anapai = 'SV')::int AS empleados_check
+                FROM aplicaciones.pro_eventos_asistencia a
+                INNER JOIN aplicaciones.pro_anacod b ON b.anacod = a.anacod
+                WHERE EXTRACT(YEAR FROM DATE(a.fecha)) = $anio
+            ),
+            empleados AS (
+                SELECT COUNT(*)::int AS total
+                FROM aplicaciones.pro_anacod
+                WHERE anasta = 'A' AND anatip = 'U' AND anapai = 'SV'
+            )
+            SELECT
+                (1.0 - (p.puntos::numeric / NULLIF(d.total * 10 * em.total, 0))) * 100 AS tasa
+            FROM dias_laborales d, puntos_equipo p, empleados em
+        " );
+        return $result ? (float) $result->tasa : 0.0;
+    }
+
+
+    public static function tasaPuntualidadUsuariosAnio( $anio, $limit = 10 ) {
+        return DB::connection( 'san' )->select( "
+            WITH dias_laborales AS (
+                SELECT COUNT(*)::int AS total
+                FROM generate_series(
+                    DATE '$anio-01-01',
+                    DATE '$anio-12-31',
+                    '1 day'::interval
+                ) AS fecha
+                WHERE EXTRACT(DOW FROM fecha) BETWEEN 1 AND 5
+            ),
+            puntos_usuario AS (
+                SELECT u.anacod,
+                    COALESCE(SUM(
+                        CASE
+                            WHEN a.evento = 'Ausencia' AND (a.accion_personal IS NULL OR a.accion_personal = '')
+                                 AND NOT EXISTS (
+                                     SELECT 1 FROM aplicaciones.pro_eventos_asistencia b
+                                     WHERE b.anacod = a.anacod
+                                       AND DATE(b.fecha) = DATE(a.fecha)
+                                       AND b.evento = 'Tarde'
+                                 )
+                                THEN 10
+                            WHEN a.evento = 'Tarde' THEN 3
+                            WHEN a.evento = 'Salida antes' THEN 3
+                            ELSE 0
+                        END
+                    ), 0)::int AS puntos,
+                    COUNT(CASE WHEN a.evento = 'Tarde' AND (a.accion_personal IS NULL OR a.accion_personal = '') THEN 1 END)::int AS tardes,
+                    COUNT(CASE WHEN a.evento = 'Salida antes' AND (a.accion_personal IS NULL OR a.accion_personal = '') THEN 1 END)::int AS salidas_antes,
+                    COUNT(CASE WHEN a.evento = 'Ausencia' AND (a.accion_personal IS NULL OR a.accion_personal = '')
+                                AND NOT EXISTS (
+                                    SELECT 1 FROM aplicaciones.pro_eventos_asistencia b
+                                    WHERE b.anacod = a.anacod
+                                      AND DATE(b.fecha) = DATE(a.fecha)
+                                      AND b.evento = 'Tarde'
+                                )
+                           THEN 1 END)::int AS ausencias,
+                    COUNT(CASE WHEN a.evento = 'Sin nfc' AND (a.accion_personal IS NULL OR a.accion_personal = '') THEN 1 END)::int AS sin_nfc
+                FROM aplicaciones.pro_anacod u
+                LEFT JOIN aplicaciones.pro_eventos_asistencia a
+                    ON a.anacod = u.anacod
+                    AND EXTRACT(YEAR FROM DATE(a.fecha)) = $anio
+                WHERE u.anasta = 'A' AND u.anatip = 'U' AND u.anapai = 'SV'
+                  AND u.fecha_ingreso IS NOT NULL
+                  AND u.fecha_ingreso < DATE '$anio-01-01'
+                GROUP BY u.anacod
+            )
+            SELECT b.anacod, b.ananam, b.anajef,
+                e.puntos, e.tardes, e.salidas_antes, e.ausencias, e.sin_nfc,
+                ROUND((1.0 - (e.puntos::numeric / NULLIF(d.total * 10, 0))) * 100, 1) AS tasa
+            FROM puntos_usuario e
+            INNER JOIN aplicaciones.pro_anacod b ON b.anacod = e.anacod
+            CROSS JOIN dias_laborales d
+            ORDER BY e.puntos ASC, e.ausencias ASC, e.tardes ASC, b.ananam ASC
+            LIMIT $limit
+        " );
     }
 
 
@@ -1131,20 +1230,58 @@ class Asistencia extends Model
 
     public static function topPontuales( $mes, $anio, $limit = 5 ) {
         return DB::connection( 'san' )->select( "
-            SELECT a.anacod, b.ananam, b.anajef,
-                COUNT(*)::int AS total_eventos,
-                SUM(CASE WHEN a.evento = 'Tarde' THEN 1 ELSE 0 END)::int AS tardes,
-                SUM(CASE WHEN a.evento = 'Ausencia' THEN 1 ELSE 0 END)::int AS ausencias,
-                SUM(CASE WHEN a.evento = 'Sin nfc' THEN 1 ELSE 0 END)::int AS sin_nfc,
-                SUM(CASE WHEN a.evento = 'Salida antes' THEN 1 ELSE 0 END)::int AS salidas_antes
-            FROM aplicaciones.pro_eventos_asistencia a
-            INNER JOIN aplicaciones.pro_anacod b ON b.anacod = a.anacod
-            WHERE EXTRACT(MONTH FROM DATE(a.fecha)) = $mes
-              AND EXTRACT(YEAR FROM DATE(a.fecha)) = $anio
-              AND a.accion_personal IS NULL
-              AND b.anasta = 'A' AND b.anatip = 'U' AND b.anapai = 'SV'
-            GROUP BY a.anacod, b.ananam, b.anajef
-            ORDER BY total_eventos ASC
+            WITH dias_laborales_mes AS (
+                SELECT COUNT(*)::int AS total
+                FROM generate_series(
+                    DATE '$anio-$mes-01',
+                    (DATE '$anio-$mes-01' + INTERVAL '1 MONTH - 1 day')::DATE,
+                    '1 day'::interval
+                ) AS fecha
+                WHERE EXTRACT(DOW FROM fecha) BETWEEN 1 AND 5
+            ),
+            puntos_usuario AS (
+                SELECT u.anacod,
+                    COALESCE(SUM(
+                        CASE
+                            WHEN a.evento = 'Ausencia' AND (a.accion_personal IS NULL OR a.accion_personal = '')
+                                 AND NOT EXISTS (
+                                     SELECT 1 FROM aplicaciones.pro_eventos_asistencia b
+                                     WHERE b.anacod = a.anacod
+                                       AND DATE(b.fecha) = DATE(a.fecha)
+                                       AND b.evento = 'Tarde'
+                                 )
+                                THEN 10
+                            WHEN a.evento = 'Tarde' THEN 3
+                            WHEN a.evento = 'Salida antes' THEN 3
+                            ELSE 0
+                        END
+                    ), 0)::int AS puntos,
+                    COUNT(CASE WHEN a.evento = 'Tarde' AND (a.accion_personal IS NULL OR a.accion_personal = '') THEN 1 END)::int AS tardes,
+                    COUNT(CASE WHEN a.evento = 'Salida antes' AND (a.accion_personal IS NULL OR a.accion_personal = '') THEN 1 END)::int AS salidas_antes,
+                    COUNT(CASE WHEN a.evento = 'Ausencia' AND (a.accion_personal IS NULL OR a.accion_personal = '')
+                                AND NOT EXISTS (
+                                    SELECT 1 FROM aplicaciones.pro_eventos_asistencia b
+                                    WHERE b.anacod = a.anacod
+                                      AND DATE(b.fecha) = DATE(a.fecha)
+                                      AND b.evento = 'Tarde'
+                                )
+                           THEN 1 END)::int AS ausencias,
+                    COUNT(CASE WHEN a.evento = 'Sin nfc' AND (a.accion_personal IS NULL OR a.accion_personal = '') THEN 1 END)::int AS sin_nfc
+                FROM aplicaciones.pro_anacod u
+                LEFT JOIN aplicaciones.pro_eventos_asistencia a
+                    ON a.anacod = u.anacod
+                    AND EXTRACT(MONTH FROM DATE(a.fecha)) = $mes
+                    AND EXTRACT(YEAR FROM DATE(a.fecha)) = $anio
+                WHERE u.anasta = 'A' AND u.anatip = 'U' AND u.anapai = 'SV'
+                GROUP BY u.anacod
+            )
+            SELECT b.anacod, b.ananam, b.anajef,
+                e.puntos, e.tardes, e.salidas_antes, e.ausencias, e.sin_nfc,
+                ROUND((1.0 - (e.puntos::numeric / NULLIF(d.total * 10, 0))) * 100, 1) AS tasa
+            FROM puntos_usuario e
+            INNER JOIN aplicaciones.pro_anacod b ON b.anacod = e.anacod
+            CROSS JOIN dias_laborales_mes d
+            ORDER BY e.puntos ASC, e.ausencias ASC, e.tardes ASC, b.ananam ASC
             LIMIT $limit
         " );
     }
@@ -1445,6 +1582,7 @@ class Asistencia extends Model
             WHERE
                 hd.numero_dia = EXTRACT(DOW FROM cd.fecha)
                 AND u.anasta = 'A'
+                AND u.anatip = 'U'
         ),
 
         primeras_entradas AS (
@@ -1568,7 +1706,7 @@ class Asistencia extends Model
             FROM aplicaciones.pro_anacod AS u
             LEFT JOIN aplicaciones.pro_horarios AS h
                 ON CAST(u.horario_id AS INT) = CAST(h.id AS INT)
-                where u.anasta = 'A' AND u.anapai='SV'
+                where u.anasta = 'A' AND u.anapai='SV' AND u.anatip = 'U'
         )
 
         SELECT a.*, b.fecha, b.nfc_entrada, b.nfc_salida, b.huella_1, b.huella_2, b.huella_3, b.huella_4, b.huella_5, b.huella_6

@@ -321,6 +321,113 @@ export default function Dashboard({ auth, data }) {
                     </div>
                 </Section>
 
+                {/* SECCIÓN 2.5: PUNTUALIDAD ANUAL */}
+                {data.puntualidad_anual && (
+                    <Section title={`Puntualidad anual ${data.puntualidad_anual.anio}`}>
+                        <div className="bg-white shadow-md rounded-lg p-5">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-6 text-center border border-indigo-100">
+                                    <p className="text-5xl font-bold text-indigo-600">
+                                        {data.puntualidad_anual.tasa}%
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-2 uppercase tracking-wide">
+                                        Tasa del año actual
+                                    </p>
+                                    {(() => {
+                                        const tasaAnterior = data.puntualidad_anual.tasa_anio_anterior ?? 0;
+                                        if (tasaAnterior === 0) {
+                                            return (
+                                                <p className="mt-3 text-xs text-gray-500">
+                                                    vs {data.puntualidad_anual.anio - 1}: sin datos
+                                                </p>
+                                            );
+                                        }
+                                        const cambio = Math.round(
+                                            ((data.puntualidad_anual.tasa - tasaAnterior) / tasaAnterior) * 100
+                                        );
+                                        const colorClass =
+                                            cambio > 0
+                                                ? "bg-green-100 text-green-700"
+                                                : cambio < 0
+                                                ? "bg-red-100 text-red-700"
+                                                : "bg-gray-100 text-gray-700";
+                                        const icon = cambio > 0 ? "↑" : cambio < 0 ? "↓" : "→";
+                                        return (
+                                            <span
+                                                className={`mt-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${colorClass}`}
+                                            >
+                                                {icon} {Math.abs(cambio)}% vs {data.puntualidad_anual.anio - 1} ({tasaAnterior}%)
+                                            </span>
+                                        );
+                                    })()}
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                        <Icons.Check className="text-green-500" />
+                                        Top 10 más puntuales del año
+                                    </h4>
+                                    {data.puntualidad_anual.top_10 && data.puntualidad_anual.top_10.length > 0 ? (
+                                        <ol className="space-y-2 max-h-80 overflow-y-auto">
+                                            {data.puntualidad_anual.top_10.map((emp, i) => (
+                                                <li
+                                                    key={emp.anacod}
+                                                    className="flex items-center gap-3 p-2 rounded-lg bg-green-50 border border-green-100"
+                                                >
+                                                    <span className="w-7 h-7 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                                                        {i + 1}
+                                                    </span>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-medium text-sm text-gray-800 truncate">
+                                                            {emp.ananam}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 truncate">
+                                                            {emp.anacod} {emp.anajef ? `· ${emp.anajef}` : ""}
+                                                        </p>
+                                                        <div className="flex flex-wrap gap-1 mt-1">
+                                                            {emp.tardes > 0 && (
+                                                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 font-medium">
+                                                                    {emp.tardes} tarde{emp.tardes > 1 ? "s" : ""}
+                                                                </span>
+                                                            )}
+                                                            {emp.salidas_antes > 0 && (
+                                                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-medium">
+                                                                    {emp.salidas_antes} salida{emp.salidas_antes > 1 ? "s" : ""}
+                                                                </span>
+                                                            )}
+                                                            {emp.ausencias > 0 && (
+                                                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-medium">
+                                                                    {emp.ausencias} ausencia{emp.ausencias > 1 ? "s" : ""}
+                                                                </span>
+                                                            )}
+                                                            {emp.sin_nfc > 0 && (
+                                                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 font-medium">
+                                                                    {emp.sin_nfc} sin NFC
+                                                                </span>
+                                                            )}
+                                                            {emp.tardes === 0 && emp.salidas_antes === 0 && emp.ausencias === 0 && (
+                                                                <span className="text-[10px] text-green-700 font-semibold">
+                                                                    Sin incidencias
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <span className="px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold flex-shrink-0">
+                                                        {emp.tasa}%
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ol>
+                                    ) : (
+                                        <p className="text-sm text-gray-400 text-center py-6">
+                                            No hay datos de puntualidad
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </Section>
+                )}
+
                 {/* SECCIÓN 3: TENDENCIAS Y CRECIMIENTO */}
                 <Section title="Tendencias y crecimiento (6 meses)">
                     <div className="bg-white shadow-md rounded-lg p-5 mb-4">
