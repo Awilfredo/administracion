@@ -326,40 +326,60 @@ export default function Dashboard({ auth, data }) {
                     <Section title={`Puntualidad anual ${data.puntualidad_anual.anio}`}>
                         <div className="bg-white shadow-md rounded-lg p-5">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl p-6 text-center border border-indigo-100">
-                                    <p className="text-5xl font-bold text-indigo-600">
-                                        {data.puntualidad_anual.tasa}%
-                                    </p>
-                                    <p className="text-xs text-gray-500 mt-2 uppercase tracking-wide">
-                                        Tasa del año actual
-                                    </p>
-                                    {(() => {
-                                        const tasaAnterior = data.puntualidad_anual.tasa_anio_anterior ?? 0;
-                                        if (tasaAnterior === 0) {
-                                            return (
-                                                <p className="mt-3 text-xs text-gray-500">
-                                                    vs {data.puntualidad_anual.anio - 1}: sin datos
-                                                </p>
+                                <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500 via-indigo-600 to-blue-700 rounded-2xl p-8 text-center shadow-lg">
+                                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent_50%)]"></div>
+                                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full"></div>
+                                    <div className="absolute -bottom-12 -left-8 w-32 h-32 bg-white/5 rounded-full"></div>
+
+                                    <div className="relative">
+                                        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/15 backdrop-blur-sm mb-3">
+                                            <Icons.Check className="w-10 h-10 text-white" />
+                                        </div>
+
+                                        <p className="text-7xl font-extrabold text-white tracking-tight">
+                                            {data.puntualidad_anual.tasa}<span className="text-4xl font-bold opacity-80">%</span>
+                                        </p>
+                                        <p className="text-sm text-indigo-100 mt-2 uppercase tracking-wider font-medium">
+                                            Tasa del año actual
+                                        </p>
+
+                                        <div className="mt-4 w-full max-w-[200px] mx-auto bg-white/20 rounded-full h-2 overflow-hidden">
+                                            <div
+                                                className="h-full bg-gradient-to-r from-emerald-300 to-emerald-400 rounded-full transition-all duration-700"
+                                                style={{ width: `${Math.min(data.puntualidad_anual.tasa, 100)}%` }}
+                                            ></div>
+                                        </div>
+
+                                        {(() => {
+                                            const tasaAnterior = data.puntualidad_anual.tasa_anio_anterior ?? 0;
+                                            if (tasaAnterior === 0) {
+                                                return (
+                                                    <p className="mt-4 text-xs text-indigo-100">
+                                                        vs {data.puntualidad_anual.anio - 1}: sin datos
+                                                    </p>
+                                                );
+                                            }
+                                            const cambio = Math.round(
+                                                ((data.puntualidad_anual.tasa - tasaAnterior) / tasaAnterior) * 100
                                             );
-                                        }
-                                        const cambio = Math.round(
-                                            ((data.puntualidad_anual.tasa - tasaAnterior) / tasaAnterior) * 100
-                                        );
-                                        const colorClass =
-                                            cambio > 0
-                                                ? "bg-green-100 text-green-700"
-                                                : cambio < 0
-                                                ? "bg-red-100 text-red-700"
-                                                : "bg-gray-100 text-gray-700";
-                                        const icon = cambio > 0 ? "↑" : cambio < 0 ? "↓" : "→";
-                                        return (
-                                            <span
-                                                className={`mt-3 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${colorClass}`}
-                                            >
-                                                {icon} {Math.abs(cambio)}% vs {data.puntualidad_anual.anio - 1} ({tasaAnterior}%)
-                                            </span>
-                                        );
-                                    })()}
+                                            const isPositive = cambio > 0;
+                                            const isNeutral = cambio === 0;
+                                            const colorClass = isPositive
+                                                ? "bg-emerald-400/30 text-emerald-50 border border-emerald-300/50"
+                                                : isNeutral
+                                                ? "bg-white/20 text-white border border-white/30"
+                                                : "bg-rose-400/30 text-rose-50 border border-rose-300/50";
+                                            const icon = isPositive ? "↑" : isNeutral ? "→" : "↓";
+                                            return (
+                                                <span
+                                                    className={`mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-sm ${colorClass}`}
+                                                >
+                                                    <span className="text-base leading-none">{icon}</span>
+                                                    {Math.abs(cambio)}% vs {data.puntualidad_anual.anio - 1} ({tasaAnterior}%)
+                                                </span>
+                                            );
+                                        })()}
+                                    </div>
                                 </div>
                                 <div>
                                     <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
