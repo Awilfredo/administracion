@@ -108,7 +108,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/ptt-equipos', [PttEquipoController::class, 'store'])->name('ptt-equipos.store');
     Route::patch('/ptt-equipos/{pttEquipo}', [PttEquipoController::class, 'update'])->name('ptt-equipos.update');
     Route::delete('/ptt-equipos/{pttEquipo}', [PttEquipoController::class, 'destroy'])->name('ptt-equipos.destroy');
-    
+
+    Route::post('/empleados/{anacod}/presupuesto/retry', [EmpleadoController::class, 'retryPresupuesto'])->name('empleados.presupuesto.retry');
+
 });
 
 

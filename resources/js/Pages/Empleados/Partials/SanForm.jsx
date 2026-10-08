@@ -2,6 +2,7 @@ import TextInput from "./TextInput";
 import Select from "./Select";
 import { CheckBoxGroup } from "@/Components/CheckBoxGroup";
 import { useEffect, useState } from "react";
+import PresupuestosUserSection from "./PresupuestosUserSection";
 
 function SanForm({
     data = {},
@@ -14,6 +15,7 @@ function SanForm({
     disabled = false,
     children,
     tipo = "crear",
+    presupuestos = null,
 }) {
     const [jefaturas, setJefaturas] = useState([]);
 
@@ -881,6 +883,22 @@ function SanForm({
                         </p>
                     )}
                 </div> */}
+                    {presupuestos && (
+                        <PresupuestosUserSection
+                            mode={presupuestos.mode || tipo}
+                            anacod={presupuestos.anacod || data.anacod || ""}
+                            centrosCosto={presupuestos.centrosCosto || []}
+                            cuentas={presupuestos.cuentas || []}
+                            value={presupuestos.value || []}
+                            onChange={(v) => presupuestos.onChange?.(v)}
+                            errors={presupuestos.errors || {}}
+                            warning={presupuestos.warning || null}
+                            disabled={disabled}
+                            enabled={presupuestos.enabled}
+                            onEnabledChange={presupuestos.onEnabledChange}
+                        />
+                    )}
+
                     {children}
                 </div>
             </div>

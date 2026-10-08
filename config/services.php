@@ -31,4 +31,12 @@ return [
         ],
     ],
 
+    'presupuestos' => [
+        'base_url' => env('PRESUPUESTOS_API_BASE_URL'),
+        'token' => env('PRESUPUESTOS_API_TOKEN'),
+        'tenant' => env('PRESUPUESTOS_API_TENANT', 'red'),
+        'timeout' => env('PRESUPUESTOS_API_TIMEOUT', 10),
+        'catalog_cache_ttl' => env('PRESUPUESTOS_API_CATALOG_CACHE_TTL', 300),
+    ],
+
 ];

@@ -6,9 +6,21 @@ import { CrearEmpleado } from "@/Helpers/CrearEmpleado";
 import SanForm from "./Partials/SanForm";
 import BackEmpleados from "./components/BackEmpleados";
 
-function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
+function Create({
+    auth,
+    anacods,
+    jefes,
+    areas,
+    posiciones,
+    horarios,
+    presupuestosCentrosCosto = [],
+    presupuestosCuentas = [],
+    presupuestosWarning = null,
+}) {
     const { fechaActual } = ManejoFechas();
     const [errors, setErrors] = useState({});
+    const [crearEnPresupuestos, setCrearEnPresupuestos] = useState(false);
+    const [presupuestosCcCuentas, setPresupuestosCcCuentas] = useState([]);
     const [data, setData] = useState({
         anacod: "", //
         nombres: "", //
@@ -38,9 +50,14 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
     const { generatePassword, makeAnacod } = CrearEmpleado();
 
     const handleSubmit = (e) => {
+        const payload = {
+            ...data,
+            crear_en_presupuestos: crearEnPresupuestos,
+            presupuestos_cc_cuentas: presupuestosCcCuentas,
+        };
         router.visit(route("empleados.store"), {
             method: "post",
-            data: data,
+            data: payload,
             preserveState: true,
             onError: (errors) => {
                 setErrors(errors);
@@ -48,7 +65,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
             },
         });
     };
-    
+
 
     useEffect(() => {
         console.log("use effect");
@@ -78,7 +95,7 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
     return (
         <AuthenticatedLayout user={auth.user} header={
         <div className="flex justify-between w-full">
-            <BackEmpleados/>    
+            <BackEmpleados/>
         <p>Alta de empleado</p>
         </div>
         }
@@ -94,6 +111,18 @@ function Create({ auth, anacods, jefes, areas, posiciones, horarios }) {
                 posiciones={posiciones}
                 jefes={jefes}
                 horarios={horarios}
+                presupuestos={{
+                    mode: "create",
+                    anacod: data.anacod,
+                    centrosCosto: presupuestosCentrosCosto,
+                    cuentas: presupuestosCuentas,
+                    value: presupuestosCcCuentas,
+                    onChange: setPresupuestosCcCuentas,
+                    enabled: crearEnPresupuestos,
+                    onEnabledChange: setCrearEnPresupuestos,
+                    errors,
+                    warning: presupuestosWarning,
+                }}
             >
                 <div>
                     <div className="flex w-full justify-center">
