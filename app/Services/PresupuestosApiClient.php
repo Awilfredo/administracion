@@ -92,7 +92,19 @@ class PresupuestosApiClient
     public function getUser(int $id): ?array
     {
         try {
-            return $this->request('GET', "users/{$id}");
+            return $this->unwrap($this->request('GET', "users/{$id}"));
+        } catch (PresupuestosApiException $e) {
+            if ($e->statusCode === 404) {
+                return null;
+            }
+            throw $e;
+        }
+    }
+
+    public function findUserByEmail(string $email): ?array
+    {
+        try {
+            return $this->unwrap($this->request('GET', 'users/by-email/' . rawurlencode($email)));
         } catch (PresupuestosApiException $e) {
             if ($e->statusCode === 404) {
                 return null;
@@ -111,12 +123,20 @@ class PresupuestosApiClient
             'is_active' => $payload['is_active'] ?? null,
             'cc_cuentas_count' => count($payload['cc_cuentas'] ?? []),
         ]);
-        return $this->request('POST', 'users', [], $payload);
+        return $this->unwrap($this->request('POST', 'users', [], $payload));
     }
 
     public function updateUser(int $id, array $payload): array
     {
-        return $this->request('PUT', "users/{$id}", [], $payload);
+        return $this->unwrap($this->request('PUT', "users/{$id}", [], $payload));
+    }
+
+    protected function unwrap(array $response): array
+    {
+        if (array_key_exists('data', $response) && is_array($response['data'])) {
+            return $response['data'];
+        }
+        return $response;
     }
 
     protected function request(string $method, string $path, array $query = [], ?array $body = null): array

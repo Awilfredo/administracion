@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\PresupuestosApiException;
 use App\Mail\ControlRegistrationConfirmation;
+use App\Mail\PresupuestosUserCreatedNotification;
 use App\Mail\UserRegistrationConfirmation;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Empleado;
@@ -224,16 +225,27 @@ class EmpleadoController extends Controller {
         $redControl = UsuarioRedControl::where( 'email', $empleado->anamai )->where( 'empresa', 1 )->first();
         $mensajeria = UsuarioRedControl::where( 'email', $empleado->anamai )->where( 'empresa', ( $empleado->anapai === 'SV' ) ? 26 : 32 )->first();
         $presupuesto = EmpleadoPresupuesto::find( $anacod );
-        $presupuestoLive = null;
-        if ( $presupuesto && $presupuesto->presupuestos_user_id ) {
-            try {
-                $presupuestoLive = app( PresupuestosApiClient::class )->getUser( (int) $presupuesto->presupuestos_user_id );
-            } catch ( \Throwable $e ) {
-                $presupuestoLive = null;
-            }
-        }
 
         list($presupuestosCentrosCosto, $presupuestosCuentas, $presupuestosWarning) = $this->loadPresupuestosCatalogs();
+
+        $presupuestoRemote = null;
+        $presupuestoRemoteError = null;
+        $presupuestoRemoteChecked = true;
+        $email = $empleado->anamai ?? null;
+        if ( $email ) {
+            try {
+                $presupuestoRemote = app( PresupuestosApiClient::class )->findUserByEmail( (string) $email );
+            } catch ( \Throwable $e ) {
+                $presupuestoRemoteError = $e->getMessage();
+                Log::warning( 'Presupuestos: fallo en by-email (show)', [
+                    'anacod' => $anacod,
+                    'email' => $email,
+                    'error' => $e->getMessage(),
+                ] );
+            }
+        } else {
+            $presupuestoRemoteError = 'El empleado no tiene email configurado.';
+        }
 
         return Inertia::render( 'Empleados/Show', [
             'empleado' => $empleado,
@@ -245,7 +257,9 @@ class EmpleadoController extends Controller {
             'redControl' => $redControl,
             'mensajeria' => $mensajeria,
             'presupuesto' => $presupuesto,
-            'presupuestoLive' => $presupuestoLive,
+            'presupuestoRemote' => $presupuestoRemote,
+            'presupuestoRemoteChecked' => $presupuestoRemoteChecked,
+            'presupuestoRemoteError' => $presupuestoRemoteError,
             'presupuestosCentrosCosto' => $presupuestosCentrosCosto,
             'presupuestosCuentas' => $presupuestosCuentas,
             'presupuestosWarning' => $presupuestosWarning,
@@ -312,7 +326,7 @@ class EmpleadoController extends Controller {
         $crearEnPresupuestos = $request->boolean( 'crear_en_presupuestos' );
         $ccCuentasFromRequest = $validatedData['presupuestos_cc_cuentas'] ?? [];
 
-        //dd($request->all());
+        dd($request->all());
 
         Log::info( 'Presupuestos: store() reached', [
             'anacod' => $validatedData['anacod'] ?? null,
@@ -410,7 +424,9 @@ class EmpleadoController extends Controller {
             $result = $client->createUser( $payload );
             $remoteId = isset( $result['id'] ) ? (int) $result['id'] : null;
 
-            return EmpleadoPresupuesto::updateOrCreate(
+            $wasFirstCreation = ! $existing || ! $existing->presupuestos_user_id;
+
+            $row = EmpleadoPresupuesto::updateOrCreate(
                 [ 'anacod' => $empleado->anacod ],
                 [
                     'presupuestos_user_id' => $remoteId,
@@ -421,6 +437,12 @@ class EmpleadoController extends Controller {
                     'last_synced_at' => now(),
                 ]
             );
+
+            if ( $wasFirstCreation && $remoteId ) {
+                $this->notifyPresupuestoUserCreated( $empleado, $password );
+            }
+
+            return $row;
         } catch ( PresupuestosApiException $e ) {
             Log::warning( 'Presupuestos: createUser falló', [
                 'anacod' => $empleado->anacod,
@@ -468,6 +490,30 @@ class EmpleadoController extends Controller {
             }
         }
         return $msg;
+    }
+
+    protected function notifyPresupuestoUserCreated( Empleado $empleado, string $password ): void {
+        try {
+            $recipients = array_values( array_filter( [ $empleado->anamai, 'it-global@red.com.sv' ] ) );
+            if ( empty( $recipients ) ) {
+                return;
+            }
+            Mail::to( $recipients )->send( new PresupuestosUserCreatedNotification(
+                (string) $empleado->ananam,
+                (string) $empleado->anamai,
+                $password,
+                (string) $empleado->anacod,
+            ) );
+            Log::info( 'Presupuestos: email de notificación enviado', [
+                'anacod' => $empleado->anacod,
+                'recipients' => $recipients,
+            ] );
+        } catch ( \Throwable $e ) {
+            Log::warning( 'Presupuestos: fallo al enviar email de notificación', [
+                'anacod' => $empleado->anacod,
+                'error' => $e->getMessage(),
+            ] );
+        }
     }
 
     protected function syncPresupuestoUpdate( Empleado $empleado, EmpleadoPresupuesto $presupuesto, array $ccCuentas ): void {
@@ -623,16 +669,13 @@ class EmpleadoController extends Controller {
         }
 
         $presupuesto = EmpleadoPresupuesto::find( $anacod );
-        if ( ! $presupuesto ) {
-            return back()->withErrors( [ 'presupuesto' => 'No existe un registro previo de Presupuestos para este empleado.' ] );
-        }
 
-        if ( $presupuesto->presupuestos_user_id ) {
+        if ( $presupuesto && $presupuesto->presupuestos_user_id ) {
             return back()->withErrors( [ 'presupuesto' => 'El usuario ya fue creado en Presupuestos (id ' . $presupuesto->presupuestos_user_id . '). Use la edición para actualizar las asignaciones.' ] );
         }
 
-        if ( $presupuesto->hasCodeConflict() ) {
-            return back()->withErrors( [ 'presupuesto' => 'Conflicto de código en Presupuestos (el `code` ya existe). Contacte al administrador para reasignar.' ] );
+        if ( $presupuesto && $presupuesto->hasEmailConflict() ) {
+            return back()->withErrors( [ 'presupuesto' => 'Conflicto de email en Presupuestos (ya existe un usuario con ese email). Contacte al administrador para reasignar.' ] );
         }
 
         $validated = $request->validate( [
@@ -644,7 +687,109 @@ class EmpleadoController extends Controller {
 
         $this->syncPresupuestoCreate( $empleado, $validated['presupuestos_cc_cuentas'], $presupuesto );
 
-        return back()->with( 'success', 'Reintento de creación enviado a Presupuestos.' );
+        $msg = $presupuesto ? 'Reintento de creación enviado a Presupuestos.' : 'Usuario creado en Presupuestos.';
+        return back()->with( 'success', $msg );
+    }
+
+    public function presupuesto( $anacod ) {
+        $empleado = Empleado::where( 'anacod', $anacod )->first();
+        if ( ! $empleado ) {
+            abort( 404 );
+        }
+
+        $presupuesto = EmpleadoPresupuesto::find( $anacod );
+
+        list($presupuestosCentrosCosto, $presupuestosCuentas, $presupuestosWarning) = $this->loadPresupuestosCatalogs();
+
+        $presupuestoRemote = null;
+        $presupuestoRemoteError = null;
+        $presupuestoRemoteChecked = true;
+        $email = $empleado->anamai ?? null;
+        if ( $email ) {
+            try {
+                $presupuestoRemote = app( PresupuestosApiClient::class )->findUserByEmail( (string) $email );
+            } catch ( \Throwable $e ) {
+                $presupuestoRemoteError = $e->getMessage();
+                Log::warning( 'Presupuestos: fallo en by-email (presupuesto)', [
+                    'anacod' => $anacod,
+                    'email' => $email,
+                    'error' => $e->getMessage(),
+                ] );
+            }
+        } else {
+            $presupuestoRemoteError = 'El empleado no tiene email configurado.';
+        }
+
+        return Inertia::render( 'Empleados/Presupuesto', [
+            'empleado' => $empleado,
+            'presupuesto' => $presupuesto,
+            'presupuestoRemote' => $presupuestoRemote,
+            'presupuestoRemoteChecked' => $presupuestoRemoteChecked,
+            'presupuestoRemoteError' => $presupuestoRemoteError,
+            'presupuestosCentrosCosto' => $presupuestosCentrosCosto,
+            'presupuestosCuentas' => $presupuestosCuentas,
+            'presupuestosWarning' => $presupuestosWarning,
+        ] );
+    }
+
+    public function linkPresupuesto( Request $request, $anacod ) {
+        $empleado = Empleado::where( 'anacod', $anacod )->first();
+        if ( ! $empleado ) {
+            abort( 404 );
+        }
+
+        $presupuesto = EmpleadoPresupuesto::find( $anacod );
+        if ( $presupuesto && $presupuesto->presupuestos_user_id ) {
+            return back()->withErrors( [ 'presupuesto' => 'Este empleado ya está vinculado a un usuario de Presupuestos (id ' . $presupuesto->presupuestos_user_id . ').' ] );
+        }
+
+        $email = $empleado->anamai ?? null;
+        if ( ! $email ) {
+            return back()->withErrors( [ 'presupuesto' => 'El empleado no tiene email configurado.' ] );
+        }
+
+        $client = app( PresupuestosApiClient::class );
+        if ( ! $client->isConfigured() ) {
+            return back()->withErrors( [ 'presupuesto' => 'La API de Presupuestos no está configurada.' ] );
+        }
+
+        try {
+            $remote = $client->findUserByEmail( (string) $email );
+        } catch ( \Throwable $e ) {
+            Log::error( 'Presupuestos: error en linkPresupuesto findUserByEmail', [
+                'anacod' => $anacod,
+                'email' => $email,
+                'error' => $e->getMessage(),
+            ] );
+            return back()->withErrors( [ 'presupuesto' => 'No se pudo consultar Presupuestos: ' . $e->getMessage() ] );
+        }
+
+        if ( ! $remote || ! isset( $remote['id'] ) ) {
+            return back()->withErrors( [ 'presupuesto' => 'No existe un usuario en Presupuestos con email=' . $email . '.' ] );
+        }
+
+        $ccCuentas = [];
+        foreach ( (array) ( $remote['cc_cuentas'] ?? [] ) as $row ) {
+            $ccCuentas[] = [
+                'centro_costo_id' => (int) ( $row['centro_costo_id'] ?? 0 ),
+                'cuenta_id' => (int) ( $row['cuenta_id'] ?? 0 ),
+                'is_aprobador' => (bool) ( $row['is_aprobador'] ?? false ),
+            ];
+        }
+
+        EmpleadoPresupuesto::updateOrCreate(
+            [ 'anacod' => $anacod ],
+            [
+                'presupuestos_user_id' => (int) $remote['id'],
+                'sync_status' => 'ok',
+                'last_error' => null,
+                'last_password' => null,
+                'cc_cuentas' => $ccCuentas,
+                'last_synced_at' => now(),
+            ]
+        );
+
+        return back()->with( 'success', 'Empleado vinculado a Presupuestos (id ' . $remote['id'] . ').' );
     }
 
     public function insertarRegistro( Request $request ) {

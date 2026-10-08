@@ -33,7 +33,7 @@ class EmpleadoPresupuesto extends Model
         'cc_cuentas' => 'array',
     ];
 
-    protected $appends = ['has_code_conflict'];
+    protected $appends = ['has_email_conflict'];
 
     public function getIsOkAttribute(): bool
     {
@@ -45,11 +45,11 @@ class EmpleadoPresupuesto extends Model
         return $this->sync_status === 'error';
     }
 
-    public function getHasCodeConflictAttribute(): bool
+    public function getHasEmailConflictAttribute(): bool
     {
         return $this->sync_status === 'error'
             && is_string($this->last_error)
-            && str_contains(strtolower($this->last_error), 'code');
+            && str_contains(strtolower($this->last_error), 'email');
     }
 
     public function isOk(): bool
@@ -62,8 +62,8 @@ class EmpleadoPresupuesto extends Model
         return $this->is_error;
     }
 
-    public function hasCodeConflict(): bool
+    public function hasEmailConflict(): bool
     {
-        return $this->has_code_conflict;
+        return $this->has_email_conflict;
     }
 }

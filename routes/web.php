@@ -110,6 +110,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/ptt-equipos/{pttEquipo}', [PttEquipoController::class, 'destroy'])->name('ptt-equipos.destroy');
 
     Route::post('/empleados/{anacod}/presupuesto/retry', [EmpleadoController::class, 'retryPresupuesto'])->name('empleados.presupuesto.retry');
+    Route::post('/empleados/{anacod}/presupuesto/link', [EmpleadoController::class, 'linkPresupuesto'])->name('empleados.presupuesto.link');
+    Route::get('/empleados/{anacod}/presupuesto', [EmpleadoController::class, 'presupuesto'])->name('empleados.presupuesto');
 
 });
 

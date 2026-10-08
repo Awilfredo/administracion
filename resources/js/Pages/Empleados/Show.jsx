@@ -23,7 +23,9 @@ const ShowEmpleado = ({
     redControl,
     mensajeria,
     presupuesto = null,
-    presupuestoLive = null,
+    presupuestoRemote = null,
+    presupuestoRemoteChecked = false,
+    presupuestoRemoteError = null,
     presupuestosCentrosCosto = [],
     presupuestosCuentas = [],
     presupuestosWarning = null,
@@ -53,9 +55,9 @@ const ShowEmpleado = ({
     const [data, setData] = useState(defaultData);
     const [errors, setErrors] = useState({});
     const [presupuestosCcCuentas, setPresupuestosCcCuentas] = useState(() => {
-        const live = Array.isArray(presupuestoLive?.cc_cuentas) ? presupuestoLive.cc_cuentas : null;
+        const remote = Array.isArray(presupuestoRemote?.cc_cuentas) ? presupuestoRemote.cc_cuentas : null;
         const local = Array.isArray(presupuesto?.cc_cuentas) ? presupuesto.cc_cuentas : null;
-        return (live && live.length > 0) ? live : (local || []);
+        return (remote && remote.length > 0) ? remote : (local || []);
     });
     const [preview, setPreview] = useState(null);
     const [foto, setFoto] = useState([]);
@@ -156,14 +158,37 @@ const ShowEmpleado = ({
         );
     };
 
+    const handleLinkPresupuesto = () => {
+        router.post(
+            route("empleados.presupuesto.link", { anacod: empleado.anacod }),
+            {},
+            {
+                preserveState: false,
+                onSuccess: () => {
+                    Swal.fire({
+                        title: "Vinculado",
+                        text: "El empleado fue vinculado al usuario de Presupuestos.",
+                        icon: "success",
+                        timer: 2500,
+                    });
+                },
+                onError: (errors) => {
+                    const msg = errors?.presupuesto?.[0] || errors?.message || "No se pudo vincular.";
+                    Swal.fire({ title: "Error", text: msg, icon: "error" });
+                },
+            }
+        );
+    };
+
     const renderPresupuestoCard = () => {
-        if (!presupuesto) return null;
-        const status = presupuesto.sync_status;
-        const isError = status === "error";
-        const isOk = status === "ok";
-        const userId = presupuesto.presupuestos_user_id;
-        const liveRoles = Array.isArray(presupuestoLive?.roles) ? presupuestoLive.roles : [];
-        const liveCcCuentas = Array.isArray(presupuestoLive?.cc_cuentas) ? presupuestoLive.cc_cuentas : [];
+        const found = presupuestoRemoteChecked && presupuestoRemote && presupuestoRemote.id;
+        const notFound = presupuestoRemoteChecked && !presupuestoRemote;
+        const remoteRoles = Array.isArray(presupuestoRemote?.roles) ? presupuestoRemote.roles : [];
+        const remoteCcCuentas = Array.isArray(presupuestoRemote?.cc_cuentas) ? presupuestoRemote.cc_cuentas : [];
+        const isError = presupuesto?.sync_status === "error";
+        const hasEmailConflict = presupuesto?.hasEmailConflict;
+        const totalCuentas = remoteCcCuentas.length;
+        const totalCcs = new Set(remoteCcCuentas.map((r) => r.centro_costo_id)).size;
 
         return (
             <div className="bg-white p-5 mt-6 rounded-lg shadow">
@@ -172,81 +197,101 @@ const ShowEmpleado = ({
                         <p className="text-lg font-semibold">Presupuestos</p>
                         <hr className="h-1 mt-2 bg-blue-800" />
                     </div>
-                    <span
-                        className={
-                            "px-3 py-1 rounded-full text-xs font-semibold " +
-                            (isOk
-                                ? "bg-green-100 text-green-700"
-                                : isError
-                                ? "bg-red-100 text-red-700"
-                                : "bg-yellow-100 text-yellow-700")
-                        }
-                    >
-                        {isOk ? "Sincronizado" : isError ? "Con error" : "Pendiente"}
-                    </span>
+                    <div className="flex items-center gap-2">
+                        {presupuestoRemoteChecked && (
+                            <span
+                                className={
+                                    "px-3 py-1 rounded-full text-xs font-semibold " +
+                                    (found
+                                        ? "bg-green-100 text-green-700"
+                                        : "bg-gray-200 text-gray-700")
+                                }
+                            >
+                                {found ? "Activo en Presupuestos" : "No existe en Presupuestos"}
+                            </span>
+                        )}
+                        <a
+                            href={route("empleados.presupuesto", { anacod: empleado.anacod })}
+                            className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                            Gestionar →
+                        </a>
+                    </div>
                 </div>
 
-                {userId && (
-                    <p className="text-sm text-gray-600 mb-2">
-                        ID Presupuestos: <span className="font-mono">{userId}</span>
-                        {presupuestoLive?.email && (
-                            <span className="ml-3">· Email: <span className="font-mono">{presupuestoLive.email}</span></span>
-                        )}
-                    </p>
-                )}
-
-                {liveRoles.length > 0 && (
-                    <p className="text-sm text-gray-600 mb-2">
-                        Rol: <span className="font-semibold">{liveRoles.map((r) => r.name).join(", ")}</span>
-                    </p>
-                )}
-
-                {liveCcCuentas.length > 0 && (
-                    <div className="mt-2">
-                        <p className="text-sm font-semibold text-gray-700 mb-1">Asignaciones:</p>
-                        <ul className="text-sm text-gray-700 list-disc pl-5 space-y-1">
-                            {liveCcCuentas.map((c, i) => (
-                                <li key={i}>
-                                    CC #{c.centro_costo_id} · Cuenta #{c.cuenta_id}
-                                    {c.is_aprobador && (
-                                        <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
-                                            Aprobador
-                                        </span>
-                                    )}
-                                </li>
-                            ))}
-                        </ul>
+                {presupuestoRemoteError && (
+                    <div className="mb-3 p-3 bg-red-50 border border-red-300 rounded">
+                        <p className="text-sm text-red-800 font-semibold">No se pudo consultar Presupuestos:</p>
+                        <p className="text-sm text-red-700">{presupuestoRemoteError}</p>
                     </div>
                 )}
 
-                {presupuesto.last_synced_at && (
-                    <p className="text-xs text-gray-400 mt-2">
-                        Última sincronización: {new Date(presupuesto.last_synced_at).toLocaleString()}
-                    </p>
+                {found && (
+                    <div className="mb-3 p-3 bg-green-50 border border-green-200 rounded">
+                        <p className="text-sm text-green-800 font-semibold mb-1">
+                            Cuenta creada en Presupuestos.
+                        </p>
+                        <p className="text-sm text-gray-700">
+                            ID <span className="font-mono">{presupuestoRemote.id}</span>
+                            {presupuestoRemote.email && (
+                                <span> · Email <span className="font-mono">{presupuestoRemote.email}</span></span>
+                            )}
+                        </p>
+                        {remoteRoles.length > 0 && (
+                            <p className="text-sm text-gray-700 mt-1">
+                                Rol: <span className="font-semibold">{remoteRoles.map((r) => r.name).join(", ")}</span>
+                            </p>
+                        )}
+                        {presupuestoRemote.is_active === false && (
+                            <p className="text-xs text-red-700 italic mt-1">
+                                Usuario inactivo en Presupuestos.
+                            </p>
+                        )}
+
+                        {totalCuentas > 0 && (
+                            <p className="text-sm text-gray-700 mt-1">
+                                Asignaciones: <span className="font-semibold">{totalCuentas}</span> {totalCuentas === 1 ? "cuenta" : "cuentas"} en <span className="font-semibold">{totalCcs}</span> {totalCcs === 1 ? "centro de costo" : "centros de costo"}
+                            </p>
+                        )}
+                    </div>
                 )}
 
-                {isError && presupuesto.last_error && (
-                    <div className="mt-3 p-3 bg-red-50 border border-red-300 rounded">
-                        <p className="text-sm text-red-800 font-semibold">Error:</p>
+                {notFound && (
+                    <div className="p-3 border border-gray-200 rounded">
+                        <p className="text-sm text-gray-700">
+                            No existe un usuario en Presupuestos con code <span className="font-mono">{empleado.anacod}</span>.
+                        </p>
+                        <a
+                            href={route("empleados.presupuesto", { anacod: empleado.anacod })}
+                            className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                            Ir a crear →
+                        </a>
+                    </div>
+                )}
+
+                {found && isError && presupuesto.last_error && (
+                    <div className="p-3 bg-red-50 border border-red-300 rounded">
+                        <p className="text-sm text-red-800 font-semibold">Último error de sincronización local:</p>
                         <p className="text-sm text-red-700">{presupuesto.last_error}</p>
                     </div>
                 )}
 
-                {isError && !presupuesto.hasCodeConflict && (
-                    <div className="mt-3 flex justify-end">
+                {found && isError && hasEmailConflict && (
+                    <div className="p-3 border-2 border-blue-300 bg-blue-50 rounded">
+                        <p className="text-sm text-gray-800 font-semibold mb-1">
+                            Vincula la referencia local
+                        </p>
+                        <p className="text-xs text-gray-700 mb-2">
+                            El usuario existe en Red pero el registro local no tiene su id guardado.
+                        </p>
                         <button
-                            onClick={handleRetryPresupuesto}
+                            onClick={handleLinkPresupuesto}
                             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
                         >
-                            Reintentar creación
+                            Vincular referencia local
                         </button>
                     </div>
-                )}
-
-                {isError && presupuesto.hasCodeConflict && (
-                    <p className="mt-3 text-xs text-red-600 italic">
-                        Conflicto de código en Presupuestos. Contacte al administrador para reasignar.
-                    </p>
                 )}
             </div>
         );
