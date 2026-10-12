@@ -533,16 +533,6 @@ const ShowEmpleado = ({
                         jefes={jefes}
                         horarios={horarios}
                         tipo="editar"
-                        presupuestos={presupuesto?.presupuestos_user_id ? {
-                            mode: "edit",
-                            anacod: empleado.anacod,
-                            centrosCosto: presupuestosCentrosCosto,
-                            cuentas: presupuestosCuentas,
-                            value: presupuestosCcCuentas,
-                            onChange: setPresupuestosCcCuentas,
-                            errors,
-                            warning: presupuestosWarning,
-                        } : null}
                     >
                         <div className="flex justify-end space-x-4 mt-6">
                             {!disabled && (
@@ -567,11 +557,24 @@ const ShowEmpleado = ({
                     ""
                 )}
 
-                <div className="flex w-full justify-center">
-                    <DangerButton onClick={() => setShowBaja(true)}>
-                        DAR DE BAJA
-                    </DangerButton>
-                </div>
+                {empleado.anasta !== "I" ? (
+                    <div className="flex w-full justify-center">
+                        <DangerButton onClick={() => setShowBaja(true)}>
+                            DAR DE BAJA
+                        </DangerButton>
+                    </div>
+                ) : (
+                    <div className="flex w-full justify-center">
+                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">
+                            Empleado dado de baja
+                            {empleado.fecha_baja && (
+                                <span className="ml-2 text-gray-500 font-normal">
+                                    ({empleado.fecha_baja})
+                                </span>
+                            )}
+                        </span>
+                    </div>
+                )}
             </div>
         </AuthenticatedLayout>
     );

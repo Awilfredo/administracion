@@ -291,7 +291,74 @@ class EmpleadoController extends Controller {
             $mensajeria->estado = 1;
             $mensajeria->save();
         }
+
+        $this->deactivatePresupuestoUser( $empleado );
+
         return redirect()->route( 'empleados.index' );
+    }
+
+    protected function deactivatePresupuestoUser( Empleado $empleado ): void {
+        try {
+            $client = app( PresupuestosApiClient::class );
+            if ( ! $client->isConfigured() ) {
+                Log::warning( 'Presupuestos: cliente no configurado, no se desactivó al usuario en Red', [
+                    'anacod' => $empleado->anacod,
+                ] );
+                return;
+            }
+
+            $presupuesto = EmpleadoPresupuesto::find( $empleado->anacod );
+            $remoteId = $presupuesto?->presupuestos_user_id;
+            $source = $remoteId ? 'local' : null;
+
+            if ( ! $remoteId ) {
+                $email = $empleado->anamai ?? null;
+                if ( ! $email ) {
+                    Log::info( 'Presupuestos: baja local sin email, nada que desactivar en Red', [
+                        'anacod' => $empleado->anacod,
+                    ] );
+                    return;
+                }
+                $remote = $client->findUserByEmail( $email );
+                if ( ! $remote || ! isset( $remote['id'] ) ) {
+                    Log::info( 'Presupuestos: baja local sin usuario en Red vinculado', [
+                        'anacod' => $empleado->anacod,
+                        'email' => $email,
+                    ] );
+                    return;
+                }
+                $remoteId = (int) $remote['id'];
+                $source = 'by_email';
+            }
+
+            $client->updateUser( $remoteId, [
+                'name' => (string) $empleado->ananam,
+                'email' => (string) $empleado->anamai,
+                'code' => (string) $empleado->anacod,
+                'is_active' => false,
+            ] );
+
+            EmpleadoPresupuesto::updateOrCreate(
+                [ 'anacod' => $empleado->anacod ],
+                [
+                    'presupuestos_user_id' => $remoteId,
+                    'sync_status' => 'ok',
+                    'last_error' => null,
+                    'last_synced_at' => now(),
+                ]
+            );
+
+            Log::info( 'Presupuestos: usuario desactivado por baja', [
+                'anacod' => $empleado->anacod,
+                'presupuestos_user_id' => $remoteId,
+                'source' => $source,
+            ] );
+        } catch ( \Throwable $e ) {
+            Log::warning( 'Presupuestos: no se pudo desactivar al usuario en Red durante baja', [
+                'anacod' => $empleado->anacod,
+                'error' => $e->getMessage(),
+            ] );
+        }
     }
 
     public function store( Request $request ) {
