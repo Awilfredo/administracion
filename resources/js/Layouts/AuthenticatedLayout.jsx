@@ -338,6 +338,33 @@ export default function Authenticated({ user, header, children }) {
                                     </span>
                                 </Link>
                             </li>
+
+                            <li>
+                                <Link
+                                    href={route("empleados.acciones.global.index")}
+                                    className={
+                                        route().current("empleados.acciones.global.*")
+                                            ? navSelectedClass
+                                            : navDefaultClass
+                                    }
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="group-hover:text-cyan-600"
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="currentColor"
+                                    >
+                                        <path d="M19 4h-2V3a1 1 0 0 0-2 0v1H9V3a1 1 0 0 0-2 0v1H5a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h14a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3zm1 15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V10h16v9zm0-11H4V7a1 1 0 0 1 1-1h2v1a1 1 0 0 0 2 0V6h6v1a1 1 0 0 0 2 0V6h2a1 1 0 0 1 1 1v1z" />
+                                        <path d="M7 12h4v4H7zm6 0h4v2h-4zm-6 5h4v2H7zm6 0h4v2h-4z" opacity=".3" />
+                                    </svg>
+                                    <span className="group-hover:text-gray-700">
+                                        Acciones de personal
+                                    </span>
+                                </Link>
+                            </li>
+
                             {false && (
                                 <li>
                                     <a

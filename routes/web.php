@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AsistenciaController;
+use App\Http\Controllers\EmpleadoAccionController;
+use App\Http\Controllers\EmpleadoAccionTipoController;
 use App\Http\Controllers\EmpleadoController;
 use App\Http\Controllers\HorarioController;
 use App\Http\Controllers\ProfileController;
@@ -112,6 +114,37 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/empleados/{anacod}/presupuesto/retry', [EmpleadoController::class, 'retryPresupuesto'])->name('empleados.presupuesto.retry');
     Route::post('/empleados/{anacod}/presupuesto/link', [EmpleadoController::class, 'linkPresupuesto'])->name('empleados.presupuesto.link');
     Route::get('/empleados/{anacod}/presupuesto', [EmpleadoController::class, 'presupuesto'])->name('empleados.presupuesto');
+
+    Route::prefix('empleados/{anacod}/acciones')->group(function () {
+        Route::get('/', [EmpleadoAccionController::class, 'index'])->name('empleados.acciones.index');
+        Route::get('/create', [EmpleadoAccionController::class, 'create'])->name('empleados.acciones.create');
+        Route::post('/', [EmpleadoAccionController::class, 'store'])->name('empleados.acciones.store');
+        Route::get('/{accion}/edit', [EmpleadoAccionController::class, 'edit'])->name('empleados.acciones.edit');
+        Route::patch('/{accion}', [EmpleadoAccionController::class, 'update'])->name('empleados.acciones.update');
+        Route::delete('/{accion}', [EmpleadoAccionController::class, 'destroy'])->name('empleados.acciones.destroy');
+        Route::post('/{accion}/cancel', [EmpleadoAccionController::class, 'cancel'])->name('empleados.acciones.cancel');
+        Route::get('/{accion}/archivos/{archivo}', [EmpleadoAccionController::class, 'downloadArchivo'])->name('empleados.acciones.archivos.download');
+        Route::delete('/{accion}/archivos/{archivo}', [EmpleadoAccionController::class, 'destroyArchivo'])->name('empleados.acciones.archivos.destroy');
+    });
+
+    Route::prefix('acciones')->group(function () {
+        Route::get('/', [EmpleadoAccionController::class, 'globalIndex'])->name('empleados.acciones.global.index');
+        Route::get('/create', [EmpleadoAccionController::class, 'globalCreate'])->name('empleados.acciones.global.create');
+        Route::post('/', [EmpleadoAccionController::class, 'globalStore'])->name('empleados.acciones.global.store');
+        Route::get('/{accion}/edit', [EmpleadoAccionController::class, 'globalEdit'])->name('empleados.acciones.global.edit');
+        Route::patch('/{accion}', [EmpleadoAccionController::class, 'globalUpdate'])->name('empleados.acciones.global.update');
+        Route::delete('/{accion}', [EmpleadoAccionController::class, 'globalDestroy'])->name('empleados.acciones.global.destroy');
+        Route::post('/{accion}/cancel', [EmpleadoAccionController::class, 'globalCancel'])->name('empleados.acciones.global.cancel');
+    });
+
+    Route::prefix('admin/accion-tipos')->group(function () {
+        Route::get('/', [EmpleadoAccionTipoController::class, 'index'])->name('admin.accion-tipos.index');
+        Route::get('/create', [EmpleadoAccionTipoController::class, 'create'])->name('admin.accion-tipos.create');
+        Route::post('/', [EmpleadoAccionTipoController::class, 'store'])->name('admin.accion-tipos.store');
+        Route::get('/{tipo}/edit', [EmpleadoAccionTipoController::class, 'edit'])->name('admin.accion-tipos.edit');
+        Route::patch('/{tipo}', [EmpleadoAccionTipoController::class, 'update'])->name('admin.accion-tipos.update');
+        Route::delete('/{tipo}', [EmpleadoAccionTipoController::class, 'destroy'])->name('admin.accion-tipos.destroy');
+    });
 
 });
 

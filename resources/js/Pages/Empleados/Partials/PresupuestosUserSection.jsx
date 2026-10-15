@@ -6,15 +6,20 @@ function toRow(r) {
         cc_id: r.centro_costo_id,
         cuenta_id: r.cuenta_id,
         is_aprobador: !!r.is_aprobador,
+        aprobador_temporal: !!r.aprobador_temporal,
+        vigente_hasta: r.vigente_hasta || null,
     };
 }
 
 function fromRow(r) {
-    return {
+    const out = {
         centro_costo_id: parseInt(r.cc_id, 10) || 0,
         cuenta_id: parseInt(r.cuenta_id, 10) || 0,
         is_aprobador: !!r.is_aprobador,
     };
+    if (r.aprobador_temporal) out.aprobador_temporal = true;
+    if (r.vigente_hasta) out.vigente_hasta = r.vigente_hasta;
+    return out;
 }
 
 export default function PresupuestosUserSection({
@@ -103,9 +108,18 @@ export default function PresupuestosUserSection({
     const rowsForCc = (ccId) => rows.filter((r) => r.cc_id === ccId);
     const cuentaIdsForCc = (ccId) => new Set(rowsForCc(ccId).map((r) => r.cuenta_id));
     const isCuentaSelected = (ccId, cuentaId) => cuentaIdsForCc(ccId).has(cuentaId);
+    const getRow = (ccId, cuentaId) => rows.find((r) => r.cc_id === ccId && r.cuenta_id === cuentaId);
     const isAprobador = (ccId, cuentaId) => {
-        const row = rows.find((r) => r.cc_id === ccId && r.cuenta_id === cuentaId);
+        const row = getRow(ccId, cuentaId);
         return row ? row.is_aprobador : false;
+    };
+    const isTemporal = (ccId, cuentaId) => {
+        const row = getRow(ccId, cuentaId);
+        return row ? !!row.aprobador_temporal : false;
+    };
+    const getVigenteHasta = (ccId, cuentaId) => {
+        const row = getRow(ccId, cuentaId);
+        return row?.vigente_hasta || "";
     };
 
     const toggleExpanded = (ccId) => {
@@ -118,7 +132,7 @@ export default function PresupuestosUserSection({
                 if (current.some((r) => r.cc_id === ccId && r.cuenta_id === cuentaId)) {
                     return current;
                 }
-                return [...current, { cc_id: ccId, cuenta_id: cuentaId, is_aprobador: false }];
+                return [...current, { cc_id: ccId, cuenta_id: cuentaId, is_aprobador: false, aprobador_temporal: false, vigente_hasta: null }];
             }
             return current.filter((r) => !(r.cc_id === ccId && r.cuenta_id === cuentaId));
         });
@@ -127,14 +141,35 @@ export default function PresupuestosUserSection({
         }
     };
 
-    const toggleAprobador = (ccId, cuentaId, value) => {
+    const updateRow = (ccId, cuentaId, patch) => {
         setRows((current) => {
             const next = [...current];
             const idx = next.findIndex((r) => r.cc_id === ccId && r.cuenta_id === cuentaId);
             if (idx === -1) return current;
-            next[idx] = { ...next[idx], is_aprobador: !!value };
+            next[idx] = { ...next[idx], ...patch };
             return next;
         });
+    };
+
+    const toggleAprobador = (ccId, cuentaId, value) => {
+        const patch = { is_aprobador: !!value };
+        if (!value) {
+            patch.aprobador_temporal = false;
+            patch.vigente_hasta = null;
+        }
+        updateRow(ccId, cuentaId, patch);
+    };
+
+    const toggleTemporal = (ccId, cuentaId, value) => {
+        const patch = { aprobador_temporal: !!value };
+        if (!value) {
+            patch.vigente_hasta = null;
+        }
+        updateRow(ccId, cuentaId, patch);
+    };
+
+    const setVigenteHasta = (ccId, cuentaId, value) => {
+        updateRow(ccId, cuentaId, { vigente_hasta: value || null });
     };
 
     const fieldError = (key) => {
@@ -281,6 +316,9 @@ export default function PresupuestosUserSection({
                                             {cuentas.map((cuenta) => {
                                                 const checked = isCuentaSelected(ccId, cuenta.id);
                                                 const aprobador = isAprobador(ccId, cuenta.id);
+                                                const temporal = isTemporal(ccId, cuenta.id);
+                                                const vigenteHasta = getVigenteHasta(ccId, cuenta.id);
+                                                const today = new Date().toISOString().split("T")[0];
                                                 return (
                                                     <div
                                                         key={cuenta.id}
@@ -316,6 +354,40 @@ export default function PresupuestosUserSection({
                                                                     }
                                                                 />
                                                                 Aprueba presupuesto
+                                                            </label>
+                                                        )}
+                                                        {checked && aprobador && (
+                                                            <label className="flex items-center gap-2 text-xs text-gray-600 pl-6">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={temporal}
+                                                                    onChange={(e) =>
+                                                                        toggleTemporal(
+                                                                            ccId,
+                                                                            cuenta.id,
+                                                                            e.target.checked,
+                                                                        )
+                                                                    }
+                                                                />
+                                                                Aprobador temporal
+                                                            </label>
+                                                        )}
+                                                        {checked && aprobador && temporal && (
+                                                            <label className="flex items-center gap-2 text-xs text-gray-600 pl-10">
+                                                                <span>Vigente hasta:</span>
+                                                                <input
+                                                                    type="date"
+                                                                    min={today}
+                                                                    value={vigenteHasta || ""}
+                                                                    onChange={(e) =>
+                                                                        setVigenteHasta(
+                                                                            ccId,
+                                                                            cuenta.id,
+                                                                            e.target.value,
+                                                                        )
+                                                                    }
+                                                                    className="px-2 py-1 border border-gray-300 rounded text-xs"
+                                                                />
                                                             </label>
                                                         )}
                                                     </div>

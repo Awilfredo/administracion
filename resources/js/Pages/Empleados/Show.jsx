@@ -27,6 +27,7 @@ const ShowEmpleado = ({
     presupuestoRemoteChecked = false,
     presupuestoRemoteError = null,
     presupuestosCentrosCosto = [],
+    ultimasAcciones = [],
     presupuestosCuentas = [],
     presupuestosWarning = null,
 }) => {
@@ -67,6 +68,7 @@ const ShowEmpleado = ({
     const { fechaActual } = ManejoFechas();
     const [fechaBaja, setFechaBaja] = useState(fechaActual());
     const [showBaja, setShowBaja] = useState(false);
+    const { formatDate } = ManejoFechas();
     console.log(redControl);
     console.log(mensajeria);
 
@@ -519,6 +521,54 @@ const ShowEmpleado = ({
                         anacod={empleado.anacod}
                     ></PerfilAplicaciones>
                 </div>
+
+                {ultimasAcciones && ultimasAcciones.length > 0 && (
+                    <div className="bg-white p-5 mt-6 rounded-lg shadow">
+                        <div className="flex justify-between items-center mb-3">
+                            <div>
+                                <p className="text-lg font-semibold">Acciones de personal</p>
+                                <hr className="h-1 mt-2 bg-purple-700" />
+                            </div>
+                            <a
+                                href={route("empleados.acciones.index", { anacod: empleado.anacod })}
+                                className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                                Ver todas →
+                            </a>
+                        </div>
+                        <ul className="text-sm space-y-2">
+                            {ultimasAcciones.map((a) => (
+                                <li
+                                    key={a.id}
+                                    className="flex items-center gap-3 border-b border-gray-100 pb-2 flex-wrap"
+                                >
+                                    <span className="font-medium text-gray-800">
+                                        {a.tipo?.nombre ?? "—"}
+                                    </span>
+                                    <span className="text-gray-500">
+                                        {formatDate(a.fecha_inicio)}
+                                        {a.fecha_fin ? ` → ${formatDate(a.fecha_fin)}` : ""}
+                                    </span>
+                                    {(a.hora_inicio || a.hora_fin) && (
+                                        <span className="px-2 py-0.5 bg-blue-50 text-blue-800 rounded font-mono text-xs">
+                                            {a.hora_inicio?.slice(0, 5) ?? "?"} – {a.hora_fin?.slice(0, 5) ?? "?"}
+                                        </span>
+                                    )}
+                                    <span
+                                        className={
+                                            "px-2 py-0.5 rounded-full text-xs " +
+                                            (a.estado === "cancelado"
+                                                ? "bg-red-100 text-red-700"
+                                                : "bg-green-100 text-green-700")
+                                        }
+                                    >
+                                        {a.estado}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
                 {renderPresupuestoCard()}
 

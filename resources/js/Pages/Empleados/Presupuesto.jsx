@@ -267,6 +267,8 @@ function PresupestoPage({
                                                         {group.rows.map((row, idx) => {
                                                             const cuenta = cuentasById.get(row.cuenta_id);
                                                             const cuentaInactiva = cuenta && cuenta.activo === false;
+                                                            const vigenteHasta = row.vigente_hasta ? new Date(row.vigente_hasta) : null;
+                                                            const isVencida = row.is_currently_active === false;
                                                             return (
                                                                 <li key={idx} className="flex items-center gap-2 text-sm text-gray-700">
                                                                     <span>
@@ -282,6 +284,16 @@ function PresupestoPage({
                                                                     {row.is_aprobador && (
                                                                         <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
                                                                             Aprobador
+                                                                        </span>
+                                                                    )}
+                                                                    {vigenteHasta && (
+                                                                        <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 rounded text-xs">
+                                                                            Hasta {vigenteHasta.toLocaleDateString()}
+                                                                        </span>
+                                                                    )}
+                                                                    {isVencida && (
+                                                                        <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs">
+                                                                            Vencida
                                                                         </span>
                                                                     )}
                                                                 </li>

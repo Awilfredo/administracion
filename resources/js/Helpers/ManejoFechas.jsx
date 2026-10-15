@@ -277,6 +277,18 @@ export const ManejoFechas = () => {
         { name: "Domingo", value: 7 },
     ];
 
+    const mesesCorto = [
+        "ene", "feb", "mar", "abr", "may", "jun",
+        "jul", "ago", "sep", "oct", "nov", "dic",
+    ];
+
+    const formatDate = (iso) => {
+        if (!iso) return "—";
+        const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+        if (!m) return iso;
+        return `${parseInt(m[3], 10)} ${mesesCorto[parseInt(m[2], 10) - 1]} ${m[1]}`;
+    };
+
     return {
         compararDias,
         convertirTimestampADate,
@@ -295,8 +307,9 @@ export const ManejoFechas = () => {
         obtenerHoraDesdeTimestamp,
         obtenerHoraDesdeFecha,
         convertirHorasAFloat,
-        fechasDelMes, 
+        fechasDelMes,
         obtenerNombreDia,
-        diasDeLaSemana
+        diasDeLaSemana,
+        formatDate,
     };
 };

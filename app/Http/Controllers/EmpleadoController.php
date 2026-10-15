@@ -8,6 +8,7 @@ use App\Mail\PresupuestosUserCreatedNotification;
 use App\Mail\UserRegistrationConfirmation;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Empleado;
+use App\Models\EmpleadoAccion;
 use App\Models\EmpleadoPresupuesto;
 use App\Models\Horario;
 use App\Models\Hiring;
@@ -263,6 +264,12 @@ class EmpleadoController extends Controller {
             'presupuestosCentrosCosto' => $presupuestosCentrosCosto,
             'presupuestosCuentas' => $presupuestosCuentas,
             'presupuestosWarning' => $presupuestosWarning,
+            'ultimasAcciones' => EmpleadoAccion::with('tipo')
+                ->where('anacod', $anacod)
+                ->orderByDesc('fecha_inicio')
+                ->orderByDesc('id')
+                ->limit(3)
+                ->get(),
         ] );
         //return json_encode( $empleado );
     }
@@ -388,12 +395,14 @@ class EmpleadoController extends Controller {
             'presupuestos_cc_cuentas.*.centro_costo_id' => 'required_if:crear_en_presupuestos,true|integer',
             'presupuestos_cc_cuentas.*.cuenta_id' => 'required_if:crear_en_presupuestos,true|integer',
             'presupuestos_cc_cuentas.*.is_aprobador' => 'sometimes|boolean',
+            'presupuestos_cc_cuentas.*.aprobador_temporal' => 'sometimes|boolean',
+            'presupuestos_cc_cuentas.*.vigente_hasta' => 'nullable|date|after_or_equal:today',
         ] );
         // Crear un nuevo registro
         $crearEnPresupuestos = $request->boolean( 'crear_en_presupuestos' );
         $ccCuentasFromRequest = $validatedData['presupuestos_cc_cuentas'] ?? [];
 
-        dd($request->all());
+        //dd($request->all());
 
         Log::info( 'Presupuestos: store() reached', [
             'anacod' => $validatedData['anacod'] ?? null,
@@ -477,7 +486,7 @@ class EmpleadoController extends Controller {
             'password' => $password,
             'password_confirmation' => $password,
             'is_active' => true,
-            'cc_cuentas' => array_values( $ccCuentas ),
+            'cc_cuentas' => $this->normalizeCcCuentasForApi( array_values( $ccCuentas ) ),
         ];
 
         Log::info( 'Presupuestos: a punto de llamar createUser', [
@@ -559,6 +568,34 @@ class EmpleadoController extends Controller {
         return $msg;
     }
 
+    protected function normalizeCcCuentasForApi( array $rows ): array {
+        return array_map( function ( $row ) {
+            $temporal = (bool) ( $row['aprobador_temporal'] ?? false );
+            $vigenteHasta = $row['vigente_hasta'] ?? null;
+            $vigenteDesde = null;
+
+            if ( $temporal && $vigenteHasta ) {
+                try {
+                    $vigenteDesde = \Carbon\Carbon::now()->toIso8601String();
+                    $vigenteHasta = \Carbon\Carbon::parse( $vigenteHasta )->endOfDay()->toIso8601String();
+                } catch ( \Throwable $e ) {
+                    $vigenteDesde = null;
+                    $vigenteHasta = null;
+                }
+            } else {
+                $vigenteHasta = null;
+            }
+
+            return [
+                'centro_costo_id' => (int) ( $row['centro_costo_id'] ?? 0 ),
+                'cuenta_id'       => (int) ( $row['cuenta_id'] ?? 0 ),
+                'is_aprobador'    => (bool) ( $row['is_aprobador'] ?? false ),
+                'vigente_desde'   => $vigenteDesde,
+                'vigente_hasta'   => $vigenteHasta,
+            ];
+        }, $rows );
+    }
+
     protected function notifyPresupuestoUserCreated( Empleado $empleado, string $password ): void {
         try {
             $recipients = array_values( array_filter( [ $empleado->anamai, 'it-global@red.com.sv' ] ) );
@@ -585,7 +622,7 @@ class EmpleadoController extends Controller {
 
     protected function syncPresupuestoUpdate( Empleado $empleado, EmpleadoPresupuesto $presupuesto, array $ccCuentas ): void {
         $client = app( PresupuestosApiClient::class );
-        if ( ! $client->isConfigured() || ! $presupuesto->presupuestos_user_id ) {
+        if ( ! $client->isConfigured() || ! $presupuesto->presupuesto_user_id ) {
             return;
         }
 
@@ -593,7 +630,7 @@ class EmpleadoController extends Controller {
             'name' => (string) $empleado->ananam,
             'email' => (string) $empleado->anamai,
             'code' => (string) $empleado->anacod,
-            'cc_cuentas' => array_values( $ccCuentas ),
+            'cc_cuentas' => $this->normalizeCcCuentasForApi( array_values( $ccCuentas ) ),
         ];
 
         try {
@@ -697,6 +734,8 @@ class EmpleadoController extends Controller {
             'presupuestos_cc_cuentas.*.centro_costo_id' => 'required_with:presupuestos_cc_cuentas|integer',
             'presupuestos_cc_cuentas.*.cuenta_id' => 'required_with:presupuestos_cc_cuentas|integer',
             'presupuestos_cc_cuentas.*.is_aprobador' => 'sometimes|boolean',
+            'presupuestos_cc_cuentas.*.aprobador_temporal' => 'sometimes|boolean',
+            'presupuestos_cc_cuentas.*.vigente_hasta' => 'nullable|date|after_or_equal:today',
         ] );
 
         $empleado = Empleado::find( $anacod );
@@ -750,6 +789,8 @@ class EmpleadoController extends Controller {
             'presupuestos_cc_cuentas.*.centro_costo_id' => 'required|integer',
             'presupuestos_cc_cuentas.*.cuenta_id' => 'required|integer',
             'presupuestos_cc_cuentas.*.is_aprobador' => 'sometimes|boolean',
+            'presupuestos_cc_cuentas.*.aprobador_temporal' => 'sometimes|boolean',
+            'presupuestos_cc_cuentas.*.vigente_hasta' => 'nullable|date|after_or_equal:today',
         ] );
 
         $this->syncPresupuestoCreate( $empleado, $validated['presupuestos_cc_cuentas'], $presupuesto );
@@ -954,6 +995,6 @@ class EmpleadoController extends Controller {
     public function DatosCreate($anacod)
     {
         $empleado = Empleado::where( 'anacod', $anacod )->first();
-       return Inertia::render('Empleados/CreateDatos', [ 'empleado' => $empleado ]);
+        return Inertia::render('Empleados/CreateDatos', [ 'empleado' => $empleado ]);
     }
 }
