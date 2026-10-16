@@ -28,8 +28,8 @@ class EmpleadoAccion extends Model
     ];
 
     protected $casts = [
-        'fecha_inicio' => 'date',
-        'fecha_fin' => 'date',
+        'fecha_inicio' => 'date:Y-m-d',
+        'fecha_fin' => 'date:Y-m-d',
         'hora_inicio' => 'string',
         'hora_fin' => 'string',
     ];

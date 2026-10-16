@@ -204,6 +204,8 @@ export default function Dashboard({ auth, data }) {
         eventos: { total: 0, justificados: 0, pendientes: 0 },
         sin_nfc: 0,
     };
+    const accionesHoy = safe.acciones_hoy ?? { vacaciones: 0, permiso: 0, incapacidad: 0, otro: 0, total: 0 };
+    const proximasAcciones = safe.proximas_acciones ?? [];
     const mes = safe.mes ?? {
         mes: "",
         tarde: 0,
@@ -273,6 +275,42 @@ export default function Dashboard({ auth, data }) {
                             value={hoy.sin_nfc}
                             icon={<Icons.Link />}
                             color="orange"
+                        />
+                    </div>
+                    <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 mt-6">
+                        Ausencias por tipo hoy
+                    </h4>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <Card
+                            title="Vacaciones"
+                            value={accionesHoy.vacaciones ?? 0}
+                            subtitle="Empleados ausentes hoy"
+                            icon={<Icons.Pending />}
+                            link="empleados.acciones.global.index"
+                            color="blue"
+                        />
+                        <Card
+                            title="Permiso"
+                            value={accionesHoy.permiso ?? 0}
+                            subtitle="Empleados ausentes hoy"
+                            icon={<Icons.Clock />}
+                            link="empleados.acciones.global.index"
+                            color="yellow"
+                        />
+                        <Card
+                            title="Incapacidad"
+                            value={accionesHoy.incapacidad ?? 0}
+                            subtitle="Empleados ausentes hoy"
+                            icon={<Icons.Alert />}
+                            link="empleados.acciones.global.index"
+                            color="red"
+                        />
+                        <Card
+                            title="Total ausencias"
+                            value={accionesHoy.total ?? 0}
+                            subtitle="Suma de todos los tipos"
+                            icon={<Icons.Users />}
+                            color="gray"
                         />
                     </div>
                 </Section>
@@ -554,6 +592,78 @@ export default function Dashboard({ auth, data }) {
                                 </table>
                             )}
                         </div>
+                    </div>
+                </Section>
+
+                {/* SECCIÓN 6B: PRÓXIMAS ACCIONES DE PERSONAL */}
+                <Section title="Próximas acciones de personal (7 días)">
+                    <div className="bg-white shadow-md rounded-lg p-5">
+                        <div className="flex items-center justify-between mb-3">
+                            <p className="text-sm text-gray-500 flex items-center gap-2">
+                                <span>Acciones que inician en los próximos 7 días</span>
+                                <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">
+                                    {proximasAcciones.length}
+                                </span>
+                            </p>
+                            <Link
+                                href={route("empleados.acciones.global.index")}
+                                className="text-xs text-indigo-600 hover:text-indigo-800"
+                            >
+                                Ver todas →
+                            </Link>
+                        </div>
+                        {proximasAcciones.length === 0 ? (
+                            <p className="text-sm text-gray-500 py-4">
+                                No hay acciones programadas en los próximos 7 días.
+                            </p>
+                        ) : (
+                            <table className="w-full text-sm">
+                                <thead className="text-left text-xs text-gray-500 uppercase border-b">
+                                    <tr>
+                                        <th className="pb-1">Empleado</th>
+                                        <th className="pb-1">Tipo</th>
+                                        <th className="pb-1">Inicio</th>
+                                        <th className="pb-1">Fin</th>
+                                        <th className="pb-1">Horario</th>
+                                        <th className="pb-1">Motivo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {proximasAcciones.map((a) => (
+                                        <tr key={a.id} className="border-b border-gray-100">
+                                            <td className="py-1.5">
+                                                <Link
+                                                    href={route("empleados.show", { anacod: a.anacod })}
+                                                    className="text-indigo-600 hover:text-indigo-800"
+                                                >
+                                                    {a.empleado_nombre || a.anacod}
+                                                </Link>
+                                                <div className="text-xs text-gray-500 font-mono">{a.anacod}</div>
+                                            </td>
+                                            <td className="py-1.5">
+                                                <span className="text-xs px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-medium">
+                                                    {a.tipo_nombre || a.tipo_codigo}
+                                                </span>
+                                            </td>
+                                            <td className="py-1.5 text-gray-700">{a.fecha_inicio}</td>
+                                            <td className="py-1.5 text-gray-700">{a.fecha_fin ?? "—"}</td>
+                                            <td className="py-1.5 text-xs text-gray-700">
+                                                {a.hora_inicio || a.hora_fin ? (
+                                                    <span className="font-mono">
+                                                        {(a.hora_inicio || "").slice(0, 5)} – {(a.hora_fin || "").slice(0, 5)}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-gray-400">—</span>
+                                                )}
+                                            </td>
+                                            <td className="py-1.5 max-w-xs truncate" title={a.motivo}>
+                                                {a.motivo}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
                     </div>
                 </Section>
 

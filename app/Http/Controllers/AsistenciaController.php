@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Mail\UserRegistrationConfirmation;
 use App\Models\Asistencia;
 use App\Models\Empleado;
+use App\Models\EmpleadoAccion;
+use App\Models\EmpleadoAccionTipo;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,28 +39,88 @@ class AsistenciaController extends Controller {
             'top_10' => Asistencia::tasaPuntualidadUsuariosAnio( $anioActual, 10 ),
         ];
 
+        $data = array_merge($data, $this->dashboardAcciones());
+
         return Inertia::render( 'Dashboard', [ 'data' => $data ] );
     }
 
-    public function index() {
-        return Inertia::render( 'Asistencia/Eventos' );
+    protected function dashboardAcciones(): array
+    {
+        $hoy = Carbon::today()->toDateString();
+        $sieteDias = Carbon::today()->addDays(7)->toDateString();
+
+        $vigentes = EmpleadoAccion::with('tipo')
+            ->where('estado', 'aprobado')
+            ->where('fecha_inicio', '<=', $hoy)
+            ->where(function ($q) use ($hoy) {
+                $q->whereNull('fecha_fin')->orWhere('fecha_fin', '>=', $hoy);
+            })
+            ->get();
+
+        $porTipo = [];
+        foreach ($vigentes as $a) {
+            $codigo = $a->tipo?->codigo ?? 'otro';
+            $porTipo[$codigo] = ($porTipo[$codigo] ?? 0) + 1;
+        }
+        $porTipo['total'] = array_sum($porTipo);
+
+        $proximas = EmpleadoAccion::with('tipo')
+            ->where('estado', 'aprobado')
+            ->where('fecha_inicio', '>', $hoy)
+            ->where('fecha_inicio', '<=', $sieteDias)
+            ->orderBy('fecha_inicio')
+            ->orderBy('id')
+            ->limit(5)
+            ->get()
+            ->map(function ($a) {
+                $emp = Empleado::where('anacod', $a->anacod)->first();
+                return [
+                    'id' => $a->id,
+                    'anacod' => $a->anacod,
+                    'empleado_nombre' => $emp?->ananam,
+                    'tipo_codigo' => $a->tipo?->codigo,
+                    'tipo_nombre' => $a->tipo?->nombre,
+                    'fecha_inicio' => $a->fecha_inicio?->toDateString(),
+                    'fecha_fin' => $a->fecha_fin?->toDateString(),
+                    'hora_inicio' => $a->hora_inicio,
+                    'hora_fin' => $a->hora_fin,
+                    'motivo' => $a->motivo,
+                ];
+            });
+
+        return [
+            'acciones_hoy' => $porTipo,
+            'proximas_acciones' => $proximas,
+        ];
     }
 
-    public function getEventos() {
-        $fecha = isset( $_GET[ 'fecha' ] ) ? $_GET[ 'fecha' ] : null;
-        $fecha_fin = isset( $_GET[ 'fecha_fin' ] ) ? $_GET[ 'fecha_fin' ] : null;
+    public function index(Request $request) {
+        $fecha = $request->query('fecha', Carbon::today()->toDateString());
+        $fechaFin = $request->query('fecha_fin', $fecha);
+        $usuario = strtoupper(trim((string) $request->query('usuario', '')));
 
-        if ( $fecha && $fecha_fin ) {
-            $asistencias = Asistencia::whereBetween( 'fecha', [ $fecha, $fecha_fin ] )
-            ->orderBy( 'id' )
-            ->get();
-            return json_encode( [ 'data'=>$asistencias ] );
-        } elseif ( $fecha ) {
-            $asistencias = Asistencia::whereDate( 'fecha', $fecha )->orderBy( 'id' )->get();
-            return json_encode( [ 'data'=>$asistencias ] );
+        $query = Asistencia::orderBy('id');
+        if ($fecha === $fechaFin) {
+            $query->whereDate('fecha', $fecha);
+        } else {
+            $query->whereBetween('fecha', [$fecha, $fechaFin]);
         }
+        if ($usuario !== '') {
+            $query->where('anacod', 'like', "%{$usuario}%");
+        }
+        $asistencias = $query->get();
 
-        return json_encode( [ 'ok' => false, 'message' =>'No se ha enviado la fecha' ] );
+        return Inertia::render('Asistencia/Eventos', [
+            'asistencias' => $asistencias,
+            'tiposAccion' => EmpleadoAccionTipo::where('activo', true)
+                ->orderBy('nombre')
+                ->get(['id', 'codigo', 'nombre']),
+            'filters' => [
+                'fecha' => $fecha,
+                'fecha_fin' => $fechaFin,
+                'usuario' => $usuario,
+            ],
+        ]);
     }
 
     public function nfcIndex() {

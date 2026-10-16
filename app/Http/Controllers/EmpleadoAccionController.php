@@ -6,10 +6,12 @@ use App\Models\Empleado;
 use App\Models\EmpleadoAccion;
 use App\Models\EmpleadoAccionArchivo;
 use App\Models\EmpleadoAccionTipo;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -43,7 +45,22 @@ class EmpleadoAccionController extends Controller
         if ($requireAnacod) {
             $rules['anacod'] = 'required|string|max:50';
         }
+
+        $merged = $request->all();
+        foreach (['hora_inicio', 'hora_fin'] as $k) {
+            if (! empty($merged[$k]) && preg_match('/^\d{2}:\d{2}:\d{2}$/', $merged[$k])) {
+                $merged[$k] = substr($merged[$k], 0, 5);
+            }
+        }
+        $request->merge($merged);
+
         $data = $request->validate($rules);
+
+        foreach (['hora_inicio', 'hora_fin'] as $k) {
+            if (! empty($data[$k]) && preg_match('/^\d{2}:\d{2}:\d{2}$/', $data[$k])) {
+                $data[$k] = substr($data[$k], 0, 5);
+            }
+        }
 
         if (! empty($data['hora_inicio']) || ! empty($data['hora_fin'])) {
             $inicio = $data['fecha_inicio'] ?? null;
@@ -61,18 +78,132 @@ class EmpleadoAccionController extends Controller
     protected function persist(Request $request, array $data, string $anacod, ?EmpleadoAccion $existing = null): EmpleadoAccion
     {
         if ($existing) {
+            $originals = $existing->getOriginal();
+            $oldAnacod = $originals['anacod'] ?? $anacod;
+            $oldFechaInicio = $originals['fecha_inicio'] ?? null;
+            $oldFechaFin = $originals['fecha_fin'] ?? null;
+            $oldHoraInicio = $originals['hora_inicio'] ?? null;
+            $oldHoraFin = $originals['hora_fin'] ?? null;
+            $oldTipoId = $originals['tipo_id'] ?? null;
+            $oldTipoNombre = $oldTipoId ? EmpleadoAccionTipo::where('id', $oldTipoId)->value('nombre') : null;
+
             $data['updated_by'] = Auth::id();
             $existing->update($data);
             $accion = $existing;
+
+            $this->limpiarEventosEnRango(
+                $oldAnacod,
+                $oldFechaInicio,
+                $oldFechaFin,
+                $oldHoraInicio ? substr($oldHoraInicio, 0, 5) : null,
+                $oldHoraFin ? substr($oldHoraFin, 0, 5) : null
+            );
+
+            $this->llenarEventosEnRango(
+                $accion->anacod,
+                $accion->fecha_inicio,
+                $accion->fecha_fin,
+                EmpleadoAccionTipo::where('id', $accion->tipo_id)->value('nombre'),
+                $accion->hora_inicio ? substr($accion->hora_inicio, 0, 5) : null,
+                $accion->hora_fin ? substr($accion->hora_fin, 0, 5) : null
+            );
         } else {
             $data['anacod'] = $anacod;
             $data['estado'] = 'aprobado';
             $data['created_by'] = Auth::id();
             $data['updated_by'] = Auth::id();
             $accion = EmpleadoAccion::create($data);
+
+            $this->llenarEventosEnRango(
+                $accion->anacod,
+                $accion->fecha_inicio,
+                $accion->fecha_fin,
+                EmpleadoAccionTipo::where('id', $accion->tipo_id)->value('nombre'),
+                $accion->hora_inicio ? substr($accion->hora_inicio, 0, 5) : null,
+                $accion->hora_fin ? substr($accion->hora_fin, 0, 5) : null
+            );
         }
         $this->storeArchivos($request, $accion);
         return $accion;
+    }
+
+    private function getTipoNombre(int $tipoId): ?string
+    {
+        return EmpleadoAccionTipo::where('id', $tipoId)->value('nombre');
+    }
+
+    private function limpiarEventosEnRango(
+        string $anacod,
+        $fechaInicio,
+        $fechaFin,
+        ?string $horaInicio,
+        ?string $horaFin
+    ): void {
+        $fechaInicioStr = $fechaInicio instanceof Carbon ? $fechaInicio->toDateString() : $fechaInicio;
+        $fechaFinStr = $fechaFin instanceof Carbon ? $fechaFin->toDateString() : ($fechaFin ?? $fechaInicioStr);
+        if (! $fechaInicioStr) return;
+
+        try {
+            $query = DB::connection('san')
+                ->table('aplicaciones.pro_eventos_asistencia')
+                ->where('anacod', $anacod)
+                ->whereBetween(DB::raw('DATE(fecha)'), [$fechaInicioStr, $fechaFinStr])
+                ->whereIn('evento', ['Tarde', 'Ausencia', 'Salida antes']);
+
+            $this->aplicarFiltroHora($query, $horaInicio, $horaFin);
+
+            $query->update(['accion_personal' => null]);
+        } catch (\Throwable $e) {
+            Log::warning('Error al limpiar eventos en rango', [
+                'anacod' => $anacod,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function llenarEventosEnRango(
+        string $anacod,
+        $fechaInicio,
+        $fechaFin,
+        ?string $tipoNombre,
+        ?string $horaInicio,
+        ?string $horaFin
+    ): void {
+        if (! $tipoNombre) return;
+        $fechaInicioStr = $fechaInicio instanceof Carbon ? $fechaInicio->toDateString() : $fechaInicio;
+        $fechaFinStr = $fechaFin instanceof Carbon ? $fechaFin->toDateString() : ($fechaFin ?? $fechaInicioStr);
+        if (! $fechaInicioStr) return;
+
+        try {
+            $query = DB::connection('san')
+                ->table('aplicaciones.pro_eventos_asistencia')
+                ->where('anacod', $anacod)
+                ->whereBetween(DB::raw('DATE(fecha)'), [$fechaInicioStr, $fechaFinStr])
+                ->whereIn('evento', ['Tarde', 'Ausencia', 'Salida antes'])
+                ->whereNull('accion_personal');
+
+            $this->aplicarFiltroHora($query, $horaInicio, $horaFin);
+
+            $query->update(['accion_personal' => $tipoNombre]);
+        } catch (\Throwable $e) {
+            Log::warning('Error al llenar eventos en rango', [
+                'anacod' => $anacod,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function aplicarFiltroHora($query, ?string $horaInicio, ?string $horaFin): void
+    {
+        if (! $horaInicio || ! $horaFin) return;
+        [$hI, $mI] = explode(':', substr($horaInicio, 0, 5));
+        [$hF, $mF] = explode(':', substr($horaFin, 0, 5));
+        $tsIni = ((int) $hI) * 60 + (int) $mI;
+        $tsFin = ((int) $hF) * 60 + (int) $mF;
+        $query->whereRaw(
+            '(EXTRACT(HOUR FROM fecha) * 60 + EXTRACT(MINUTE FROM fecha)) BETWEEN ? AND ?',
+            [$tsIni, $tsFin]
+        );
     }
 
     public function index(Request $request, string $anacod): Response
@@ -323,6 +454,13 @@ class EmpleadoAccionController extends Controller
 
     protected function destroyAccion(EmpleadoAccion $accion): void
     {
+        $this->limpiarEventosEnRango(
+            $accion->anacod,
+            $accion->fecha_inicio,
+            $accion->fecha_fin,
+            $accion->hora_inicio ? substr($accion->hora_inicio, 0, 5) : null,
+            $accion->hora_fin ? substr($accion->hora_fin, 0, 5) : null
+        );
         foreach ($accion->archivos()->get() as $archivo) {
             Storage::disk('public')->delete($archivo->path);
         }
@@ -331,6 +469,13 @@ class EmpleadoAccionController extends Controller
 
     protected function cancelAccion(Request $request, EmpleadoAccion $accion): void
     {
+        $this->limpiarEventosEnRango(
+            $accion->anacod,
+            $accion->fecha_inicio,
+            $accion->fecha_fin,
+            $accion->hora_inicio ? substr($accion->hora_inicio, 0, 5) : null,
+            $accion->hora_fin ? substr($accion->hora_fin, 0, 5) : null
+        );
         $data = $request->validate([
             'observaciones' => 'nullable|string|max:1000',
         ]);

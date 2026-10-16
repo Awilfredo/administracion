@@ -51,6 +51,19 @@ export default function Edit({ auth, anacod, empleado, accion, tipos, errors }) 
 
             <div className="max-w-3xl mx-auto mt-8 p-6 space-y-6">
                 <h1 className="text-2xl font-bold text-gray-800">Editar acción</h1>
+                {errors && Object.keys(errors).length > 0 && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+                        <p className="font-semibold text-sm mb-1">Hay errores en el formulario:</p>
+                        <ul className="list-disc pl-5 text-xs space-y-0.5">
+                            {Object.entries(errors).map(([key, msgs]) => (
+                                <li key={key}>
+                                    <strong>{key}:</strong>{" "}
+                                    {Array.isArray(msgs) ? msgs[0] : msgs}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
                 <div className="bg-white p-5 rounded-lg shadow">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <AccionForm data={data} setData={setData} errors={errors} tipos={tipos} />

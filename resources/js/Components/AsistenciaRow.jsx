@@ -1,87 +1,12 @@
-import { Link, useForm } from "@inertiajs/react";
-import { DeleteIcon } from "./DeleteIcon";
-import EditIcon from "./EditIcon";
-import { SaveIcon } from "./SaveIcon";
-import { useState } from "react";
-
 function AsistenciaRow({ element, handleCheck }) {
-    const handleEdit = (id) => {
-        document.getElementById(id).disabled = false;
-        document.getElementById(id).focus();
-    };
-
     const fecha = new Date(element.fecha);
     const fechaLegible = fecha.toLocaleDateString();
     const tiempoLegible = fecha.toLocaleTimeString();
 
-    const [showBtnSave, setshowBtnSave] = useState(false);
-    const { data, setData, patch, errors, processing, recentlySuccessful } =
-        useForm({
-            accion_personal: element.accion_personal || "",
-            id: element.id,
-        });
-
-    const handleSubmit = () => {
-        patch(route("asistencia.update"), {
-            preserveScroll: true,
-            onSuccess: () =>
-                Swal.fire({
-                    title: "Accion de personal actualizada!",
-                    text: "",
-                    icon: "success",
-                }).then((e) => setshowBtnSave(false)),
-        });
-    };
-
-    const handleChange = (e) => {
-        setData("accion_personal", e.target.value);
-        if (data.accion_personal != element.accion_personal) {
-            setshowBtnSave(true);
-        }
-    };
-
-    const handleBlur = (e) => {
-        e.target.disabled = true;
-        if (!element.accion_personal && data.accion_personal === "")
-            setshowBtnSave(false);
-    };
-
-    const handleFocus = (e) => {
-        e.target.className = "border-gray-500 rounded-xl bg-white";
-    };
-
-    const handleDelete = (id) => {
-        Swal.fire({
-            title: "Estas seguro que deseas eliminar esta accion de personal?",
-            text: "",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "Confirmar",
-            cancelButtonText: "Cancelar",
-        }).then((result) => {
-            if (result.isConfirmed) {
-                patch(route("asistencia.delete"), {
-                    preserveScroll: true,
-                    onSuccess: () =>
-                        Swal.fire({
-                            title: "Accion de personal actualizada!",
-                            text: "",
-                            icon: "success",
-                        }).then((e) => {
-                            setshowBtnSave(false);
-                            setData("accion_personal", "");
-                        }),
-                });
-            }
-        });
-    };
-
     return (
         <tr className="bg-white border-b transition duration-300 ease-in-out hover:bg-gray-100">
             <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                <input type="checkbox" className="w-7 h-7" onChange={(e)=>handleCheck(e, element.id)} />
+                <input type="checkbox" className="w-7 h-7" onChange={(e) => handleCheck(e, element.id)} />
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                 {fechaLegible}
@@ -99,37 +24,13 @@ function AsistenciaRow({ element, handleCheck }) {
                 {tiempoLegible}
             </td>
             <td className="text-sm text-gray-900 font-light px-4 py-4 whitespace-nowrap">
-                <input
-                    type="text"
-                    disabled
-                    className="border-gray-500 rounded-xl"
-                    value={data.accion_personal}
-                    id={`accion_personal${element.id}`}
-                    onBlur={handleBlur}
-                    onChange={handleChange}
-                    onFocus={handleFocus}
-                />
-            </td>
-
-            <td className="text-sm text-gray-900 font-light px-4 py-4 whitespace-nowrap w-60">
-                <button
-                    onClick={() => handleEdit(`accion_personal${element.id}`)}
-                    className="text-blue-500 mx-5"
-                >
-                    <EditIcon></EditIcon>
-                </button>
-
-                {showBtnSave && (
-                    <button
-                        className="text-green-500 mr-5"
-                        onClick={handleSubmit}
-                    >
-                        <SaveIcon></SaveIcon>
-                    </button>
+                {element.accion_personal ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">
+                        {element.accion_personal}
+                    </span>
+                ) : (
+                    <span className="text-gray-400">—</span>
                 )}
-                <button className="text-red-500" onClick={handleDelete}>
-                    <DeleteIcon></DeleteIcon>
-                </button>
             </td>
         </tr>
     );
