@@ -4,11 +4,11 @@ import { useState } from "react";
 
 export default function Create({ auth, errors }) {
     const [data, setData] = useState({
-        codigo: "",
         nombre: "",
         descripcion: "",
         requiere_adjunto: false,
         activo: true,
+        afecta_asistencia: true,
     });
 
     const handleSubmit = (e) => {
@@ -31,17 +31,6 @@ export default function Create({ auth, errors }) {
                 <h1 className="text-2xl font-bold text-gray-800">Nuevo tipo de acción</h1>
                 <div className="bg-white p-5 rounded-lg shadow">
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="text-stone-600 text-sm font-medium">Código</label>
-                            <input
-                                type="text"
-                                value={data.codigo}
-                                onChange={(e) => setData({ ...data, codigo: e.target.value })}
-                                placeholder="ej. vacaciones"
-                                className="mt-2 block w-full rounded-md border border-gray-200 px-2 py-2 font-mono"
-                            />
-                            {errors?.codigo && <p className="text-red-600 text-sm mt-1">{errors.codigo[0]}</p>}
-                        </div>
                         <div>
                             <label className="text-stone-600 text-sm font-medium">Nombre</label>
                             <input
@@ -77,6 +66,19 @@ export default function Create({ auth, errors }) {
                                 onChange={(e) => setData({ ...data, activo: e.target.checked })}
                             />
                             Activo
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-gray-700">
+                            <input
+                                type="checkbox"
+                                checked={data.afecta_asistencia}
+                                onChange={(e) => setData({ ...data, afecta_asistencia: e.target.checked })}
+                            />
+                            <span>
+                                Afecta asistencia
+                                <span className="text-xs text-gray-500 ml-1">
+                                    (sincroniza accion_personal en pro_eventos_asistencia)
+                                </span>
+                            </span>
                         </label>
                         <div className="flex justify-end gap-2 pt-4 border-t">
                             <button

@@ -117,6 +117,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::prefix('empleados/{anacod}/acciones')->group(function () {
         Route::get('/', [EmpleadoAccionController::class, 'index'])->name('empleados.acciones.index');
+        Route::get('/export', [EmpleadoAccionController::class, 'export'])->name('empleados.acciones.export');
         Route::get('/create', [EmpleadoAccionController::class, 'create'])->name('empleados.acciones.create');
         Route::post('/', [EmpleadoAccionController::class, 'store'])->name('empleados.acciones.store');
         Route::get('/{accion}/edit', [EmpleadoAccionController::class, 'edit'])->name('empleados.acciones.edit');
@@ -129,12 +130,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::prefix('acciones')->group(function () {
         Route::get('/', [EmpleadoAccionController::class, 'globalIndex'])->name('empleados.acciones.global.index');
+        Route::get('/export', [EmpleadoAccionController::class, 'globalExport'])->name('empleados.acciones.global.export');
         Route::get('/create', [EmpleadoAccionController::class, 'globalCreate'])->name('empleados.acciones.global.create');
         Route::post('/', [EmpleadoAccionController::class, 'globalStore'])->name('empleados.acciones.global.store');
         Route::get('/{accion}/edit', [EmpleadoAccionController::class, 'globalEdit'])->name('empleados.acciones.global.edit');
         Route::patch('/{accion}', [EmpleadoAccionController::class, 'globalUpdate'])->name('empleados.acciones.global.update');
         Route::delete('/{accion}', [EmpleadoAccionController::class, 'globalDestroy'])->name('empleados.acciones.global.destroy');
         Route::post('/{accion}/cancel', [EmpleadoAccionController::class, 'globalCancel'])->name('empleados.acciones.global.cancel');
+        Route::post('/check-aprobador', [EmpleadoAccionController::class, 'checkAprobador'])->name('empleados.acciones.check-aprobador');
+        Route::post('/asignar-aprobador-temporal', [EmpleadoAccionController::class, 'asignarAprobadorTemporal'])->name('empleados.acciones.asignar-aprobador-temporal');
+        Route::post('/skip-aprobador-temporal', [EmpleadoAccionController::class, 'skipAprobadorTemporal'])->name('empleados.acciones.skip-aprobador-temporal');
+        Route::get('/search-users', [EmpleadoAccionController::class, 'searchUsers'])->name('empleados.acciones.search-users');
     });
 
     Route::prefix('admin/accion-tipos')->group(function () {

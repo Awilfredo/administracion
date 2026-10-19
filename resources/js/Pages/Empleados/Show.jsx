@@ -11,6 +11,9 @@ import SecondaryButton from "@/Components/SecondaryButton";
 import BackEmpleados from "./components/BackEmpleados";
 import PerfilAplicaciones from "@/Components/PerfilAplicaciones";
 import Nav from "./Partials/Nav";
+import AprobadorTemporalModal from "@/Components/AprobadorTemporalModal";
+import { apiFetch } from "@/Helpers/apiFetch";
+import { showAprobadorSummary } from "@/Helpers/aprobadorSummary";
 
 const ShowEmpleado = ({
     auth,
@@ -28,6 +31,7 @@ const ShowEmpleado = ({
     presupuestoRemoteError = null,
     presupuestosCentrosCosto = [],
     ultimasAcciones = [],
+    aprobadoresTemporales = [],
     presupuestosCuentas = [],
     presupuestosWarning = null,
 }) => {
@@ -68,6 +72,8 @@ const ShowEmpleado = ({
     const { fechaActual } = ManejoFechas();
     const [fechaBaja, setFechaBaja] = useState(fechaActual());
     const [showBaja, setShowBaja] = useState(false);
+    const [bajaAprobadorModal, setBajaAprobadorModal] = useState({ open: false, loading: false, error: null });
+    const [bajaAprobadorCheck, setBajaAprobadorCheck] = useState(null);
     const { formatDate } = ManejoFechas();
     console.log(redControl);
     console.log(mensajeria);
@@ -299,8 +305,60 @@ const ShowEmpleado = ({
         );
     };
 
-    const handleClickBaja = (e) => {
+    const doBaja = () => {
+        router.delete(
+            route("empleados.baja", { anacod: empleado.anacod }),
+            {
+                data: { anacod: empleado.anacod, fechaBaja: fechaBaja },
+            }
+        );
         Swal.fire({
+            title: "Exito!",
+            text: "Se ha dado de baja exitosamente.",
+            icon: "success",
+            timer: 2500,
+        }).then(() => router.visit(route("empleados.index")));
+    };
+
+    const handleAprobadorBajaConfirm = async (form) => {
+        setBajaAprobadorModal({ open: true, loading: true, error: null });
+        try {
+            const result = await apiFetch(
+                route("empleados.acciones.asignar-aprobador-temporal"),
+                { method: "POST", body: { ...form, anacod: empleado.anacod, accion_personal_id: null } }
+            );
+            setBajaAprobadorModal({ open: false, loading: false, error: null });
+            await showAprobadorSummary(result);
+            doBaja();
+        } catch (e) {
+            setBajaAprobadorModal({
+                open: true,
+                loading: false,
+                error: e.message || "Error al asignar aprobador temporal.",
+            });
+        }
+    };
+
+    const handleAprobadorBajaSkip = async (form) => {
+        setBajaAprobadorModal({ open: true, loading: true, error: null });
+        try {
+            await apiFetch(
+                route("empleados.acciones.skip-aprobador-temporal"),
+                { method: "POST", body: { ...form, anacod: empleado.anacod, accion_personal_id: null } }
+            );
+            setBajaAprobadorModal({ open: false, loading: false, error: null });
+            doBaja();
+        } catch (e) {
+            setBajaAprobadorModal({
+                open: true,
+                loading: false,
+                error: e.message || "Error al omitir aprobador temporal.",
+            });
+        }
+    };
+
+    const handleClickBaja = async (e) => {
+        const result = await Swal.fire({
             title: `Estas seguro?`,
             text: `Quieres dar de baja a ${empleado.anacod}`,
             icon: "warning",
@@ -315,22 +373,36 @@ const ShowEmpleado = ({
                     "bg-red-500 text-white p-2 rounded hover:bg-red-700",
             },
             reverseButtons: true,
-        }).then((result) => {
-            if (result.isConfirmed) {
-                router.delete(
-                    route("empleados.baja", { anacod: empleado.anacod }),
-                    {
-                        data: { anacod: empleado.anacod, fechaBaja: fechaBaja },
-                    }
-                );
-                Swal.fire({
-                    title: "Exito!",
-                    text: "Se ha dado de baja exitosamente.",
-                    icon: "success",
-                    timer: 2500,
-                }).then(() => router.visit(route("empleados.index")));
-            }
         });
+        if (!result.isConfirmed) return;
+
+        setShowBaja(false);
+
+        let check = null;
+        try {
+            check = await apiFetch(
+                route("empleados.acciones.check-aprobador"),
+                {
+                    method: "POST",
+                    body: {
+                        anacod: empleado.anacod,
+                        fecha_inicio: fechaBaja,
+                        fecha_fin: fechaBaja,
+                    },
+                }
+            );
+        } catch {
+            check = null;
+        }
+
+        setBajaAprobadorCheck(check);
+
+        if (check && check.is_aprobador) {
+            setBajaAprobadorModal({ open: true, loading: false, error: null });
+            return;
+        }
+
+        doBaja();
     };
 
     const handleCancel = (e) => {
@@ -459,6 +531,25 @@ const ShowEmpleado = ({
                 </div>
             </Modal>
 
+            <AprobadorTemporalModal
+                open={bajaAprobadorModal.open}
+                onClose={() => {
+                    setBajaAprobadorModal({ open: false, loading: false, error: null });
+                    doBaja();
+                }}
+                onConfirm={handleAprobadorBajaConfirm}
+                onSkip={handleAprobadorBajaSkip}
+                empleado={empleado}
+                anacod={empleado.anacod}
+                ccCuentas={bajaAprobadorCheck?.cc_cuentas || []}
+                fechaInicioDefault={fechaBaja}
+                fechaFinDefault={null}
+                defaultIsTemporal={false}
+                loading={bajaAprobadorModal.loading}
+                error={bajaAprobadorModal.error}
+                searchUsersUrl={route("empleados.acciones.search-users")}
+            />
+
             <div className="max-w-7xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg">
                 <h1 className="text-2xl font-bold text-gray-800 mb-6">
                     Información del Empleado
@@ -564,6 +655,19 @@ const ShowEmpleado = ({
                                     >
                                         {a.estado}
                                     </span>
+                                    {a.origen === "sharepoint" && (
+                                        <span
+                                            className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs"
+                                            title={a.sharepoint_id ? `SharePoint ID: ${a.sharepoint_id}` : "Importado de SharePoint"}
+                                        >
+                                            📥 SharePoint
+                                        </span>
+                                    )}
+                                    {a.pais && (
+                                        <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-xs">
+                                            {a.pais}
+                                        </span>
+                                    )}
                                 </li>
                             ))}
                         </ul>
@@ -571,6 +675,57 @@ const ShowEmpleado = ({
                 )}
 
                 {renderPresupuestoCard()}
+
+                {aprobadoresTemporales && aprobadoresTemporales.length > 0 && (
+                    <div className="bg-white p-5 mt-6 rounded-lg shadow">
+                        <div className="flex justify-between items-center mb-3">
+                            <div>
+                                <p className="text-lg font-semibold">Aprobadores temporales asignados</p>
+                                <hr className="h-1 mt-2 bg-amber-500" />
+                            </div>
+                        </div>
+                        <ul className="text-sm space-y-2">
+                            {aprobadoresTemporales.map((a) => (
+                                <li
+                                    key={a.id}
+                                    className="flex items-center gap-3 border-b border-gray-100 pb-2 flex-wrap"
+                                >
+                                    <span className="font-medium text-gray-800">
+                                        Aprobador ID {a.temp_user_id}
+                                    </span>
+                                    {a.temp_user_email && a.temp_user_email !== "skipped" && (
+                                        <span className="text-gray-500 text-xs">
+                                            ({a.temp_user_email})
+                                        </span>
+                                    )}
+                                    <span className="text-gray-500">
+                                        {a.fecha_desde} → {a.fecha_hasta || "Permanente"}
+                                    </span>
+                                    <span className="text-xs text-gray-500">
+                                        {Array.isArray(a.cc_cuentas)
+                                            ? `${a.cc_cuentas.length} cc/cuenta(s)`
+                                            : ""}
+                                    </span>
+                                    <span
+                                        className={
+                                            "px-2 py-0.5 rounded-full text-xs " +
+                                            (a.sync_status === "ok"
+                                                ? "bg-green-100 text-green-700"
+                                                : a.sync_status === "error"
+                                                ? "bg-red-100 text-red-700"
+                                                : a.sync_status === "skipped"
+                                                ? "bg-gray-200 text-gray-700"
+                                                : "bg-yellow-100 text-yellow-700")
+                                        }
+                                        title={a.last_error || ""}
+                                    >
+                                        {a.sync_status}
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
                 {data.anacod ? (
                     <SanForm

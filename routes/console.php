@@ -13,3 +13,15 @@ Schedule::command('acciones:sincronizar-asistencia')
     ->withoutOverlapping()
     ->runInBackground()
     ->onOneServer();
+
+Schedule::command('sharepoint:sync-acciones')
+    ->everyFifteenMinutes()
+    ->withoutOverlapping()
+    ->runInBackground()
+    ->onOneServer()
+    ->onSuccess(function () {
+        \Illuminate\Support\Facades\Log::info('SharePoint sync: completed successfully');
+    })
+    ->onFailure(function () {
+        \Illuminate\Support\Facades\Log::error('SharePoint sync: failed');
+    });

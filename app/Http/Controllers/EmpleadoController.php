@@ -9,6 +9,7 @@ use App\Mail\UserRegistrationConfirmation;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Empleado;
 use App\Models\EmpleadoAccion;
+use App\Models\EmpleadoAprobadorTemporal;
 use App\Models\EmpleadoPresupuesto;
 use App\Models\Horario;
 use App\Models\Hiring;
@@ -270,6 +271,23 @@ class EmpleadoController extends Controller {
                 ->orderByDesc('id')
                 ->limit(3)
                 ->get(),
+            'aprobadoresTemporales' => EmpleadoAprobadorTemporal::where('anacod_origen', $anacod)
+                ->orderByDesc('id')
+                ->limit(10)
+                ->get()
+                ->map(function ($row) {
+                    return [
+                        'id' => (int) $row->id,
+                        'temp_user_id' => (int) $row->temp_user_id,
+                        'temp_user_email' => $row->temp_user_email,
+                        'fecha_desde' => optional($row->fecha_desde)->toDateString(),
+                        'fecha_hasta' => optional($row->fecha_hasta)->toDateString(),
+                        'cc_cuentas' => $row->cc_cuentas,
+                        'sync_status' => $row->sync_status,
+                        'last_error' => $row->last_error,
+                        'created_at' => optional($row->created_at)->toIso8601String(),
+                    ];
+                }),
         ] );
         //return json_encode( $empleado );
     }
@@ -338,12 +356,7 @@ class EmpleadoController extends Controller {
                 $source = 'by_email';
             }
 
-            $client->updateUser( $remoteId, [
-                'name' => (string) $empleado->ananam,
-                'email' => (string) $empleado->anamai,
-                'code' => (string) $empleado->anacod,
-                'is_active' => false,
-            ] );
+            $client->deleteUser( $remoteId );
 
             EmpleadoPresupuesto::updateOrCreate(
                 [ 'anacod' => $empleado->anacod ],

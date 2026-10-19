@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\EmpleadoAccion;
 use App\Models\EmpleadoAccionTipo;
+use App\Services\AccionPersonalSync;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -49,7 +50,12 @@ class SincronizarAccionesAsistenciaCommand extends Command
 
         foreach ($acciones as $accion) {
             $tipoNombre = $accion->tipo?->nombre ?? 'Otro';
-            $this->line(" - {$accion->anacod}: {$tipoNombre} ({$accion->fecha_inicio} → " . ($accion->fecha_fin ?? $accion->fecha_inicio) . ")");
+            $afectaAsistencia = AccionPersonalSync::debeSincronizar($accion);
+            $this->line(" - {$accion->anacod}: {$tipoNombre} ({$accion->fecha_inicio} → " . ($accion->fecha_fin ?? $accion->fecha_inicio) . ")" . ($afectaAsistencia ? '' : ' [no afecta asistencia, skip]'));
+
+            if (! $afectaAsistencia) {
+                continue;
+            }
 
             $rows = DB::connection('san')->select(
                 "SELECT id, fecha, evento

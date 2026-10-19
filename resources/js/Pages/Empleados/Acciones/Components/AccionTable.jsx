@@ -117,6 +117,8 @@ export default function AccionTable({
                             <th className="px-4 py-3">Período</th>
                             <th className="px-4 py-3">Horario</th>
                             <th className="px-4 py-3">Motivo</th>
+                            <th className="px-4 py-3">País</th>
+                            <th className="px-4 py-3">Origen</th>
                             <th className="px-4 py-3">Estado</th>
                             <th className="px-4 py-3 text-center">Arch.</th>
                             <th className="px-4 py-3 text-right">Acciones</th>
@@ -155,6 +157,27 @@ export default function AccionTable({
                                 </td>
                                 <td className="px-4 py-2 max-w-xs truncate" title={a.motivo}>
                                     {a.motivo}
+                                </td>
+                                <td className="px-4 py-2 text-center text-xs">
+                                    {a.pais ? (
+                                        <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded font-mono">
+                                            {a.pais}
+                                        </span>
+                                    ) : (
+                                        <span className="text-gray-400">—</span>
+                                    )}
+                                </td>
+                                <td className="px-4 py-2 text-center">
+                                    {a.origen === 'sharepoint' ? (
+                                        <span
+                                            className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded text-xs"
+                                            title={a.sharepoint_id ? `SharePoint ID: ${a.sharepoint_id}` : 'Importado de SharePoint'}
+                                        >
+                                            📥 SharePoint
+                                        </span>
+                                    ) : (
+                                        <span className="text-gray-400 text-xs">Manual</span>
+                                    )}
                                 </td>
                                 <td className="px-4 py-2">
                                     <EstadoBadge estado={a.estado} />

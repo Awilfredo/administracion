@@ -18,6 +18,18 @@ export default function GlobalIndex({ auth, acciones, tipos, filters }) {
         router.get(route("empleados.acciones.global.index"), {}, { preserveState: true });
     };
 
+    const exportUrl = () => {
+        const params = new URLSearchParams();
+        if (search.anacod) params.set('anacod', search.anacod);
+        if (search.tipo_id) params.set('tipo_id', search.tipo_id);
+        if (search.estado) params.set('estado', search.estado);
+        if (search.fecha_desde) params.set('fecha_desde', search.fecha_desde);
+        if (search.fecha_hasta) params.set('fecha_hasta', search.fecha_hasta);
+        const qs = params.toString();
+        return route("empleados.acciones.global.export") + (qs ? '?' + qs : '');
+    };
+    void exportUrl;
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -36,6 +48,14 @@ export default function GlobalIndex({ auth, acciones, tipos, filters }) {
                         <p className="text-sm text-gray-500">Listado global de todas las acciones registradas.</p>
                     </div>
                     <div className="flex gap-2">
+                        <a
+                            href={exportUrl()}
+                            data-test="export-csv-btn"
+                            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"
+                            download
+                        >
+                            Exportar Excel
+                        </a>
                         <Link
                             href={route("admin.accion-tipos.index")}
                             className="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"

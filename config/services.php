@@ -39,4 +39,12 @@ return [
         'catalog_cache_ttl' => env('PRESUPUESTOS_API_CATALOG_CACHE_TTL', 300),
     ],
 
+    'sharepoint' => [
+        'base_url' => env('SHAREPOINT_API_BASE_URL'),
+        'api_key' => env('SHAREPOINT_API_KEY'),
+        'site_url' => env('SHAREPOINT_SITE_URL'),
+        'list' => env('SHAREPOINT_LIST', 'Acciones de Personal'),
+        'timeout' => env('SHAREPOINT_API_TIMEOUT', 30),
+    ],
+
 ];

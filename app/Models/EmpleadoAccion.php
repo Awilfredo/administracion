@@ -14,6 +14,9 @@ class EmpleadoAccion extends Model
     protected $table = 'empleado_acciones';
 
     protected $fillable = [
+        'sharepoint_id',
+        'sharepoint_guid',
+        'origen',
         'anacod',
         'tipo_id',
         'fecha_inicio',
@@ -23,11 +26,13 @@ class EmpleadoAccion extends Model
         'motivo',
         'estado',
         'observaciones',
+        'pais',
         'created_by',
         'updated_by',
     ];
 
     protected $casts = [
+        'sharepoint_id' => 'integer',
         'fecha_inicio' => 'date:Y-m-d',
         'fecha_fin' => 'date:Y-m-d',
         'hora_inicio' => 'string',

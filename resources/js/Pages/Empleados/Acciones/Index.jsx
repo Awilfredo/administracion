@@ -24,6 +24,16 @@ export default function Index({ auth, anacod, empleado, acciones, tipos, filters
         router.get(route("empleados.acciones.index", { anacod }), {}, { preserveState: true });
     };
 
+    const exportUrl = () => {
+        const params = new URLSearchParams();
+        if (search.tipo_id) params.set('tipo_id', search.tipo_id);
+        if (search.estado) params.set('estado', search.estado);
+        if (search.fecha_desde) params.set('fecha_desde', search.fecha_desde);
+        if (search.fecha_hasta) params.set('fecha_hasta', search.fecha_hasta);
+        const qs = params.toString();
+        return route("empleados.acciones.export", { anacod }) + (qs ? '?' + qs : '');
+    };
+
     return (
         <AuthenticatedLayout
             user={auth.user}
@@ -45,12 +55,22 @@ export default function Index({ auth, anacod, empleado, acciones, tipos, filters
                             Empleado <span className="font-mono">{anacod}</span> · {empleado?.ananam}
                         </p>
                     </div>
-                    <Link
-                        href={route("empleados.acciones.create", { anacod })}
-                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
-                    >
-                        Nueva acción
-                    </Link>
+                    <div className="flex gap-2">
+                        <a
+                            href={exportUrl()}
+                            data-test="export-csv-btn"
+                            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm font-medium"
+                            download
+                        >
+                            Exportar Excel
+                        </a>
+                        <Link
+                            href={route("empleados.acciones.create", { anacod })}
+                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                        >
+                            Nueva acción
+                        </Link>
+                    </div>
                 </div>
 
                 <form

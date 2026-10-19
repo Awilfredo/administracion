@@ -131,6 +131,81 @@ class PresupuestosApiClient
         return $this->unwrap($this->request('PUT', "users/{$id}", [], $payload));
     }
 
+    public function deleteUser(int $id): array
+    {
+        Log::info('Presupuestos API: deleteUser -> DELETE users/{id}', [
+            'id' => $id,
+        ]);
+        return $this->unwrap($this->request('DELETE', "users/{$id}"));
+    }
+
+    public function listUsers(string $search = '', string $estado = 'activos', int $perPage = 50): array
+    {
+        $query = array_filter([
+            'search' => $search !== '' ? $search : null,
+            'estado' => $estado,
+            'per_page' => $perPage,
+        ], fn ($v) => $v !== null);
+
+        return $this->request('GET', 'users', $query);
+    }
+
+    public function getUserCcCuentas(int $userId): Collection
+    {
+        $key = "presupuestos:user_cc:{$this->tenant}:{$userId}";
+
+        $payload = Cache::remember($key, 60, function () use ($userId) {
+            try {
+                return $this->request('GET', "users/{$userId}/cc-cuentas");
+            } catch (PresupuestosApiException $e) {
+                if ($e->statusCode === 404) {
+                    return ['data' => []];
+                }
+                throw $e;
+            }
+        });
+
+        return $this->mapCcCuentas($payload['data'] ?? []);
+    }
+
+    public function upsertUserCcCuenta(int $userId, int $centroCostoId, int $cuentaId, array $attrs): array
+    {
+        $body = array_merge([
+            'centro_costo_id' => $centroCostoId,
+            'cuenta_id' => $cuentaId,
+        ], $attrs);
+
+        $this->forgetUserCcCache($userId);
+
+        return $this->unwrap($this->request('POST', "users/{$userId}/cc-cuentas", [], $body));
+    }
+
+    public function updateUserCcCuenta(int $userId, int $ccCuentaId, array $attrs): array
+    {
+        $this->forgetUserCcCache($userId);
+
+        return $this->unwrap($this->request('PUT', "users/{$userId}/cc-cuentas/{$ccCuentaId}", [], $attrs));
+    }
+
+    protected function mapCcCuentas(array $data): Collection
+    {
+        return collect($data)->map(fn ($row) => [
+            'id' => isset($row['id']) ? (int) $row['id'] : null,
+            'user_id' => isset($row['user_id']) ? (int) $row['user_id'] : null,
+            'centro_costo_id' => (int) ($row['centro_costo_id'] ?? 0),
+            'cuenta_id' => (int) ($row['cuenta_id'] ?? 0),
+            'is_aprobador' => (bool) ($row['is_aprobador'] ?? false),
+            'vigente_desde' => $row['vigente_desde'] ?? null,
+            'vigente_hasta' => $row['vigente_hasta'] ?? null,
+            'is_currently_active' => (bool) ($row['is_currently_active'] ?? false),
+        ])->values();
+    }
+
+    protected function forgetUserCcCache(int $userId): void
+    {
+        Cache::forget("presupuestos:user_cc:{$this->tenant}:{$userId}");
+    }
+
     protected function unwrap(array $response): array
     {
         if (array_key_exists('data', $response) && is_array($response['data'])) {

@@ -1,7 +1,11 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { Head, router } from "@inertiajs/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AccionForm from "./Components/AccionForm";
+import AprobadorTemporalModal from "@/Components/AprobadorTemporalModal";
+import { esAccionProlongada } from "@/Helpers/esAccionProlongada";
+import { apiFetch } from "@/Helpers/apiFetch";
+import { showAprobadorSummary } from "@/Helpers/aprobadorSummary";
 
 export default function GlobalCreate({ auth, tipos, empleadosActivos = [], errors }) {
     const [data, setData] = useState({
@@ -15,12 +19,89 @@ export default function GlobalCreate({ auth, tipos, empleadosActivos = [], error
         observaciones: "",
     });
     const [empleadoActual, setEmpleadoActual] = useState(null);
+    const [aprobadorCheck, setAprobadorCheck] = useState(null);
+    const [aprobadorModal, setAprobadorModal] = useState({ open: false, loading: false, error: null });
+    const skipRef = useRef(false);
+    const debounceRef = useRef(null);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
+    useEffect(() => {
+        if (!esAccionProlongada(data) || !data.anacod) {
+            setAprobadorCheck(null);
+            return;
+        }
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        debounceRef.current = setTimeout(async () => {
+            try {
+                const json = await apiFetch(
+                    route("empleados.acciones.check-aprobador"),
+                    {
+                        method: "POST",
+                        body: {
+                            anacod: data.anacod,
+                            fecha_inicio: data.fecha_inicio,
+                            fecha_fin: data.fecha_fin || null,
+                        },
+                    }
+                );
+                setAprobadorCheck(json);
+            } catch {
+                setAprobadorCheck(null);
+            }
+        }, 500);
+        return () => debounceRef.current && clearTimeout(debounceRef.current);
+    }, [data.anacod, data.fecha_inicio, data.fecha_fin, data.hora_inicio, data.hora_fin]);
+
+    const doSubmit = () => {
         router.post(route("empleados.acciones.global.store"), data, {
             forceFormData: true,
         });
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (aprobadorCheck?.is_aprobador && !skipRef.current) {
+            setAprobadorModal({ open: true, loading: false, error: null });
+            return;
+        }
+        doSubmit();
+    };
+
+    const handleAprobadorConfirm = async (form) => {
+        setAprobadorModal({ open: true, loading: true, error: null });
+        try {
+            const result = await apiFetch(
+                route("empleados.acciones.asignar-aprobador-temporal"),
+                { method: "POST", body: { ...form, anacod: data.anacod, accion_personal_id: null } }
+            );
+            setAprobadorModal({ open: false, loading: false, error: null });
+            await showAprobadorSummary(result);
+            doSubmit();
+        } catch (e) {
+            setAprobadorModal({
+                open: true,
+                loading: false,
+                error: e.message || "Error al asignar aprobador temporal.",
+            });
+        }
+    };
+
+    const handleAprobadorSkip = async (form) => {
+        setAprobadorModal({ open: true, loading: true, error: null });
+        try {
+            await apiFetch(
+                route("empleados.acciones.skip-aprobador-temporal"),
+                { method: "POST", body: { ...form, anacod: data.anacod, accion_personal_id: null } }
+            );
+            skipRef.current = true;
+            setAprobadorModal({ open: false, loading: false, error: null });
+            doSubmit();
+        } catch (e) {
+            setAprobadorModal({
+                open: true,
+                loading: false,
+                error: e.message || "Error al omitir aprobador temporal.",
+            });
+        }
     };
 
     return (
@@ -80,6 +161,21 @@ export default function GlobalCreate({ auth, tipos, empleadosActivos = [], error
                     </form>
                 </div>
             </div>
+
+            <AprobadorTemporalModal
+                open={aprobadorModal.open}
+                onClose={() => setAprobadorModal({ open: false, loading: false, error: null })}
+                onConfirm={handleAprobadorConfirm}
+                onSkip={handleAprobadorSkip}
+                empleado={empleadoActual}
+                anacod={data.anacod}
+                ccCuentas={aprobadorCheck?.cc_cuentas || []}
+                fechaInicioDefault={data.fecha_inicio}
+                fechaFinDefault={data.fecha_fin || data.fecha_inicio}
+                loading={aprobadorModal.loading}
+                error={aprobadorModal.error}
+                searchUsersUrl={route("empleados.acciones.search-users")}
+            />
         </AuthenticatedLayout>
     );
 }

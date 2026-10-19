@@ -21,6 +21,7 @@ function EmpleadoDatalist({ value, empleadoActual, empleadosActivos, onSelect, e
                 {empleadosActivos.map((e) => (
                     <option key={e.anacod} value={e.anacod}>
                         {e.ananam}
+                        {e.anamai ? ` — ${e.anamai}` : ""}
                     </option>
                 ))}
             </datalist>
@@ -43,8 +44,12 @@ export default function AccionForm({
     empleadoActual = null,
     onSelectEmpleado = null,
     empleadosActivos = [],
+    readOnly = false,
 }) {
     const [archivos, setArchivos] = useState([]);
+
+    const isSharepoint = data?.origen === "sharepoint";
+    const isLocked = readOnly || isSharepoint;
 
     const sameDay = !data.fecha_fin || data.fecha_fin === data.fecha_inicio;
 
@@ -67,6 +72,17 @@ export default function AccionForm({
 
     return (
         <div className="space-y-4">
+            {isSharepoint && (
+                <div className="p-3 bg-blue-50 border border-blue-300 rounded text-blue-900 text-sm">
+                    <p className="font-medium mb-1">📥 Importado de SharePoint</p>
+                    <p>
+                        Esta acción proviene de SharePoint (ID: {data.sharepoint_id ?? "?"}) y es de
+                        solo lectura. Si necesitás modificarla, hacelo en SharePoint y vuelve a
+                        sincronizar.
+                    </p>
+                </div>
+            )}
+
             {showEmpleadoSelector && (
                 <EmpleadoDatalist
                     value={data.anacod}
@@ -77,10 +93,11 @@ export default function AccionForm({
                         setData({ ...data, anacod: v });
                     }}
                     error={errors?.anacod?.[0]}
+                    disabled={isLocked}
                 />
             )}
 
-            <Select label="Tipo de acción" value={data.tipo_id} onChange={handleTipo}>
+            <Select label="Tipo de acción" value={data.tipo_id} onChange={handleTipo} disabled={isLocked}>
                 <option value="">— Seleccione —</option>
                 {tipos.map((t) => (
                     <option key={t.id} value={t.id}>
@@ -96,12 +113,14 @@ export default function AccionForm({
                     type="date"
                     value={data.fecha_inicio || ""}
                     onChange={(e) => setData({ ...data, fecha_inicio: e.target.value, hora_inicio: null, hora_fin: null })}
+                    disabled={isLocked}
                 />
                 <TextInput
                     label="Fecha de fin (opcional)"
                     type="date"
                     value={data.fecha_fin || ""}
                     onChange={(e) => setData({ ...data, fecha_fin: e.target.value, hora_inicio: null, hora_fin: null })}
+                    disabled={isLocked}
                 />
             </div>
             {(errors?.fecha_inicio || errors?.fecha_fin) && (
@@ -124,12 +143,14 @@ export default function AccionForm({
                             type="time"
                             value={data.hora_inicio || ""}
                             onChange={(e) => setData({ ...data, hora_inicio: e.target.value || null })}
+                            disabled={isLocked}
                         />
                         <TextInput
                             label="Hora de fin"
                             type="time"
                             value={data.hora_fin || ""}
                             onChange={(e) => setData({ ...data, hora_fin: e.target.value || null })}
+                            disabled={isLocked}
                         />
                     </div>
                     {(errors?.hora_inicio || errors?.hora_fin) && (
@@ -146,7 +167,8 @@ export default function AccionForm({
                     value={data.motivo || ""}
                     onChange={(e) => setData({ ...data, motivo: e.target.value })}
                     rows="3"
-                    className="mt-2 block w-full rounded-md border border-gray-200 px-2 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    disabled={isLocked}
+                    className="mt-2 block w-full rounded-md border border-gray-200 px-2 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
             </div>
             {errors?.motivo && <p className="text-red-600 text-sm">{errors.motivo[0]}</p>}
@@ -157,20 +179,22 @@ export default function AccionForm({
                     value={data.observaciones || ""}
                     onChange={(e) => setData({ ...data, observaciones: e.target.value })}
                     rows="2"
-                    className="mt-2 block w-full rounded-md border border-gray-200 px-2 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    disabled={isLocked}
+                    className="mt-2 block w-full rounded-md border border-gray-200 px-2 py-2 shadow-sm outline-none focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 />
             </div>
 
-            <div>
-                <label className="text-stone-600 text-sm font-medium">
-                    Archivos adjuntos (opcional, máx 10 MB c/u)
-                </label>
-                <input
-                    type="file"
-                    multiple
-                    onChange={handleArchivos}
-                    className="mt-2 block w-full text-sm"
-                />
+            {!isLocked && (
+                <div>
+                    <label className="text-stone-600 text-sm font-medium">
+                        Archivos adjuntos (opcional, máx 10 MB c/u)
+                    </label>
+                    <input
+                        type="file"
+                        multiple
+                        onChange={handleArchivos}
+                        className="mt-2 block w-full text-sm"
+                    />
                 {archivos.length > 0 && (
                     <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3">
                         {archivos.map((f, i) => {
@@ -218,7 +242,8 @@ export default function AccionForm({
                         })}
                     </div>
                 )}
-            </div>
+                </div>
+            )}
         </div>
     );
 }

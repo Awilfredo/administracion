@@ -150,11 +150,11 @@ export default function Index({ auth, tipos, counts = {}, search: initialSearch 
                             <table className="w-full text-sm">
                                 <thead className="bg-gray-50 text-left text-xs uppercase text-gray-600 sticky top-0 z-10 shadow-sm">
                                     <tr>
-                                        <th className="px-4 py-3">Código</th>
                                         <th className="px-4 py-3">Nombre</th>
                                         <th className="px-4 py-3">Descripción</th>
                                         <th className="px-4 py-3 text-center">Acciones</th>
                                         <th className="px-4 py-3">Adjunto</th>
+                                        <th className="px-4 py-3">Asistencia</th>
                                         <th className="px-4 py-3">Estado</th>
                                         <th className="px-4 py-3 text-right">Operaciones</th>
                                     </tr>
@@ -165,7 +165,6 @@ export default function Index({ auth, tipos, counts = {}, search: initialSearch 
                                             key={t.id}
                                             className="border-t border-gray-100 hover:bg-gray-50 transition-colors"
                                         >
-                                            <td className="px-4 py-2 font-mono">{t.codigo}</td>
                                             <td className="px-4 py-2 font-medium">{t.nombre}</td>
                                             <td
                                                 className="px-4 py-2 text-gray-600 text-xs max-w-xs truncate"
@@ -183,6 +182,17 @@ export default function Index({ auth, tipos, counts = {}, search: initialSearch 
                                                     </span>
                                                 ) : (
                                                     <span className="text-gray-400 text-xs">No</span>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-2">
+                                                {t.afecta_asistencia !== false ? (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-800 rounded text-xs">
+                                                        Sí
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-500 rounded text-xs">
+                                                        No
+                                                    </span>
                                                 )}
                                             </td>
                                             <td className="px-4 py-2">

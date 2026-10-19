@@ -18,10 +18,7 @@ class EmpleadoAccionTipoController extends Controller
 
         $query = EmpleadoAccionTipo::query();
         if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('codigo', 'like', "%{$search}%")
-                  ->orWhere('nombre', 'like', "%{$search}%");
-            });
+            $query->where('nombre', 'like', "%{$search}%");
         }
 
         $tipos = $query->orderBy('nombre')->paginate(25)->withQueryString();
@@ -47,8 +44,7 @@ class EmpleadoAccionTipoController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'codigo' => 'required|string|max:50|unique:empleado_accion_tipos,codigo',
-            'nombre' => 'required|string|max:100',
+            'nombre' => 'required|string|max:100|unique:empleado_accion_tipos,nombre',
             'descripcion' => 'nullable|string|max:1000',
             'requiere_adjunto' => 'sometimes|boolean',
             'activo' => 'sometimes|boolean',
@@ -74,8 +70,7 @@ class EmpleadoAccionTipoController extends Controller
     public function update(Request $request, EmpleadoAccionTipo $tipo): RedirectResponse
     {
         $data = $request->validate([
-            'codigo' => 'required|string|max:50|unique:empleado_accion_tipos,codigo,' . $tipo->id,
-            'nombre' => 'required|string|max:100',
+            'nombre' => 'required|string|max:100|unique:empleado_accion_tipos,nombre,' . $tipo->id,
             'descripcion' => 'nullable|string|max:1000',
             'requiere_adjunto' => 'sometimes|boolean',
             'activo' => 'sometimes|boolean',

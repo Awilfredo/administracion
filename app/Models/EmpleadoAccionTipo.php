@@ -13,16 +13,17 @@ class EmpleadoAccionTipo extends Model
     protected $table = 'empleado_accion_tipos';
 
     protected $fillable = [
-        'codigo',
         'nombre',
         'descripcion',
         'requiere_adjunto',
         'activo',
+        'afecta_asistencia',
     ];
 
     protected $casts = [
         'requiere_adjunto' => 'boolean',
         'activo' => 'boolean',
+        'afecta_asistencia' => 'boolean',
     ];
 
     public function acciones(): HasMany
