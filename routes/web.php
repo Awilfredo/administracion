@@ -141,6 +141,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/asignar-aprobador-temporal', [EmpleadoAccionController::class, 'asignarAprobadorTemporal'])->name('empleados.acciones.asignar-aprobador-temporal');
         Route::post('/skip-aprobador-temporal', [EmpleadoAccionController::class, 'skipAprobadorTemporal'])->name('empleados.acciones.skip-aprobador-temporal');
         Route::get('/search-users', [EmpleadoAccionController::class, 'searchUsers'])->name('empleados.acciones.search-users');
+        Route::get('/sin-aprobador-temporal', [EmpleadoAccionController::class, 'indexSinAprobador'])->name('empleados.acciones.sin-aprobador-temporal');
     });
 
     Route::prefix('admin/accion-tipos')->group(function () {

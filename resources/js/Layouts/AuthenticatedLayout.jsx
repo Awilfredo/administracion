@@ -365,6 +365,31 @@ export default function Authenticated({ user, header, children }) {
                                 </Link>
                             </li>
 
+                            <li>
+                                <Link
+                                    href={route("empleados.acciones.sin-aprobador-temporal")}
+                                    className={
+                                        route().current("empleados.acciones.sin-aprobador-temporal")
+                                            ? navSelectedClass
+                                            : navDefaultClass
+                                    }
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="group-hover:text-amber-600"
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="currentColor"
+                                    >
+                                        <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+                                    </svg>
+                                    <span className="group-hover:text-gray-700">
+                                        Sin aprobador temporal
+                                    </span>
+                                </Link>
+                            </li>
+
                             {false && (
                                 <li>
                                     <a

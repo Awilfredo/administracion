@@ -154,6 +154,136 @@ class EmpleadoAccionController extends Controller
         ]);
     }
 
+    public function indexSinAprobador(Request $request): Response
+    {
+        $filters = $request->validate([
+            'origen' => 'nullable|in:manual,sharepoint',
+            'fecha_desde' => 'nullable|date',
+            'fecha_hasta' => 'nullable|date|after_or_equal:fecha_desde',
+            'anacod' => 'nullable|string|max:50',
+        ]);
+
+        $today = now()->toDateString();
+        $horizon = now()->addDays(30)->toDateString();
+        $recentPast = now()->subDays(7)->toDateString();
+
+        $query = EmpleadoAccion::with('tipo')
+            ->where('estado', 'aprobado')
+            ->where(function ($q) use ($today, $horizon, $recentPast) {
+                // Caso A: activa ahora (fecha_inicio <= hoy Y COALESCE(fecha_fin, fecha_inicio) >= hoy)
+                $q->where(function ($q2) use ($today) {
+                    $q2->where('fecha_inicio', '<=', $today)
+                        ->whereRaw('COALESCE(fecha_fin, fecha_inicio) >= ?', [$today]);
+                })
+                // Caso B: empieza pronto (próximos 30 días)
+                ->orWhere(function ($q2) use ($today, $horizon) {
+                    $q2->where('fecha_inicio', '>', $today)
+                        ->where('fecha_inicio', '<=', $horizon);
+                })
+                // Caso C: terminó hace poco (últimos 7 días, usando COALESCE para fechas_fin NULL)
+                ->orWhere(function ($q2) use ($recentPast, $today) {
+                    $q2->whereRaw('COALESCE(fecha_fin, fecha_inicio) >= ?', [$recentPast])
+                        ->whereRaw('COALESCE(fecha_fin, fecha_inicio) < ?', [$today]);
+                });
+            })
+            ->whereNotExists(function ($sub) {
+                $sub->select(DB::raw(1))
+                    ->from('empleado_aprobadores_temporales')
+                    ->whereColumn('empleado_aprobadores_temporales.accion_personal_id', 'empleado_acciones.id')
+                    ->whereIn('sync_status', ['ok', 'pending']);
+            })
+            ->whereNotExists(function ($sub) {
+                $sub->select(DB::raw(1))
+                    ->from('empleado_aprobadores_temporales')
+                    ->whereColumn('empleado_aprobadores_temporales.accion_personal_id', 'empleado_acciones.id')
+                    ->where('sync_status', 'skipped');
+            });
+
+        if (! empty($filters['origen'])) {
+            $query->where('origen', $filters['origen']);
+        }
+        if (! empty($filters['anacod'])) {
+            $query->where('anacod', $filters['anacod']);
+        }
+        if (! empty($filters['fecha_desde'])) {
+            $query->where('fecha_inicio', '>=', $filters['fecha_desde']);
+        }
+        if (! empty($filters['fecha_hasta'])) {
+            $query->where('fecha_inicio', '<=', $filters['fecha_hasta']);
+        }
+
+        $acciones = $query->orderBy('fecha_inicio')->orderByDesc('id')->limit(100)->get();
+
+        $aprobadoresPorEmpleado = [];
+        $client = app(PresupuestosApiClient::class);
+        foreach ($acciones as $accion) {
+            $anacod = $accion->anacod;
+            if (! isset($aprobadoresPorEmpleado[$anacod])) {
+                $aprobadoresPorEmpleado[$anacod] = $this->obtenerCcCuentasAprobador($anacod, $client);
+            }
+        }
+
+        return Inertia::render('Empleados/Acciones/SinAprobadorTemporal', [
+            'acciones' => $acciones,
+            'aprobadoresPorEmpleado' => $aprobadoresPorEmpleado,
+            'filters' => $filters,
+            'today' => $today,
+        ]);
+    }
+
+    protected function obtenerCcCuentasAprobador(string $anacod, PresupuestosApiClient $client): array
+    {
+        if (! $client->isConfigured()) {
+            return [];
+        }
+
+        try {
+            $presupuesto = EmpleadoPresupuesto::where('anacod', $anacod)->first();
+            $userId = $presupuesto?->presupuestos_user_id;
+            if (! $userId) {
+                $empleado = Empleado::where('anacod', $anacod)->first();
+                $email = $empleado?->anamai;
+                if ($email) {
+                    $remote = $client->findUserByEmail($email);
+                    $userId = isset($remote['id']) ? (int) $remote['id'] : null;
+                }
+            }
+            if (! $userId) {
+                return [];
+            }
+
+            $ccCuentas = $client->getUserCcCuentas($userId);
+            $aprobadores = $ccCuentas->where('is_aprobador', true)->where('is_currently_active', true);
+
+            if ($aprobadores->isEmpty()) {
+                return [];
+            }
+
+            $ccs = $client->listCentrosCosto();
+            $cuentas = $client->listCuentas();
+
+            return $aprobadores->map(function ($row) use ($ccs, $cuentas) {
+                $cc = $ccs->firstWhere('id', $row['centro_costo_id']);
+                $cuenta = $cuentas->firstWhere('id', $row['cuenta_id']);
+                return [
+                    'cc_id' => $row['centro_costo_id'],
+                    'cc_codigo' => $cc['codigo'] ?? '',
+                    'cc_nombre' => $cc['nombre'] ?? '',
+                    'cuenta_id' => $row['cuenta_id'],
+                    'cuenta_codigo' => $cuenta['codigo'] ?? '',
+                    'cuenta_nombre' => $cuenta['nombre'] ?? '',
+                    'remote_cc_cuenta_id' => $row['id'],
+                ];
+            })->values()->all();
+        } catch (\Throwable $e) {
+            Log::warning('AprobadorTemp: no se pudo consultar cc/cuentas', [
+                'anacod' => $anacod,
+                'error' => $e->getMessage(),
+            ]);
+            return [];
+        }
+    }
+
     public function export(Request $request, string $anacod): StreamedResponse
     {
         $this->ensureEmpleadoExists($anacod);
