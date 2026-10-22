@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AprobadorAsignacionController;
 use App\Http\Controllers\AsistenciaController;
 use App\Http\Controllers\EmpleadoAccionController;
 use App\Http\Controllers\EmpleadoAccionTipoController;
@@ -114,6 +115,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/empleados/{anacod}/presupuesto/retry', [EmpleadoController::class, 'retryPresupuesto'])->name('empleados.presupuesto.retry');
     Route::post('/empleados/{anacod}/presupuesto/link', [EmpleadoController::class, 'linkPresupuesto'])->name('empleados.presupuesto.link');
     Route::get('/empleados/{anacod}/presupuesto', [EmpleadoController::class, 'presupuesto'])->name('empleados.presupuesto');
+
+    Route::prefix('empleados/{anacod}/aprobadores')->group(function () {
+        Route::get('/', [AprobadorAsignacionController::class, 'index'])->name('empleados.aprobadores.index');
+        Route::post('/', [AprobadorAsignacionController::class, 'store'])->name('empleados.aprobadores.store');
+        Route::post('/copiar-de/{fromAnacod}', [AprobadorAsignacionController::class, 'copyFrom'])->name('empleados.aprobadores.copy-from');
+    });
 
     Route::prefix('empleados/{anacod}/acciones')->group(function () {
         Route::get('/', [EmpleadoAccionController::class, 'index'])->name('empleados.acciones.index');

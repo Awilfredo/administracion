@@ -642,7 +642,7 @@ export default function Dashboard({ auth, data }) {
                                             </td>
                                             <td className="py-1.5">
                                                 <span className="text-xs px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-medium">
-                                                    {a.tipo_nombre || a.tipo_codigo}
+                                                    {a.tipo_nombre}
                                                 </span>
                                             </td>
                                             <td className="py-1.5 text-gray-700">{a.fecha_inicio}</td>

@@ -1,6 +1,6 @@
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
 import { router } from "@inertiajs/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SanForm from "./Partials/SanForm";
 import EditIcon from "@/Components/EditIcon";
 import Modal from "@/Components/Modal";
@@ -12,6 +12,7 @@ import BackEmpleados from "./components/BackEmpleados";
 import PerfilAplicaciones from "@/Components/PerfilAplicaciones";
 import Nav from "./Partials/Nav";
 import AprobadorTemporalModal from "@/Components/AprobadorTemporalModal";
+import AsignarAprobadorModal from "@/Components/AsignarAprobadorModal";
 import { apiFetch } from "@/Helpers/apiFetch";
 import { showAprobadorSummary } from "@/Helpers/aprobadorSummary";
 
@@ -74,6 +75,9 @@ const ShowEmpleado = ({
     const [showBaja, setShowBaja] = useState(false);
     const [bajaAprobadorModal, setBajaAprobadorModal] = useState({ open: false, loading: false, error: null });
     const [bajaAprobadorCheck, setBajaAprobadorCheck] = useState(null);
+    const [showAprobadorManual, setShowAprobadorManual] = useState(false);
+    const [aprobadorManualCcCuentas, setAprobadorManualCcCuentas] = useState([]);
+    const [aprobadorManualLoading, setAprobadorManualLoading] = useState(false);
     const { formatDate } = ManejoFechas();
     console.log(redControl);
     console.log(mensajeria);
@@ -83,6 +87,18 @@ const ShowEmpleado = ({
         const { name, value } = e.target;
         setData({ ...data, [name]: value });
     };
+
+    useEffect(() => {
+        if (showAprobadorManual && aprobadorManualCcCuentas.length === 0 && empleado?.anacod) {
+            setAprobadorManualLoading(true);
+            apiFetch(route("empleados.aprobadores.index", { anacod: empleado.anacod }))
+                .then((json) => {
+                    setAprobadorManualCcCuentas(json.cc_cuentas || []);
+                })
+                .catch((e) => console.error(e))
+                .finally(() => setAprobadorManualLoading(false));
+        }
+    }, [showAprobadorManual, empleado?.anacod]);
 
     // Función para guardar cambios
     const handleSave = () => {
@@ -550,6 +566,36 @@ const ShowEmpleado = ({
                 searchUsersUrl={route("empleados.acciones.search-users")}
             />
 
+            <AsignarAprobadorModal
+                open={showAprobadorManual}
+                onClose={() => setShowAprobadorManual(false)}
+                onConfirm={async (form) => {
+                    setAprobadorManualLoading(true);
+                    try {
+                        const result = await apiFetch(
+                            route("empleados.aprobadores.store", { anacod }),
+                            { method: "POST", body: { ...form, origen: "manual_admin" } }
+                        );
+                        setShowAprobadorManual(false);
+                        alert(`Asignación ${result.ok ? 'exitosa' : 'parcial'}: ${result.asignaciones?.length || 0} cc/cuentas asignadas.`);
+                        if (result.conflictos?.length) {
+                            alert(`Hubo ${result.conflictos.length} cc/cuentas omitidas (ya cubiertas).`);
+                        }
+                    } catch (e) {
+                        alert("Error: " + (e.message || "No se pudo asignar."));
+                    } finally {
+                        setAprobadorManualLoading(false);
+                    }
+                }}
+                empleado={empleado}
+                anacod={empleado.anacod}
+                ccCuentas={aprobadorManualCcCuentas}
+                fechaInicioDefault={fechaActual()}
+                searchUsersUrl={route("empleados.acciones.search-users")}
+                copyFromUrl={route("empleados.aprobadores.copy-from", { anacod: "PLACEHOLDER", fromAnacod: "" })}
+                loading={aprobadorManualLoading}
+            />
+
             <div className="max-w-7xl mx-auto mt-8 p-6 bg-white rounded-lg shadow-lg">
                 <h1 className="text-2xl font-bold text-gray-800 mb-6">
                     Información del Empleado
@@ -763,12 +809,24 @@ const ShowEmpleado = ({
                 )}
 
                 {empleado.anasta !== "I" ? (
-                    <div className="flex w-full justify-center">
+                    <div className="flex w-full justify-center gap-4">
+                        <SecondaryButton onClick={() => setShowAprobadorManual(true)}>
+                            Asignar aprobadores
+                        </SecondaryButton>
                         <DangerButton onClick={() => setShowBaja(true)}>
                             DAR DE BAJA
                         </DangerButton>
                     </div>
                 ) : (
+                    <div className="flex w-full justify-center gap-4">
+                        <SecondaryButton onClick={() => setShowAprobadorManual(true)}>
+                            Asignar aprobadores
+                        </SecondaryButton>
+                        <span className="px-3 py-2 bg-red-100 text-red-800 rounded font-mono text-sm self-center">
+                            EMPLEADO DADO DE BAJA
+                        </span>
+                    </div>
+                )}
                     <div className="flex w-full justify-center">
                         <span className="px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">
                             Empleado dado de baja

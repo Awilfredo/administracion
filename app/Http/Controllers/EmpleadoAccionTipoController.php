@@ -48,10 +48,12 @@ class EmpleadoAccionTipoController extends Controller
             'descripcion' => 'nullable|string|max:1000',
             'requiere_adjunto' => 'sometimes|boolean',
             'activo' => 'sometimes|boolean',
+            'afecta_asistencia' => 'sometimes|boolean',
         ]);
 
         $data['requiere_adjunto'] = (bool) ($data['requiere_adjunto'] ?? false);
         $data['activo'] = (bool) ($data['activo'] ?? true);
+        $data['afecta_asistencia'] = (bool) ($data['afecta_asistencia'] ?? true);
 
         EmpleadoAccionTipo::create($data);
 
@@ -74,10 +76,12 @@ class EmpleadoAccionTipoController extends Controller
             'descripcion' => 'nullable|string|max:1000',
             'requiere_adjunto' => 'sometimes|boolean',
             'activo' => 'sometimes|boolean',
+            'afecta_asistencia' => 'sometimes|boolean',
         ]);
 
         $data['requiere_adjunto'] = (bool) ($data['requiere_adjunto'] ?? false);
         $data['activo'] = (bool) ($data['activo'] ?? false);
+        $data['afecta_asistencia'] = (bool) ($data['afecta_asistencia'] ?? $tipo->afecta_asistencia);
 
         $tipo->update($data);
 

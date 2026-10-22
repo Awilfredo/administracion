@@ -59,8 +59,9 @@ class AsistenciaController extends Controller {
 
         $porTipo = [];
         foreach ($vigentes as $a) {
-            $codigo = $a->tipo?->codigo ?? 'otro';
-            $porTipo[$codigo] = ($porTipo[$codigo] ?? 0) + 1;
+            $nombre = $a->tipo?->nombre ?? 'Otro';
+            $clave = \Illuminate\Support\Str::slug($nombre);
+            $porTipo[$clave] = ($porTipo[$clave] ?? 0) + 1;
         }
         $porTipo['total'] = array_sum($porTipo);
 
@@ -78,7 +79,6 @@ class AsistenciaController extends Controller {
                     'id' => $a->id,
                     'anacod' => $a->anacod,
                     'empleado_nombre' => $emp?->ananam,
-                    'tipo_codigo' => $a->tipo?->codigo,
                     'tipo_nombre' => $a->tipo?->nombre,
                     'fecha_inicio' => $a->fecha_inicio?->toDateString(),
                     'fecha_fin' => $a->fecha_fin?->toDateString(),
@@ -114,7 +114,7 @@ class AsistenciaController extends Controller {
             'asistencias' => $asistencias,
             'tiposAccion' => EmpleadoAccionTipo::where('activo', true)
                 ->orderBy('nombre')
-                ->get(['id', 'codigo', 'nombre']),
+                ->get(['id', 'nombre', 'afecta_asistencia']),
             'filters' => [
                 'fecha' => $fecha,
                 'fecha_fin' => $fechaFin,
