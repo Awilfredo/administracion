@@ -151,6 +151,64 @@ Pestaña "Acciones" en `Nav.jsx`.
   - `proximas_acciones` — hasta 5 acciones en los próximos 7 días.
 - 4 cards nuevas en "Hoy" + sección "Próximas acciones de personal".
 
+### 9.1 Tab "Dashboard" dentro de /acciones
+
+- **`GlobalIndex.jsx`** — pestañas client-side (`useState`): `listado` | `dashboard`.
+  Patrón tomado de `Nfc/Create.jsx` (barra sticky `top-16`, botones pill).
+  El badge del botón "Listado" usa `acciones.total`.
+  El dashboard **no** hereda los filtros del listado: tiene su propio selector de período.
+- **`AccionesDashboard.jsx`** (`Pages/Empleados/Acciones/Components/`) — consume
+  `GET /acciones/dashboard` (JSON) con `apiFetch`. Los datos iniciales llegan ya en las
+  props de Inertia (`globalIndex` incluye `dashboard`), así que no hay spinner ni
+  fetch al abrir la pestaña; el refetch solo ocurre al cambiar de período.
+  - Layout en 3 secciones (grilla de 12 columnas):
+    - **Resumen** — 8 KPIs (4 por fila): total, aprobadas, canceladas, empleados,
+      un solo día, multidía, vigentes hoy, próximas (30 días). El KPI "Total acciones"
+      incluye un sparkline de 12 meses (`MiniSparkline`).
+    - **Distribución** — evolución mensual (span 8, con chip comparativa mes vs mes
+      anterior), distribución por área (span 4), pastel por tipo (span 4),
+      ranking por tipo (span 4, con `⌀ días` por tipo) y top empleados (span 4).
+    - **Actividad** — últimas acciones registradas (span 8) y "en curso y próximas" (span 4).
+  - Sistema de cards propio: `Card` (header con título + chip, cuerpo con padding),
+    `KpiCard`, `Chip`, `EstadoVacio`. Sin alturas fijas: cada card define su `min-h`
+    y las de una misma fila se estiran igual (`items-stretch`).
+  - **Ojo**: el cuerpo de las cards es `flex flex-col justify-center` (NO `flex items-center`),
+    porque en un flex row el contenedor del gráfico colapsa a ancho 0 y el chart no renderiza.
+- **`EmpleadoAccionController::globalDashboard()`** — JSON con:
+  - `kpis` (total, aprobadas, canceladas, empleados, vigentes, proximas, `un_dia`,
+    `multidia`, `promedio_dias`, `areas`), `comparativa`, `por_tipo` (con `promedio_dias`),
+    `por_area`, `por_estado`, `evolucion`, `top_empleados` (con `area`), `ultimas`,
+    `vigentes`, `proximas`, `totales`, `rango`, `generado_at`.
+  - Períodos: `mes` | `trimestre` | `semestre` | `anio` (default) | `todo`.
+  - La evolución mensual usa `DATE_FORMAT(fecha_inicio, '%Y-%m')` (MySQL).
+  - Los nombres de empleado y el área (`anarea`) se resuelven en batch contra la
+    conexión `san` (PostgreSQL).
+  - `por_area` cuenta **acciones** por área (no empleados) y su suma siempre cuadra
+    con `kpis.total`.
+  - "Vigentes" usa `COALESCE(fecha_fin, fecha_inicio) >= hoy` (ver regla 7 de §15);
+    cada acción devuelve `dias` (duración inclusiva) para mostrar "1 día" / "N días".
+- **`StackedBarsMini.jsx`** — nuevas props opcionales `colors` y `maxBarSize`
+  (no rompen los usos existentes). La animación se desactivó (`isAnimationActive={false}`)
+  para que los dashboards muestren los datos al instante.
+- **`GraficaCircular.jsx`** — nuevas props opcionales `height` (default 220) y
+  `legendColumns` (default 1); los usos existentes en `Asistencia/Resumen` y
+  `Asistencia/Estadisticas` no cambian. Igual que `StackedBarsMini`, sin animación.
+- **`MiniSparkline.jsx`** (`Components/`) — micro-gráfico de tendencia con área y
+  degradado, sin ejes; usado en el KPI "Total acciones".
+
+### 9.2 Corrección de la regla de vigencia
+
+Se corrigió el mismo error (tratar `fecha_fin` null como acción abierta) en 3 lugares:
+
+| Archivo | Antes | Ahora |
+|---|---|---|
+| `EmpleadoAccionController::globalDashboard()` | `whereNull('fecha_fin')->orWhere('fecha_fin','>=',$hoy)` | `COALESCE(fecha_fin, fecha_inicio) >= $hoy` |
+| `AsistenciaController::dashboardAcciones()` | ídem | ídem |
+| `SincronizarAccionesAsistenciaCommand` | ídem | ídem |
+
+Impacto: "acciones hoy" pasó de **774** (dato inflado) a **1** (real), y el cron de
+sincronización dejó de leer 773 acciones por corrida para leer 1.
+
 ## 10. Eventos de asistencia (Asistencia/Eventos.jsx)
 
 - `MarcasFiltro` con presets + fechas + usuario.
@@ -225,6 +283,12 @@ resources/js/Pages/Empleados/Partials/Select.jsx
 4. **Solo llena nulls en el sync manual**.
 5. **Filtro de tiempo** — `EXTRACT(HOUR/MINUTE FROM fecha)`.
 6. **Persistencia de filtros en URL**.
+7. **`fecha_fin` null ⇒ la acción dura UN SOLO DÍA** — el rango efectivo es
+   `COALESCE(fecha_fin, fecha_inicio)`. Toda consulta de "vigente/activa hoy" debe usar
+   `COALESCE(fecha_fin, fecha_inicio) >= hoy` (nunca `whereNull('fecha_fin')` como
+   "abierta"). Referencias: `AccionPersonalSync::llenar/limpiar` (`fecha_fin ?? fecha_inicio`),
+   `AccionForm.jsx` (`sameDay = !fecha_fin || fecha_fin === fecha_inicio`),
+   `EmpleadoAccionController::indexSinAprobador`.
 
 ## 16. Cómo se usa
 

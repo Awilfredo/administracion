@@ -138,6 +138,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('acciones')->group(function () {
         Route::get('/', [EmpleadoAccionController::class, 'globalIndex'])->name('empleados.acciones.global.index');
         Route::get('/export', [EmpleadoAccionController::class, 'globalExport'])->name('empleados.acciones.global.export');
+        Route::get('/dashboard', [EmpleadoAccionController::class, 'globalDashboard'])->name('empleados.acciones.global.dashboard');
         Route::get('/create', [EmpleadoAccionController::class, 'globalCreate'])->name('empleados.acciones.global.create');
         Route::post('/', [EmpleadoAccionController::class, 'globalStore'])->name('empleados.acciones.global.store');
         Route::get('/{accion}/edit', [EmpleadoAccionController::class, 'globalEdit'])->name('empleados.acciones.global.edit');

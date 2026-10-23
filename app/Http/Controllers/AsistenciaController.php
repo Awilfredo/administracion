@@ -52,9 +52,7 @@ class AsistenciaController extends Controller {
         $vigentes = EmpleadoAccion::with('tipo')
             ->where('estado', 'aprobado')
             ->where('fecha_inicio', '<=', $hoy)
-            ->where(function ($q) use ($hoy) {
-                $q->whereNull('fecha_fin')->orWhere('fecha_fin', '>=', $hoy);
-            })
+            ->whereRaw('COALESCE(fecha_fin, fecha_inicio) >= ?', [$hoy])
             ->get();
 
         $porTipo = [];

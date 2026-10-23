@@ -526,7 +526,341 @@ class EmpleadoAccionController extends Controller
             'acciones' => $acciones,
             'tipos' => EmpleadoAccionTipo::where('activo', true)->orderBy('nombre')->get(),
             'filters' => $filters,
+            'dashboard' => $this->dashboardData('anio'),
         ]);
+    }
+
+    public function globalDashboard(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'periodo' => 'nullable|in:mes,trimestre,semestre,anio,todo',
+        ]);
+
+        return response()->json($this->dashboardData($data['periodo'] ?? 'anio'));
+    }
+
+    protected function dashboardData(string $periodo): array
+    {
+        [$desde, $hasta] = $this->rangoPeriodo($periodo);
+
+        $base = function () use ($desde, $hasta) {
+            $query = EmpleadoAccion::query();
+            if ($desde) {
+                $query->whereDate('fecha_inicio', '>=', $desde);
+            }
+            if ($hasta) {
+                $query->whereDate('fecha_inicio', '<=', $hasta);
+            }
+            return $query;
+        };
+
+        $total = $base()->count();
+        $aprobadas = $base()->where('estado', 'aprobado')->count();
+        $canceladas = $base()->where('estado', 'cancelado')->count();
+        $empleadosAfectados = $base()->distinct()->count('anacod');
+        $unDia = $base()->whereRaw('COALESCE(fecha_fin, fecha_inicio) = fecha_inicio')->count();
+
+        $duracionPorTipo = $base()
+            ->selectRaw('tipo_id, AVG(DATEDIFF(IFNULL(fecha_fin, fecha_inicio), fecha_inicio) + 1) as promedio')
+            ->groupBy('tipo_id')
+            ->pluck('promedio', 'tipo_id');
+
+        $duracionGeneral = (float) $base()
+            ->selectRaw('AVG(DATEDIFF(IFNULL(fecha_fin, fecha_inicio), fecha_inicio) + 1) as promedio')
+            ->value('promedio');
+
+        $conteosPorTipo = $base()
+            ->selectRaw('tipo_id, COUNT(*) as total')
+            ->groupBy('tipo_id')
+            ->orderByDesc('total')
+            ->pluck('total', 'tipo_id');
+
+        $nombresTipo = EmpleadoAccionTipo::whereIn('id', $conteosPorTipo->keys())
+            ->pluck('nombre', 'id');
+
+        $porTipo = $conteosPorTipo
+            ->map(fn ($conteo, $tipoId) => [
+                'label' => $nombresTipo[$tipoId] ?? 'Sin tipo',
+                'value' => (int) $conteo,
+                'promedio_dias' => round((float) ($duracionPorTipo[$tipoId] ?? 0), 1),
+            ])
+            ->values()
+            ->all();
+
+        $porEstado = $base()
+            ->selectRaw('estado, COUNT(*) as total')
+            ->groupBy('estado')
+            ->pluck('total', 'estado')
+            ->map(fn ($conteo, $estado) => [
+                'label' => ucfirst((string) $estado),
+                'value' => (int) $conteo,
+            ])
+            ->values()
+            ->all();
+
+        $evolucion = $base()
+            ->selectRaw(
+                "DATE_FORMAT(fecha_inicio, '%Y-%m') as mes,
+                 COUNT(*) as total,
+                 SUM(CASE WHEN estado = 'aprobado' THEN 1 ELSE 0 END) as aprobadas,
+                 SUM(CASE WHEN estado = 'cancelado' THEN 1 ELSE 0 END) as canceladas"
+            )
+            ->groupBy('mes')
+            ->orderBy('mes')
+            ->get()
+            ->map(fn ($fila) => [
+                'label' => $this->etiquetaMes($fila->mes),
+                'aprobadas' => (int) $fila->aprobadas,
+                'canceladas' => (int) $fila->canceladas,
+                'total' => (int) $fila->total,
+            ])
+            ->all();
+
+        $topEmpleadosQuery = $base()
+            ->selectRaw('anacod, COUNT(*) as total')
+            ->groupBy('anacod')
+            ->orderByDesc('total')
+            ->limit(10)
+            ->get();
+
+        $hoy = Carbon::today()->toDateString();
+        $finProximos = Carbon::today()->addDays(30)->toDateString();
+
+        $vigentesBase = function () use ($hoy) {
+            return EmpleadoAccion::with('tipo')
+                ->where('estado', 'aprobado')
+                ->whereDate('fecha_inicio', '<=', $hoy)
+                ->whereRaw('COALESCE(fecha_fin, fecha_inicio) >= ?', [$hoy]);
+        };
+
+        $vigentesTotal = $vigentesBase()->count();
+
+        $vigentes = $vigentesBase()
+            ->orderByRaw('COALESCE(fecha_fin, fecha_inicio)')
+            ->orderBy('fecha_inicio')
+            ->orderBy('id')
+            ->limit(15)
+            ->get();
+
+        $proximasBase = function () use ($hoy, $finProximos) {
+            return EmpleadoAccion::with('tipo')
+                ->where('estado', 'aprobado')
+                ->whereDate('fecha_inicio', '>', $hoy)
+                ->whereDate('fecha_inicio', '<=', $finProximos);
+        };
+
+        $proximasTotal = $proximasBase()->count();
+
+        $proximas = $proximasBase()
+            ->orderBy('fecha_inicio')
+            ->orderBy('id')
+            ->limit(15)
+            ->get();
+
+        $ultimas = $base()
+            ->with('tipo')
+            ->orderByDesc('fecha_inicio')
+            ->orderByDesc('id')
+            ->limit(8)
+            ->get();
+
+        $conteosPorAnacod = $base()
+            ->selectRaw('anacod, COUNT(*) as total')
+            ->groupBy('anacod')
+            ->get();
+
+        $anacods = $topEmpleadosQuery->pluck('anacod')
+            ->merge($conteosPorAnacod->pluck('anacod'))
+            ->merge($vigentes->pluck('anacod'))
+            ->merge($proximas->pluck('anacod'))
+            ->merge($ultimas->pluck('anacod'))
+            ->map(fn ($anacod) => trim((string) $anacod))
+            ->unique()
+            ->values();
+
+        $nombresEmpleado = [];
+        $areasEmpleado = [];
+        if ($anacods->isNotEmpty()) {
+            foreach (Empleado::whereIn('anacod', $anacods)->get() as $empleado) {
+                $clave = trim((string) $empleado->anacod);
+                $nombresEmpleado[$clave] = $empleado->ananam;
+                $areasEmpleado[$clave] = $empleado->anarea ?: 'SIN ÁREA';
+            }
+        }
+
+        $nombreDe = fn ($anacod) => $nombresEmpleado[trim((string) $anacod)] ?? '—';
+        $areaDe = fn ($anacod) => $areasEmpleado[trim((string) $anacod)] ?? 'SIN ÁREA';
+
+        $porArea = $conteosPorAnacod
+            ->groupBy(fn ($fila) => $areaDe($fila->anacod))
+            ->map(fn ($filas, $area) => [
+                'label' => (string) $area,
+                'value' => (int) $filas->sum('total'),
+            ])
+            ->values()
+            ->sortByDesc('value')
+            ->values()
+            ->all();
+
+        $topEmpleados = $topEmpleadosQuery
+            ->map(fn ($fila) => [
+                'anacod' => $fila->anacod,
+                'nombre' => $nombreDe($fila->anacod),
+                'area' => $areaDe($fila->anacod),
+                'total' => (int) $fila->total,
+            ])
+            ->values()
+            ->all();
+
+        $mapearAccion = fn ($accion) => [
+            'id' => $accion->id,
+            'anacod' => $accion->anacod,
+            'nombre' => $nombreDe($accion->anacod),
+            'tipo' => $accion->tipo?->nombre ?? '—',
+            'fecha_inicio' => $accion->fecha_inicio?->toDateString(),
+            'fecha_fin' => $accion->fecha_fin?->toDateString(),
+            'dias' => $this->diasDuracion($accion),
+            'motivo' => $accion->motivo,
+            'estado' => $accion->estado,
+        ];
+
+        $inicioMesActual = Carbon::today()->startOfMonth();
+        $finMesActual = Carbon::today()->endOfMonth();
+        $inicioMesAnterior = $inicioMesActual->copy()->subMonthNoOverflow();
+        $finMesAnterior = $inicioMesAnterior->copy()->endOfMonth();
+
+        $mesActual = EmpleadoAccion::whereBetween('fecha_inicio', [
+            $inicioMesActual->toDateString(),
+            $finMesActual->toDateString(),
+        ])->count();
+
+        $mesAnterior = EmpleadoAccion::whereBetween('fecha_inicio', [
+            $inicioMesAnterior->toDateString(),
+            $finMesAnterior->toDateString(),
+        ])->count();
+
+        $variacion = $mesAnterior > 0
+            ? round((($mesActual - $mesAnterior) / $mesAnterior) * 100, 1)
+            : null;
+
+        return [
+            'periodo' => $periodo,
+            'rango' => [
+                'desde' => $desde,
+                'hasta' => $hasta,
+                'etiqueta' => $desde
+                    ? $this->etiquetaMesCorta($desde).' – '.$this->etiquetaMesCorta($hasta)
+                    : 'Histórico completo',
+            ],
+            'kpis' => [
+                'total' => $total,
+                'aprobadas' => $aprobadas,
+                'canceladas' => $canceladas,
+                'empleados' => $empleadosAfectados,
+                'vigentes' => $vigentesTotal,
+                'proximas' => $proximasTotal,
+                'un_dia' => $unDia,
+                'multidia' => $total - $unDia,
+                'promedio_dias' => round($duracionGeneral, 1),
+                'areas' => count($porArea),
+            ],
+            'comparativa' => [
+                'mes_actual' => [
+                    'label' => $this->etiquetaMesLarga($inicioMesActual),
+                    'total' => $mesActual,
+                ],
+                'mes_anterior' => [
+                    'label' => $this->etiquetaMesLarga($inicioMesAnterior),
+                    'total' => $mesAnterior,
+                ],
+                'variacion_pct' => $variacion,
+            ],
+            'por_tipo' => $porTipo,
+            'por_area' => $porArea,
+            'por_estado' => $porEstado,
+            'evolucion' => $evolucion,
+            'top_empleados' => $topEmpleados,
+            'ultimas' => $ultimas->map($mapearAccion)->values()->all(),
+            'vigentes' => $vigentes->map($mapearAccion)->values()->all(),
+            'proximas' => $proximas->map($mapearAccion)->values()->all(),
+            'totales' => [
+                'vigentes' => $vigentesTotal,
+                'proximas' => $proximasTotal,
+            ],
+            'generado_at' => Carbon::now()->format('Y-m-d H:i'),
+        ];
+    }
+
+    protected function diasDuracion(EmpleadoAccion $accion): int
+    {
+        if (! $accion->fecha_inicio) {
+            return 1;
+        }
+
+        $inicio = $accion->fecha_inicio->toDateString();
+        $fin = $accion->fecha_fin?->toDateString() ?? $inicio;
+
+        $dias = (int) floor((strtotime($fin) - strtotime($inicio)) / 86400) + 1;
+
+        return max(1, $dias);
+    }
+
+    protected function rangoPeriodo(string $periodo): array
+    {
+        $hoy = Carbon::today();
+
+        return match ($periodo) {
+            'mes' => [
+                $hoy->copy()->startOfMonth()->toDateString(),
+                $hoy->copy()->endOfMonth()->toDateString(),
+            ],
+            'trimestre' => [
+                $hoy->copy()->subMonthsNoOverflow(2)->startOfMonth()->toDateString(),
+                $hoy->copy()->endOfMonth()->toDateString(),
+            ],
+            'semestre' => [
+                $hoy->copy()->subMonthsNoOverflow(5)->startOfMonth()->toDateString(),
+                $hoy->copy()->endOfMonth()->toDateString(),
+            ],
+            'anio' => [
+                $hoy->copy()->subMonthsNoOverflow(11)->startOfMonth()->toDateString(),
+                $hoy->copy()->endOfMonth()->toDateString(),
+            ],
+            default => [null, null],
+        };
+    }
+
+    protected function etiquetaMes(?string $ym): string
+    {
+        if (! $ym) {
+            return '';
+        }
+
+        [$anio, $mes] = explode('-', $ym);
+
+        return $this->nombreMes((int) $mes).' '.substr($anio, 2);
+    }
+
+    protected function etiquetaMesCorta(string $fecha): string
+    {
+        $carbon = Carbon::parse($fecha);
+
+        return $this->nombreMes((int) $carbon->month).' '.$carbon->year;
+    }
+
+    protected function etiquetaMesLarga(Carbon $fecha): string
+    {
+        return $this->nombreMes((int) $fecha->month).' '.$fecha->year;
+    }
+
+    protected function nombreMes(int $mes): string
+    {
+        $meses = [
+            1 => 'Ene', 2 => 'Feb', 3 => 'Mar', 4 => 'Abr', 5 => 'May', 6 => 'Jun',
+            7 => 'Jul', 8 => 'Ago', 9 => 'Sep', 10 => 'Oct', 11 => 'Nov', 12 => 'Dic',
+        ];
+
+        return $meses[$mes] ?? (string) $mes;
     }
 
     public function globalCreate(): Response

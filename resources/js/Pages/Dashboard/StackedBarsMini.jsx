@@ -18,12 +18,14 @@ const STACK_COLORS = {
     altas: "#10b981",
 };
 
-export default function StackedBarsMini({ data, xKey = "label", series = [], height = 180 }) {
+export default function StackedBarsMini({ data, xKey = "label", series = [], height = 180, colors = null, maxBarSize = null }) {
     const [hydrated, setHydrated] = useState(false);
     useEffect(() => setHydrated(true), []);
 
     if (!hydrated) return <div style={{ height }} className="flex items-center justify-center text-gray-400 text-sm">Cargando…</div>;
     if (!data || data.length === 0) return <p className="text-sm text-gray-500 py-4">Sin datos.</p>;
+
+    const paleta = colors ?? STACK_COLORS;
 
     return (
         <div style={{ height }}>
@@ -41,7 +43,9 @@ export default function StackedBarsMini({ data, xKey = "label", series = [], hei
                             key={key}
                             dataKey={key}
                             stackId="a"
-                            fill={STACK_COLORS[key] ?? "#6b7280"}
+                            fill={paleta[key] ?? "#6b7280"}
+                            maxBarSize={maxBarSize ?? undefined}
+                            isAnimationActive={false}
                             radius={key === series[series.length - 1] ? [2, 2, 0, 0] : undefined}
                         />
                     ))}

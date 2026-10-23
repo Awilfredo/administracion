@@ -31,9 +31,7 @@ class SincronizarAccionesAsistenciaCommand extends Command
         $query = EmpleadoAccion::with('tipo')
             ->where('estado', 'aprobado')
             ->where('fecha_inicio', '<=', $fecha)
-            ->where(function ($q) use ($fecha) {
-                $q->whereNull('fecha_fin')->orWhere('fecha_fin', '>=', $fecha);
-            });
+            ->whereRaw('COALESCE(fecha_fin, fecha_inicio) >= ?', [$fecha]);
         if ($empleadoFilter) {
             $query->where('anacod', $empleadoFilter);
         }

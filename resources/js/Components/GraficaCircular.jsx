@@ -2,7 +2,7 @@ import React from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 const RADIAN = Math.PI / 180;
 
-export default function GraficaCircular({ data, colors, title }) {
+export default function GraficaCircular({ data, colors, title, height = 220, legendColumns = 1 }) {
     const COLORS = colors ?? ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#FF8042"];
 
     const renderCustomizedLabel = ({
@@ -36,7 +36,7 @@ export default function GraficaCircular({ data, colors, title }) {
         <div className="w-full">
             {title && <p className="text-xl text-center mt-5">{title}</p>}
             <div className="flex items-center justify-center gap-4 flex-wrap">
-                <div className="w-full" style={{ height: 220, minWidth: 180 }}>
+                <div className="w-full" style={{ height: height, minWidth: 180 }}>
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                             <Pie
@@ -48,6 +48,7 @@ export default function GraficaCircular({ data, colors, title }) {
                                 outerRadius="75%"
                                 fill="#8884d8"
                                 dataKey="value"
+                                isAnimationActive={false}
                             >
                                 {data.map((entry, index) => (
                                     <Cell
@@ -59,11 +60,20 @@ export default function GraficaCircular({ data, colors, title }) {
                         </PieChart>
                     </ResponsiveContainer>
                 </div>
-                <div className="w-full max-w-xs space-y-1.5">
+                <div
+                    className={`w-full flex flex-wrap ${
+                        legendColumns > 1 ? "max-w-sm" : "max-w-xs flex-col"
+                    }`}
+                >
                     {data.map((element, index) => (
-                        <div className="text-md flex items-center py-1" key={index}>
+                        <div
+                            className={`text-sm flex items-center py-0.5 ${
+                                legendColumns > 1 ? "w-1/2 pr-3" : "w-full"
+                            }`}
+                            key={index}
+                        >
                             <span
-                                className="inline-block w-3 h-3 rounded-full mr-3 flex-shrink-0"
+                                className="inline-block w-3 h-3 rounded-full mr-2 flex-shrink-0"
                                 style={{ backgroundColor: COLORS[index % COLORS.length] }}
                             />
                             <span className="text-gray-700 truncate">
