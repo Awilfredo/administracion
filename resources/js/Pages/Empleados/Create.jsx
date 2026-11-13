@@ -49,12 +49,30 @@ function Create({
 
     const { generatePassword, makeAnacod } = CrearEmpleado();
 
+    // Errores que ya se muestran junto a su campo dentro de SanForm.
+    const erroresDeCampo = [
+        "anacod", "ananam", "anapai", "anamai", "anasta", "anatel", "anarea",
+        "anarad", "anajef", "folcod", "folcodreal", "anaext", "anapos",
+        "anames", "anadia", "fecha_ingreso", "horario_id", "isBoss",
+        "lider_area", "anaimg", "usuario_mensajeria", "usuario_red_control",
+        "salario", "cuenta", "imei", "imei_real", "sim", "sim_real",
+        "anapas", "direccion", "anatel_real",
+    ];
+
+    const erroresGenerales = Object.entries(errors || {}).filter(
+        ([key]) => !erroresDeCampo.includes(key),
+    );
+
     const handleSubmit = (e) => {
         const payload = {
             ...data,
             crear_en_presupuestos: crearEnPresupuestos,
-            presupuestos_cc_cuentas: presupuestosCcCuentas,
         };
+        // Solo se envia el array de combinaciones cuando el checkbox esta marcado.
+        // Si se manda vacio, el backend lo interpreta como "sin combinaciones".
+        if (crearEnPresupuestos) {
+            payload.presupuestos_cc_cuentas = presupuestosCcCuentas;
+        }
         router.visit(route("empleados.store"), {
             method: "post",
             data: payload,
@@ -101,6 +119,22 @@ function Create({
         }
         >
             <Head title="Alta" />
+
+            {erroresGenerales.length > 0 && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+                    <p className="font-semibold text-sm mb-1">
+                        Hay errores en el formulario:
+                    </p>
+                    <ul className="list-disc pl-5 text-xs space-y-0.5">
+                        {erroresGenerales.map(([key, msgs]) => (
+                            <li key={key}>
+                                <strong>{key}:</strong>{" "}
+                                {Array.isArray(msgs) ? msgs[0] : msgs}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
 
             <SanForm
                 data={data}

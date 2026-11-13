@@ -175,6 +175,8 @@ export default function PresupuestosUserSection({
     const fieldError = (key) => {
         if (!errors) return null;
         const candidates = [
+            `presupuestos_cc_cuentas.${key}`,
+            `presupuestos_cc_cuentas.*.${key}`,
             `presupuestos.cc_cuentas.${key}`,
             `presupuestos.cc_cuentas.*.${key}`,
             `cc_cuentas.${key}`,
@@ -185,7 +187,10 @@ export default function PresupuestosUserSection({
         }
         return null;
     };
-    const rootError = errors?.["presupuestos.cc_cuentas"] || errors?.cc_cuentas;
+    const rootError =
+        errors?.["presupuestos_cc_cuentas"] ||
+        errors?.["presupuestos.cc_cuentas"] ||
+        errors?.cc_cuentas;
 
     const totalSelected = rows.length;
 
@@ -215,6 +220,12 @@ export default function PresupuestosUserSection({
                 </div>
             )}
 
+            {rootError && (
+                <div className="mb-3 p-2 bg-red-50 border border-red-300 rounded text-red-700 text-sm">
+                    {Array.isArray(rootError) ? rootError[0] : rootError}
+                </div>
+            )}
+
             {enabled && (
                 <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -232,12 +243,6 @@ export default function PresupuestosUserSection({
                             Total seleccionados: <span className="ml-1 font-semibold text-gray-800">{totalSelected}</span>
                         </div>
                     </div>
-
-                    {rootError && (
-                        <div className="mb-3 p-2 bg-red-50 border border-red-300 rounded text-red-700 text-sm">
-                            {Array.isArray(rootError) ? rootError[0] : rootError}
-                        </div>
-                    )}
 
                     <div className="mb-3 flex flex-col md:flex-row md:items-end gap-3">
                         <div className="md:flex-1">

@@ -21,6 +21,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
 use App\Models\DatosEmpleado;
@@ -404,9 +405,14 @@ class EmpleadoController extends Controller {
             'lider_area' => 'required|string|max:50',
             'anaimg' => 'nullable|string|max:255',
             'crear_en_presupuestos' => 'sometimes|boolean',
-            'presupuestos_cc_cuentas' => 'required_if:crear_en_presupuestos,true|array|min:1',
-            'presupuestos_cc_cuentas.*.centro_costo_id' => 'required_if:crear_en_presupuestos,true|integer',
-            'presupuestos_cc_cuentas.*.cuenta_id' => 'required_if:crear_en_presupuestos,true|integer',
+            // Sin 'min:1': esa regla se evalua siempre (incluso con el checkbox desmarcado)
+            // y hacia fallar la validacion con un array vacio, bloqueando la creacion
+            // del empleado aunque no se haya pedido crear el usuario en Presupuestos.
+            // El minimo de combinaciones se valida explicitamente mas abajo, solo cuando
+            // crear_en_presupuestos es true.
+            'presupuestos_cc_cuentas' => 'required_if:crear_en_presupuestos,true|array',
+            'presupuestos_cc_cuentas.*.centro_costo_id' => 'required_if:crear_en_presupuestos,true|integer|min:1',
+            'presupuestos_cc_cuentas.*.cuenta_id' => 'required_if:crear_en_presupuestos,true|integer|min:1',
             'presupuestos_cc_cuentas.*.is_aprobador' => 'sometimes|boolean',
             'presupuestos_cc_cuentas.*.aprobador_temporal' => 'sometimes|boolean',
             'presupuestos_cc_cuentas.*.vigente_hasta' => 'nullable|date|after_or_equal:today',
@@ -414,6 +420,15 @@ class EmpleadoController extends Controller {
         // Crear un nuevo registro
         $crearEnPresupuestos = $request->boolean( 'crear_en_presupuestos' );
         $ccCuentasFromRequest = $validatedData['presupuestos_cc_cuentas'] ?? [];
+
+        // Si se pide crear el usuario en Presupuestos, debe existir al menos una
+        // combinacion centro de costo / cuenta. Se valida aqui para que el mensaje
+        // llegue al formulario y no se pierde el alta del empleado.
+        if ( $crearEnPresupuestos && count( $ccCuentasFromRequest ) < 1 ) {
+            throw ValidationException::withMessages( [
+                'presupuestos_cc_cuentas' => 'Debe seleccionar al menos un centro de costo y una cuenta para crear el usuario en Presupuestos.',
+            ] );
+        }
 
         //dd($request->all());
 
