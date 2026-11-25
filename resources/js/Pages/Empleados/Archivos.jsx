@@ -40,8 +40,9 @@ export default function Archivos({ empleadoId, archivos }) {
                 Swal.fire({
                     icon: "success",
                     title: "Archivo subido correctamente",
+                    text: "Se notificó por correo a awcruz@red.com.sv",
                     showConfirmButton: false,
-                    timer: 1500,
+                    timer: 2500,
                 });
             },
         });
