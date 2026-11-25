@@ -21,6 +21,123 @@ Laravel is a web application framework with expressive, elegant syntax. We belie
 
 Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
+## Acciones de personal — Comandos Artisan
+
+Módulo de acciones de personal (vacaciones, permisos, incapacidades, renuncias, etc.).
+La documentación completa del módulo está en [`ACCIONES_PERSONAL.md`](ACCIONES_PERSONAL.md).
+
+### Flujo de datos
+
+```
+SharePoint ──sharepoint:sync-acciones──▶ empleado_acciones ──acciones:sincronizar-asistencia──▶ san.pro_eventos_asistencia.accion_personal
+```
+
+### `sharepoint:sync-acciones`
+
+Importa las acciones de personal desde **SharePoint** hacia la tabla `empleado_acciones`
+(origen `sharepoint`).
+
+```bash
+php artisan sharepoint:sync-acciones
+```
+
+| Opción | Descripción | Por defecto |
+|---|---|---|
+| `--from=Y-m-d` | Fecha desde de la consulta a SharePoint | hace 7 días |
+| `--to=Y-m-d` | Fecha hasta de la consulta a SharePoint | hoy + 30 días |
+| `--limit=N` | Cantidad máxima de items por request | `100` |
+| `--dry-run` | Solo loguea, no escribe en la base de datos | — |
+
+```bash
+# Simular sin escribir nada
+php artisan sharepoint:sync-acciones --dry-run
+
+# Reprocesar un rango específico
+php artisan sharepoint:sync-acciones --from=2026-10-01 --to=2026-10-31 --limit=200
+```
+
+### `acciones:sincronizar-asistencia`
+
+Marca el campo `accion_personal` en `san.pro_eventos_asistencia` con el tipo de acción
+que justifica cada evento de **Ausencia**, **Tarde** o **Salida antes**.
+Solo procesa las acciones aprobadas que **cubren la fecha objetivo**
+(`COALESCE(fecha_fin, fecha_inicio)` — una acción sin `fecha_fin` dura un solo día).
+
+```bash
+php artisan acciones:sincronizar-asistencia
+```
+
+| Opción | Descripción | Por defecto |
+|---|---|---|
+| `--fecha=YYYY-MM-DD` | Fecha objetivo | hoy |
+| `--empleado=ANACOD` | Filtra por un empleado concreto | — |
+| `--dry-run` | Solo muestra lo que haría, sin escribir | — |
+
+```bash
+# Simular sin escribir nada
+php artisan acciones:sincronizar-asistencia --dry-run
+
+# Sincronizar una fecha puntual
+php artisan acciones:sincronizar-asistencia --fecha=2026-10-23
+
+# Sincronizar solo a un empleado
+php artisan acciones:sincronizar-asistencia --empleado=AAYALA
+```
+
+### Programación automática (scheduler)
+
+Ambos comandos ya están programados en [`routes/console.php`](routes/console.php) con
+`->everyFifteenMinutes()`, `->withoutOverlapping()`, `->runInBackground()` y `->onOneServer()`.
+
+Verificar qué está programado:
+
+```bash
+php artisan schedule:list
+```
+
+### Ejecutarlos con crontab (cada media hora)
+
+Hay dos alternativas. **Usar solo una**, si no los comandos se ejecutarán dos veces
+(una por el scheduler y otra por cron).
+
+#### Opción A — Delegar en el scheduler de Laravel (recomendado)
+
+Una sola línea de cron (cada minuto); el scheduler decide qué corre y con qué frecuencia:
+
+```cron
+* * * * * cd /home/wilfredo/progra/administracion && /usr/bin/php artisan schedule:run >> /dev/null 2>&1
+```
+
+#### Opción B — Invocar los comandos directamente (cada 30 minutos)
+
+Si se prefiere no depender del scheduler, hay que **comentar los bloques
+`Schedule::command(...)` de `routes/console.php`** (para no duplicar la ejecución)
+y agregar al crontab del usuario (`crontab -e`):
+
+```cron
+# SharePoint → empleado_acciones (minuto 0 y 30 de cada hora)
+0,30 * * * * cd /home/wilfredo/progra/administracion && /usr/bin/php artisan sharepoint:sync-acciones >> /dev/null 2>&1
+
+# empleado_acciones → san.pro_eventos_asistencia (minuto 0 y 30 de cada hora)
+0,30 * * * * cd /home/wilfredo/progra/administracion && /usr/bin/php artisan acciones:sincronizar-asistencia >> /dev/null 2>&1
+```
+
+Notas:
+- `cd` hacia la raíz del proyecto es obligatorio para que Laravel encuentre `.env` y `bootstrap/`.
+- Usar la ruta absoluta de PHP (`/usr/bin/php`) evita fallos cuando cron no carga el `PATH` del usuario.
+- `>> /dev/null 2>&1` evita que cron envíe correo con la salida; para depurar, cambiar a
+  `>> /home/wilfredo/progra/administracion/storage/logs/cron.log 2>&1`.
+- Conviene separar los minutos para no golpear SharePoint y la BD `san` en el mismo instante:
+  `5,35 * * * *` para SharePoint y `0,30 * * * *` para la sincronización de asistencia.
+
+#### Verificar que quedó instalado
+
+```bash
+crontab -l                 # listar las tareas
+sudo crontab -l -u wilfredo
+tail -f storage/logs/laravel.log   # revisar el log de las ejecuciones
+```
+
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
