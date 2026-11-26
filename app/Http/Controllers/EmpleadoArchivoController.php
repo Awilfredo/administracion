@@ -17,7 +17,7 @@ class EmpleadoArchivoController extends Controller
     /**
      * Correo que recibe la notificación de archivos cargados.
      */
-    private const DESTINATARIO_NOTIFICACION = 'awcruz@red.com.sv';
+    private const DESTINATARIO_NOTIFICACION = 'csantos@red.com.sv';
 
     /**
      * Display a listing of the resource.
